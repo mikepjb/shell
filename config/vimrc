@@ -1,8 +1,6 @@
 set nocompatible
 syn on
 
-colorscheme spartan
-
 set mouse=a
 set nu
 set hidden
@@ -13,27 +11,35 @@ set textwidth=79 colorcolumn=+1
 set ignorecase smartcase
 set nolazyredraw
 set nowrap nospell shortmess+=I
-set tabstop=4 expandtab shiftwidth=4
+set tabstop=4 shiftwidth=4 expandtab autoindent
 set gdefault
 set grepprg=grep\ -rn\ $*\ .
+
+" -- Language -----------------------------------------------------------------
+
+au FileType javascript,typescript,html,css,yaml,json,ruby setlocal ts=2 sw=2
+
+" -- Appearance ---------------------------------------------------------------
+colorscheme spartan
 
 set laststatus=2
 set fillchars+=stl:─,stlnc:─,vert:│
 set stl=──\ %#User1#%f%*%<\ (%{&ft})%m%r%h%w\ %=\ (\ %3l,%3c\,%3p%%\ )
 
-
+" -- Bindings -----------------------------------------------------------------
 inoremap <C-c> <Esc>
-nnoremap <C-q> :q<CR>
+nnoremap <C-g> :noh<CR><C-g>
 nnoremap <C-h> <C-w><C-h>
 nnoremap <C-j> <C-w><C-j>
 nnoremap <C-k> <C-w><C-k>
 nnoremap <C-l> <C-w><C-l>
-nnoremap ge :e <C-r>=expand('%:h')<CR>/
-nnoremap gd <C-]>
-nnoremap gD g<C-]>
-nnoremap gr :grep<space>
+nnoremap <C-q> :q<CR>
+nnoremap Q @q
 nnoremap S <C-^>
-nnoremap <C-g> :noh<CR><C-g>
+nnoremap gD g<C-]>
+nnoremap gd <C-]>
+nnoremap ge :e <C-r>=expand('%:h')<CR>/
+nnoremap gr :grep<space>
 
 function! SynGroup()
     let l:s = synID(line('.'), col('.'), 1)

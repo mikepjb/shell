@@ -1,4 +1,18 @@
 export EDITOR='vim'
+
+go_paths="/usr/local/go/bin:$HOME/go/bin"
+node_paths="$HOME/.config/n/bin:$HOME/.npm/bin"
+mac_paths="/sbin:/opt/homebrew/bin"
+sys_paths="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin"
+export PATH="$go_paths:$node_paths:$mac_paths:$sys_paths"
+
+HISTSIZE=50000
+HISTFILESIZE=50000
+HISTCONTROL=ignoreboth
+shopt -s histappend
+
+CDPATH=.:$HOME/src
+
 alias vi='vim' x='tmux attach -t x || tmux new -s x'
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 PS1='\W $ '
