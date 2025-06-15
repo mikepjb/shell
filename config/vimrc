@@ -5,6 +5,7 @@ colorscheme spartan
 
 set mouse=a
 set nu
+set hidden
 set clipboard=unnamed,unnamedplus
 set noswapfile nobackup undofile
 set undodir='~/.vim/undodir'
@@ -14,10 +15,12 @@ set nolazyredraw
 set nowrap nospell shortmess+=I
 set tabstop=4 expandtab shiftwidth=4
 set gdefault
+set grepprg=grep\ -rn\ $*\ .
 
 set laststatus=2
 set fillchars+=stl:─,stlnc:─,vert:│
-set stl=──\ %#User1#%f%*%<\ (%{&ft})\ %=\ (\ %3l,%3c\,%3p%%\ )
+set stl=──\ %#User1#%f%*%<\ (%{&ft})%m%r%h%w\ %=\ (\ %3l,%3c\,%3p%%\ )
+
 
 inoremap <C-c> <Esc>
 nnoremap <C-q> :q<CR>

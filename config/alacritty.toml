@@ -1,9 +1,14 @@
-# -- Keybinds ------------------------------------------------------------------
+# -- Keybinds -----------------------------------------------------------------
 
 [env]
 option_as_alt = "Both" # treat option as alt in mac os
 
-# -- Appearance ----------------------------------------------------------------
+[[keyboard.bindings]]
+action = "ToggleFullscreen"
+key = "Return"
+mods = "Alt"
+
+# -- Appearance ---------------------------------------------------------------
 
 [font]
 size = 16.0

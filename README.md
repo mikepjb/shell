@@ -6,6 +6,8 @@ _A collection of tools I use for development work._
   developing software that solves problems.
 - This setup was created with a spartan mindset driving it.
   Constraints enforce deeper engagement.
+- To get started, download this repo and run `./setup.sh`. This supports Mac OS
+  and Arch Linux.
 
 ## Development Discipline
 
@@ -20,3 +22,7 @@ _A collection of tools I use for development work._
 - Exceeding 80 character width (becomes harder to read)
 - Exceeding 300 lines for source code (small enough to reason about).
 - Exceeding 100 lines for config (these have a larger effect).
+
+## On my radar
+
+- Using the `:g/pattern/command` in vim

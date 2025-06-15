@@ -75,14 +75,9 @@ hi Underlined   ctermfg=4    cterm=underline
 hi Error        ctermfg=13   ctermbg=1
 hi Todo         ctermfg=11    ctermbg=none
 
-hi DiffAdd      ctermfg=2    ctermbg=0
-hi DiffChange   ctermfg=3    ctermbg=0
-hi DiffDelete   ctermfg=1    ctermbg=0
-hi DiffText     ctermfg=11   ctermbg=0    cterm=none
-hi link DiffAdd diffAdded
-hi link DiffDelete diffRemoved  
-hi link DiffChange diffLine
-hi link DiffText diffFile
+hi Added        ctermfg=2    ctermbg=0
+hi Removed      ctermfg=1    ctermbg=0
+hi gitcommitBranch ctermfg=3
 
 hi TabLine      ctermfg=8    ctermbg=0    cterm=none
 hi TabLineFill  ctermfg=8    ctermbg=0    cterm=none
