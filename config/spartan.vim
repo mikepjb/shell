@@ -76,6 +76,10 @@ hi DiffAdd      ctermfg=2    ctermbg=0
 hi DiffChange   ctermfg=3    ctermbg=0
 hi DiffDelete   ctermfg=1    ctermbg=0
 hi DiffText     ctermfg=11   ctermbg=0    cterm=none
+hi link DiffAdd diffAdded
+hi link DiffDelete diffRemoved  
+hi link DiffChange diffLine
+hi link DiffText diffFile
 
 hi TabLine      ctermfg=8    ctermbg=0    cterm=none
 hi TabLineFill  ctermfg=8    ctermbg=0    cterm=none

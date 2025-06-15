@@ -1,0 +1,34 @@
+# vim: ft=gitconfig
+[core]
+	editor = vim
+	autocrlf = false
+[alias]
+	aa = add --all
+	br = branch --sort=committerdate
+	st = status
+	count = shortlog -sn
+	ff = pull --ff-only
+	co = checkout
+	ci = commit --verbose
+	di = diff
+	dc = diff --cached
+	dd = diff --stat origin/develop HEAD
+	dn = diff --name-status
+	list = config --global --list
+	amend = commit --amend
+	ffa = fetch --all && git rebase origin/master
+	push-new = push -u origin HEAD
+	ra = log --pretty=format:\"%C(yellow)%h%Creset %<(7,trunc)%ae%C(auto)%d %Creset%s %Cgreen(%cr)\"
+	up = pull --rebase
+        li = update-index --assume-unchanged
+[user]
+	name = Mike Bruce
+	email = mike@hypalynx.com
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
+
+# Use alternative email for work projects
+[includeIf "hasconfig:remote.*.url:git@github.com:loveholidays/*"]
+    path = "~/.gitconfig_loveholidays"
