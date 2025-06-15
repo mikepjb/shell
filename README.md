@@ -1,4 +1,4 @@
-# Shell
+# :trident: Shell
 
 _A collection of tools I use for development work._
 
