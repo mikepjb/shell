@@ -9,19 +9,22 @@ let g:colors_name = "spartan"
 
 " Basic UI elements
 hi Normal       ctermfg=none    ctermbg=none
-hi Cursor       ctermfg=0    ctermbg=14
 hi CursorLine   ctermbg=0    cterm=none
 hi CursorColumn ctermbg=none
+hi ColorColumn	ctermbg=0 " a.k.a column line indicator
+hi NonText      ctermfg=8
 hi LineNr       ctermfg=8    ctermbg=0
 hi CursorLineNr ctermfg=11   ctermbg=8
-hi StatusLine   ctermfg=8    ctermbg=0    cterm=none
+hi StatusLine   ctermfg=none ctermbg=0    cterm=none
 hi StatusLineNC ctermfg=8    ctermbg=0    cterm=none
+hi User1        ctermfg=12
 hi VertSplit    ctermfg=8    ctermbg=0    cterm=none
 hi Visual       ctermfg=0    ctermbg=3
-hi Search       ctermfg=0    ctermbg=11
+hi Search       ctermfg=0    ctermbg=3
 hi IncSearch    ctermfg=0    ctermbg=9
 hi Pmenu        ctermfg=7    ctermbg=8
 hi PmenuSel     ctermfg=0    ctermbg=3
+hi MatchParen   ctermfg=13 ctermbg=none
 
 " Messages and errors
 hi ErrorMsg     ctermfg=15   ctermbg=1
@@ -31,46 +34,46 @@ hi Question     ctermfg=6    ctermbg=0
 
 " Syntax highlighting
 hi Comment      ctermfg=8
-hi Constant     ctermfg=1
-hi String       ctermfg=2
-hi Character    ctermfg=2
-hi Number       ctermfg=1
-hi Boolean      ctermfg=1
-hi Float        ctermfg=1
+hi Constant     ctermfg=none
+hi String       ctermfg=none
+hi Character    ctermfg=none
+hi Number       ctermfg=none
+hi Boolean      ctermfg=none
+hi Float        ctermfg=none
 hi Title	ctermfg=3
 
-hi Identifier   ctermfg=6    cterm=none
-hi Function     ctermfg=4
+hi Identifier   ctermfg=none    cterm=none
+hi Function     ctermfg=none
 
-hi Statement    ctermfg=3    cterm=none
-hi Conditional  ctermfg=3
-hi Repeat       ctermfg=3
-hi Label        ctermfg=3
-hi Operator     ctermfg=7
-hi Keyword      ctermfg=3
-hi Exception    ctermfg=3
+hi Statement    ctermfg=none    cterm=none
+hi Conditional  ctermfg=none
+hi Repeat       ctermfg=none
+hi Label        ctermfg=none
+hi Operator     ctermfg=none
+hi Keyword      ctermfg=none
+hi Exception    ctermfg=none
 
-hi PreProc      ctermfg=5
-hi Include      ctermfg=5
-hi Define       ctermfg=5
-hi Macro        ctermfg=5
-hi PreCondit    ctermfg=5
+hi PreProc      ctermfg=none
+hi Include      ctermfg=none
+hi Define       ctermfg=none
+hi Macro        ctermfg=none
+hi PreCondit    ctermfg=none
 
-hi Type         ctermfg=6    cterm=none
-hi StorageClass ctermfg=6
-hi Structure    ctermfg=6
-hi Typedef      ctermfg=6
+hi Type         ctermfg=none    cterm=none
+hi StorageClass ctermfg=none
+hi Structure    ctermfg=none
+hi Typedef      ctermfg=none
 
-hi Special      ctermfg=13
-hi SpecialChar  ctermfg=13
-hi Tag          ctermfg=13
-hi Delimiter    ctermfg=7
+hi Special      ctermfg=none
+hi SpecialChar  ctermfg=none
+hi Tag          ctermfg=none
+hi Delimiter    ctermfg=none
 hi SpecialComment ctermfg=13
 hi Debug        ctermfg=13
 
 hi Underlined   ctermfg=4    cterm=underline
-hi Error        ctermfg=15   ctermbg=1
-hi Todo         ctermfg=0    ctermbg=11
+hi Error        ctermfg=13   ctermbg=1
+hi Todo         ctermfg=11    ctermbg=none
 
 hi DiffAdd      ctermfg=2    ctermbg=0
 hi DiffChange   ctermfg=3    ctermbg=0

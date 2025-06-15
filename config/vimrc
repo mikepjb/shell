@@ -6,9 +6,31 @@ colorscheme spartan
 set mouse=a
 set nu
 set clipboard=unnamed,unnamedplus
+set noswapfile nobackup undofile
+set undodir='~/.vim/undodir'
+set textwidth=79 colorcolumn=+1
+set ignorecase smartcase
+set nolazyredraw
+set nowrap nospell shortmess+=I
+set tabstop=4 expandtab shiftwidth=4
+set gdefault
+
+set laststatus=2
+set fillchars+=stl:─,stlnc:─,vert:│
+set stl=──\ %#User1#%f%*%<\ (%{&ft})\ %=\ (\ %3l,%3c\,%3p%%\ )
 
 inoremap <C-c> <Esc>
+nnoremap <C-q> :q<CR>
+nnoremap <C-h> <C-w><C-h>
+nnoremap <C-j> <C-w><C-j>
+nnoremap <C-k> <C-w><C-k>
+nnoremap <C-l> <C-w><C-l>
+nnoremap ge :e <C-r>=expand('%:h')<CR>/
+nnoremap gd <C-]>
+nnoremap gD g<C-]>
+nnoremap gr :grep<space>
 nnoremap S <C-^>
+nnoremap <C-g> :noh<CR><C-g>
 
 function! SynGroup()
     let l:s = synID(line('.'), col('.'), 1)
@@ -16,3 +38,5 @@ function! SynGroup()
 endfunc
 
 nnoremap zA :call SynGroup()<CR>
+
+packadd matchit

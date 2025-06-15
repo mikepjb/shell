@@ -1,3 +1,4 @@
 export EDITOR='vim'
-alias vi='vim'
+alias vi='vim' x='tmux attach -t x || tmux new -s x'
+alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 PS1='\W $ '

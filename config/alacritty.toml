@@ -1,3 +1,10 @@
+# -- Keybinds ------------------------------------------------------------------
+
+[env]
+option_as_alt = "Both" # treat option as alt in mac os
+
+# -- Appearance ----------------------------------------------------------------
+
 [font]
 size = 16.0
 
@@ -26,6 +33,9 @@ decorations = "Full"
 background = "#0c0c0c"  # Very dark gray, softer than pure black
 foreground = "#e4e4e4"  # Light gray foreground for readability
 
+[colors.cursor]
+cursor = "#ff00ff"
+
 [colors.normal]
 black = "#0f0f0f"       # Dark gray
 red = "#cc8faa"         # Muted magenta/pink (from bright #ff0080)
@@ -37,7 +47,7 @@ cyan = "#8fcccc"        # Muted cyan (from bright #00ffff)
 white = "#b8b8b8"       # Medium gray
 
 [colors.bright]
-black = "#a8a8a8"       # Invisible gray
+black = "#787878"       # Invisible gray
 red = "#ff0080"         # Error red
 green = "#00ff80"       # Bright green
 yellow = "#ffb300"      # UI amber
