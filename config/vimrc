@@ -1,4 +1,5 @@
 set nocompatible
+filetype plugin on
 syn on
 
 set mouse=a
@@ -15,9 +16,20 @@ set tabstop=4 shiftwidth=4 expandtab autoindent
 set gdefault
 set grepprg=grep\ -rn\ $*\ .
 
-" -- Language -----------------------------------------------------------------
+set wildmenu                    " visual autocomplete for command menu
+set wildmode=longest:full,full  " complete longest common string, then each full match
+set wildignore=*.o,*.obj,*.pyc,*.swp,*.bak,*.class,*/.git/*,*/node_modules/*
+set path+=**                    " search down into subfolders with :find
+set wildcharm=<Tab>
 
-au FileType javascript,typescript,html,css,yaml,json,ruby setlocal ts=2 sw=2
+let g:netrw_liststyle = 3       " tree view
+let g:netrw_banner = 0          " disable banner
+let g:netrw_browse_split = 4    " open in previous window
+
+augroup Base
+    autocmd!
+    autocmd FileType netrw nnoremap <buffer> S <C-^>
+augroup END
 
 " -- Appearance ---------------------------------------------------------------
 colorscheme spartan
@@ -27,6 +39,12 @@ set fillchars+=stl:─,stlnc:─,vert:│
 set stl=──\ %#User1#%f%*%<\ (%{&ft})%m%r%h%w\ %=\ (\ %3l,%3c\,%3p%%\ )
 
 " -- Bindings -----------------------------------------------------------------
+function! Tree()
+    enew | setl bt=nofile bh=hide noswf nonu ro | file tree
+    sil r !tree -a -I .git --gitignore --prune --noreport
+    sil! g/^$/d | norm! gg
+endfunction
+
 inoremap <C-c> <Esc>
 nnoremap <C-g> :noh<CR><C-g>
 nnoremap <C-h> <C-w><C-h>
@@ -34,11 +52,14 @@ nnoremap <C-j> <C-w><C-j>
 nnoremap <C-k> <C-w><C-k>
 nnoremap <C-l> <C-w><C-l>
 nnoremap <C-q> :q<CR>
+nnoremap <space> :find *
 nnoremap Q @q
 nnoremap S <C-^>
 nnoremap gD g<C-]>
+nnoremap gP :call Tree()<CR>
 nnoremap gd <C-]>
 nnoremap ge :e <C-r>=expand('%:h')<CR>/
+nnoremap gi :e ~/.vimrc<CR>
 nnoremap gr :grep<space>
 
 function! SynGroup()
@@ -47,5 +68,9 @@ function! SynGroup()
 endfunc
 
 nnoremap zA :call SynGroup()<CR>
+
+" -- Language -----------------------------------------------------------------
+
+au FileType javascript,typescript,html,css,yaml,json,ruby setlocal ts=2 sw=2
 
 packadd matchit

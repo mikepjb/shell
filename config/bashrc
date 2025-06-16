@@ -4,7 +4,8 @@ go_paths="/usr/local/go/bin:$HOME/go/bin"
 node_paths="$HOME/.config/n/bin:$HOME/.npm/bin"
 mac_paths="/sbin:/opt/homebrew/bin"
 sys_paths="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin"
-export PATH="$go_paths:$node_paths:$mac_paths:$sys_paths"
+user_paths="$HOME/.local/bin"
+export PATH="$user_paths:$go_paths:$node_paths:$mac_paths:$sys_paths"
 
 HISTSIZE=50000
 HISTFILESIZE=50000

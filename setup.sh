@@ -13,5 +13,9 @@ ln -sfv $setup_dir/config/tmux.conf $HOME/.config/tmux/tmux.conf
 ln -sfv $setup_dir/config/gitconfig $HOME/.gitconfig
 ln -sfv $setup_dir/config/gitconfig_loveholidays $HOME/.gitconfig_loveholidays
 
+for f in $setup_dir/bin/*; do
+    echo $f
+done
+
 mkdir -p ~/.vim/colors
 ln -sfv $setup_dir/config/spartan.vim $HOME/.vim/colors/spartan.vim
