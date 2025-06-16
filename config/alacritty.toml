@@ -1,12 +1,14 @@
 # -- Keybinds -----------------------------------------------------------------
 
-[env]
-option_as_alt = "Both" # treat option as alt in mac os
-
 [[keyboard.bindings]]
 action = "ToggleFullscreen"
 key = "Return"
 mods = "Alt"
+
+[window]
+opacity = 0.95
+decorations = "Full"
+option_as_alt = "Both" # treat option as alt in mac os
 
 # -- Appearance ---------------------------------------------------------------
 
@@ -28,10 +30,6 @@ style = "Italic"
 [font.normal]
 family = "Rec Mono Linear"
 style = "Regular"
-
-[window]
-opacity = 0.95
-decorations = "Full"
 
 [colors.primary]
 # Quiet theme with synthwave highlights
