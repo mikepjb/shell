@@ -40,9 +40,16 @@ set stl=──\ %#User1#%f%*%<\ (%{&ft})%m%r%h%w\ %=\ (\ %3l,%3c\,%3p%%\ )
 
 " -- Bindings -----------------------------------------------------------------
 function! Tree()
-    enew | setl bt=nofile bh=hide noswf nonu ro | file tree
+    let tree_buf = bufnr('tree')
+    if tree_buf != -1
+        execute 'buffer' tree_buf
+        setl ma | %delete _
+    else
+        enew | setl bt=nofile bh=hide noswf nonu ro | file tree
+    endif
     sil r !tree -a -I .git --gitignore --prune --noreport
     sil! g/^$/d | norm! gg
+    setl noma
 endfunction
 
 inoremap <C-c> <Esc>
@@ -56,12 +63,15 @@ nnoremap <space> :find *
 nnoremap Q @q
 nnoremap S <C-^>
 nnoremap gD g<C-]>
-nnoremap gP :call Tree()<CR>
+nnoremap <C-u> :call Tree()<CR>
 nnoremap gd <C-]>
 nnoremap ge :e <C-r>=len(expand('%:h')) ? expand('%:h') : getcwd()<CR>/
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :e ~/.tmp-notes<CR> " temp for now, needs a better name/setup
 nnoremap gr :grep<space>
+nnoremap go :copen<CR>
+nnoremap gj :cnext<CR>
+nnoremap gk :cprev<CR>
 
 function! SynGroup()
     let l:s = synID(line('.'), col('.'), 1)
@@ -73,5 +83,10 @@ nnoremap zA :call SynGroup()<CR>
 " -- Language -----------------------------------------------------------------
 
 au FileType javascript,typescript,html,css,yaml,json,ruby setlocal ts=2 sw=2
+
+set tags=./tags
+au FileType go set tags+=~/.tags/go.tags
+au FileType clojure,java set tags+=~/.tags/clojure.tags,~/.tags/java.tags
+au FileType javascript,typescript set tags+=~/.tags/node.tags
 
 packadd matchit

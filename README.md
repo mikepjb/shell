@@ -26,3 +26,8 @@ _A collection of tools I use for development work._
 ## On my radar
 
 - Using the `:g/pattern/command` in vim
+- Using args/argdo/update to apply updates across a project:
+```
+:args **/*.{js,ts,jsx,tsx}
+:argdo %s/console\.log/logger.debug/g | update
+```

@@ -2,7 +2,7 @@
 
 set +e
 
-setup_dir=`dirname `realpath $0``
+setup_dir=`dirname $(realpath $0)`
 local_bin_dir="$HOME/.local/bin"
 
 main() {
@@ -21,7 +21,7 @@ link_files() {
 
     mkdir -p ~/.local/bin
     for f in $setup_dir/bin/*; do
-        lhn -sfv $f `basename $f`
+        ln -sfv $f $local_bin_dir/`basename $f`
     done
 
     mkdir -p ~/.vim/colors
