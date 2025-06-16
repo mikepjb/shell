@@ -1,5 +1,5 @@
 set nocompatible
-filetype plugin on
+filetype plugin indent on
 syn on
 
 set mouse=a
@@ -58,8 +58,9 @@ nnoremap S <C-^>
 nnoremap gD g<C-]>
 nnoremap gP :call Tree()<CR>
 nnoremap gd <C-]>
-nnoremap ge :e <C-r>=expand('%:h')<CR>/
+nnoremap ge :e <C-r>=len(expand('%:h')) ? expand('%:h') : getcwd()<CR>/
 nnoremap gi :e ~/.vimrc<CR>
+nnoremap gn :e ~/.tmp-notes<CR> " temp for now, needs a better name/setup
 nnoremap gr :grep<space>
 
 function! SynGroup()

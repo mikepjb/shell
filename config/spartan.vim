@@ -27,7 +27,7 @@ hi PmenuSel     ctermfg=0    ctermbg=3
 hi MatchParen   ctermfg=13 ctermbg=none
 
 " Messages and errors
-hi ErrorMsg     ctermfg=15   ctermbg=1
+hi ErrorMsg     ctermfg=13   ctermbg=none
 hi WarningMsg   ctermfg=11   ctermbg=0
 hi MoreMsg      ctermfg=2    ctermbg=0
 hi Question     ctermfg=6    ctermbg=0

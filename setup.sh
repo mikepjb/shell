@@ -2,20 +2,30 @@
 
 set +e
 
-setup_dir=$(dirname $(realpath $0))
+setup_dir=`dirname `realpath $0``
+local_bin_dir="$HOME/.local/bin"
 
-echo '. ~/.bashrc' > $HOME/.bash_profile
+main() {
+    link_files
+}
 
-ln -sfv $setup_dir/config/bashrc $HOME/.bashrc
-ln -sfv $setup_dir/config/vimrc $HOME/.vimrc
-ln -sfv $setup_dir/config/alacritty.toml $HOME/.config/alacritty/alacritty.toml
-ln -sfv $setup_dir/config/tmux.conf $HOME/.config/tmux/tmux.conf
-ln -sfv $setup_dir/config/gitconfig $HOME/.gitconfig
-ln -sfv $setup_dir/config/gitconfig_loveholidays $HOME/.gitconfig_loveholidays
+link_files() {
+    echo '. ~/.bashrc' > $HOME/.bash_profile
 
-for f in $setup_dir/bin/*; do
-    echo $f
-done
+    ln -sfv $setup_dir/config/bashrc $HOME/.bashrc
+    ln -sfv $setup_dir/config/vimrc $HOME/.vimrc
+    ln -sfv $setup_dir/config/alacritty.toml $HOME/.config/alacritty/alacritty.toml
+    ln -sfv $setup_dir/config/tmux.conf $HOME/.config/tmux/tmux.conf
+    ln -sfv $setup_dir/config/gitconfig $HOME/.gitconfig
+    ln -sfv $setup_dir/config/gitconfig_loveholidays $HOME/.gitconfig_loveholidays
 
-mkdir -p ~/.vim/colors
-ln -sfv $setup_dir/config/spartan.vim $HOME/.vim/colors/spartan.vim
+    mkdir -p ~/.local/bin
+    for f in $setup_dir/bin/*; do
+        lhn -sfv $f `basename $f`
+    done
+
+    mkdir -p ~/.vim/colors
+    ln -sfv $setup_dir/config/spartan.vim $HOME/.vim/colors/spartan.vim
+}
+
+main
