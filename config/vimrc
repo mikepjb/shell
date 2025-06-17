@@ -3,36 +3,13 @@ set nocompatible
 filetype plugin indent on
 syn on
 
-set hidden nos nobk udf udir=~/.vim/undodir cb=unnamed,unnamedplus " file cfg
-
-" -- Display and Interface ----------------------------------------------------
-set nu
-set mouse=a
-set nowrap nospell
-set shortmess+=I
-set textwidth=79 colorcolumn=+1
-set splitbelow splitright
-set scrolloff=8
-set nolazyredraw
-
-" -- Search and Navigation ----------------------------------------------------
-set hlsearch incsearch ignorecase smartcase wrapscan
-set gdefault                    " global replace by default
-set grepprg=grep\ -rn\ $*\ .
-
-" -- Indentation and Formatting -----------------------------------------------
-set tabstop=4 shiftwidth=4 expandtab autoindent
-set backspace=indent,eol,start  " sane backspacing
-
-" -- Completion and File Discovery --------------------------------------------
-set wildmenu                    " visual autocomplete for command menu
-set wildmode=longest:full,full  " complete longest common string, then each full match
-set wildignore=*.o,*.obj,*.pyc,*.swp,*.bak,*.class,*/.git/*,*/node_modules/*
-set path+=**                    " search down into subfolders with :find
-set wildcharm=<Tab>
-
-" -- Performance and Timing --------------------------------------------------
-set ttimeoutlen=50             " faster escape sequences
+set hid noswf nobk udf udir=~/.vim/undodir cb=unnamed,unnamedplus " file cfg
+set nu mouse=a nowrap nospell shm+=I tw=79 cc=+1 sb spr so=8 nolz " UI
+set hls is ignorecase scs ws gd gp=grep\ -rn\ $*\ . " search
+set ts=4 shiftwidth=4 et ai backspace=indent,eol,start " indentation/formatting
+set wmnu wim=longest:full,full wcm=<Tab> path+=** " completion
+set wig=*.o,*.obj,*.pyc,*.swp,*.bak,*.class,*/.git/*,*/node_modules/*
+set ttm=50 " performance: faster escape sequences
 
 let g:netrw_liststyle = 3       " tree view
 let g:netrw_banner = 0          " disable banner
