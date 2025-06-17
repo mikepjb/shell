@@ -40,7 +40,7 @@ foreground = "#e4e4e4"  # Light gray foreground for readability
 cursor = "#ff00ff"
 
 [colors.normal]
-black = "#0f0f0f"       # Dark gray
+black = "#202020"       # Dark gray
 red = "#cc8faa"         # Muted magenta/pink (from bright #ff0080)
 green = "#8fcc9f"       # Muted green (from bright #00ff80)
 yellow = "#ccb38f"      # Muted amber (from bright #ffb300)

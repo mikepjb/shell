@@ -1,26 +1,38 @@
+" -- Spartan Vim Configuration - flow state (needs better subtitle)
 set nocompatible
 filetype plugin indent on
 syn on
 
-set mouse=a
+set hidden nos nobk udf udir=~/.vim/undodir cb=unnamed,unnamedplus " file cfg
+
+" -- Display and Interface ----------------------------------------------------
 set nu
-set hidden
-set clipboard=unnamed,unnamedplus
-set noswapfile nobackup undofile
-set undodir='~/.vim/undodir'
+set mouse=a
+set nowrap nospell
+set shortmess+=I
 set textwidth=79 colorcolumn=+1
-set ignorecase smartcase
+set splitbelow splitright
+set scrolloff=8
 set nolazyredraw
-set nowrap nospell shortmess+=I
-set tabstop=4 shiftwidth=4 expandtab autoindent
-set gdefault
+
+" -- Search and Navigation ----------------------------------------------------
+set hlsearch incsearch ignorecase smartcase wrapscan
+set gdefault                    " global replace by default
 set grepprg=grep\ -rn\ $*\ .
 
+" -- Indentation and Formatting -----------------------------------------------
+set tabstop=4 shiftwidth=4 expandtab autoindent
+set backspace=indent,eol,start  " sane backspacing
+
+" -- Completion and File Discovery --------------------------------------------
 set wildmenu                    " visual autocomplete for command menu
 set wildmode=longest:full,full  " complete longest common string, then each full match
 set wildignore=*.o,*.obj,*.pyc,*.swp,*.bak,*.class,*/.git/*,*/node_modules/*
 set path+=**                    " search down into subfolders with :find
 set wildcharm=<Tab>
+
+" -- Performance and Timing --------------------------------------------------
+set ttimeoutlen=50             " faster escape sequences
 
 let g:netrw_liststyle = 3       " tree view
 let g:netrw_banner = 0          " disable banner
@@ -52,6 +64,20 @@ function! Tree()
     setl noma
 endfunction
 
+function! Format(fn)
+    cclose
+    cexpr []
+    normal w
+    let l:output = system(a:fn . ' ' . shellescape(expand('%')))
+    if v:shell_error
+        let l:lines = split(l:output, '\n')
+        cexpr l:lines
+        copen
+    else
+        edit!  " Reload formatted file
+    endif
+endfunction
+
 inoremap <C-c> <Esc>
 nnoremap <C-g> :noh<CR><C-g>
 nnoremap <C-h> <C-w><C-h>
@@ -72,6 +98,9 @@ nnoremap gr :grep<space>
 nnoremap go :copen<CR>
 nnoremap gj :cnext<CR>
 nnoremap gk :cprev<CR>
+nnoremap n nzzzv               " center search results
+nnoremap N Nzzzv
+
 
 function! SynGroup()
     let l:s = synID(line('.'), col('.'), 1)
@@ -88,5 +117,14 @@ set tags=./tags
 au FileType go set tags+=~/.tags/go.tags
 au FileType clojure,java set tags+=~/.tags/clojure.tags,~/.tags/java.tags
 au FileType javascript,typescript set tags+=~/.tags/node.tags
+
+autocmd FileType go setlocal formatprg=goimports\ -w
+autocmd FileType templ setlocal formatprg=templ\ fmt\ -w
+
+augroup Formatting
+    autocmd!
+    autocmd FileType go nnoremap <buffer> gF :call Format("goimports -w")<CR>
+    autocmd FileType templ nnoremap <buffer> gF :call Format("templ fmt -w")<CR>
+augroup END
 
 packadd matchit

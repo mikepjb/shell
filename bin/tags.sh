@@ -2,6 +2,8 @@
 
 set +e
 
+# TODO now just generate project tags for now
+
 user_tags_dir="$HOME/.tags"
 user_src_dir="$HOME/src"
 update="false" # update source code before generating tags
@@ -36,6 +38,8 @@ main() {
             exit 1
             ;;
     esac
+
+    ctags -R . # generate local project file
 }
 
 setup_go() {

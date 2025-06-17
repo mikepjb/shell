@@ -13,17 +13,17 @@ hi CursorLine   ctermbg=0    cterm=none
 hi CursorColumn ctermbg=none
 hi ColorColumn	ctermbg=0 " a.k.a column line indicator
 hi NonText      ctermfg=8
-hi LineNr       ctermfg=8    ctermbg=0
+hi LineNr       ctermfg=8    ctermbg=none
 hi CursorLineNr ctermfg=11   ctermbg=8
-hi StatusLine   ctermfg=none ctermbg=0    cterm=none
-hi StatusLineNC ctermfg=8    ctermbg=0    cterm=none
+hi StatusLine   ctermfg=none ctermbg=none    cterm=none
+hi StatusLineNC ctermfg=8    ctermbg=none    cterm=none
 hi User1        ctermfg=12
-hi VertSplit    ctermfg=8    ctermbg=0    cterm=none
-hi Visual       ctermfg=0    ctermbg=3
-hi Search       ctermfg=0    ctermbg=3
-hi IncSearch    ctermfg=0    ctermbg=9
-hi Pmenu        ctermfg=7    ctermbg=8
-hi PmenuSel     ctermfg=0    ctermbg=3
+hi VertSplit    ctermfg=8    ctermbg=none    cterm=none
+hi Visual       ctermfg=0    ctermbg=10
+hi Search       ctermfg=10    ctermbg=none
+hi IncSearch    ctermfg=10    ctermbg=none
+hi Pmenu        ctermfg=14    ctermbg=0
+hi PmenuSel     ctermfg=0    ctermbg=14
 hi MatchParen   ctermfg=13 ctermbg=none
 
 " Messages and errors
