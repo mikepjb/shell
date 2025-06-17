@@ -1,5 +1,11 @@
 # Bash Configuration
 
+# Won't work as PS1 hasn't been set, is there a more reliable way to
+# detect we are using an interactive terminal?
+if command -v tmux &> /dev/null && [ -n "$PS1" ] && [ -z "$TMUX" ]; then
+  exec tmux new-session -A -s main
+fi
+
 # -- Environment --------------------------------------------------------------
 # Mac OS likes to think bash is going out of fashion.
 export BASH_SILENCE_DEPRECATION_WARNING=1
