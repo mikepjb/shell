@@ -23,8 +23,7 @@ augroup END
 " -- Appearance ---------------------------------------------------------------
 colorscheme spartan
 
-set laststatus=2
-set fillchars+=stl:─,stlnc:─,vert:│
+set ls=2 fcs+=stl:─,stlnc:─,vert:│
 set stl=──\ %#User1#%f%*%<\ (%{&ft})%m%r%h%w\ %=\ (\ %3l,%3c\,%3p%%\ )
 
 " -- Bindings -----------------------------------------------------------------
