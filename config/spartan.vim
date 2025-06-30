@@ -72,8 +72,8 @@ hi SpecialComment ctermfg=13
 hi Debug        ctermfg=13
 
 hi Underlined   ctermfg=4    cterm=underline
-hi Error        ctermfg=13   ctermbg=1
-hi Todo         ctermfg=11    ctermbg=none
+hi Error        ctermfg=none ctermbg=none " e.g Not Error but Bash $( escaping
+hi Todo         ctermfg=11   ctermbg=none
 
 hi Added        ctermfg=2    ctermbg=0
 hi Removed      ctermfg=1    ctermbg=0

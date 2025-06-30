@@ -1,106 +1,75 @@
-" -- Spartan Vim Configuration - flow state (needs better subtitle)
-set nocompatible
-filetype plugin indent on
-syn on
-
-set hid noswf nobk udf udir=~/.vim/undodir cb=unnamed,unnamedplus " file cfg
-set nu mouse=a nowrap nospell shm+=I tw=79 cc=+1 sb spr so=8 nolz " UI
-set hls is ignorecase scs ws gd gp=grep\ -rn\ $*\ . " search
-set ts=4 shiftwidth=4 et ai backspace=indent,eol,start " indentation/formatting
-set wmnu wim=longest:full,full wcm=<Tab> path+=** " completion
-set wig=*.o,*.obj,*.pyc,*.swp,*.bak,*.class,*/.git/*,*/node_modules/*
-set ttm=50 " performance: faster escape sequences
-
-let g:netrw_liststyle = 3       " tree view
-let g:netrw_banner = 0          " disable banner
-let g:netrw_browse_split = 4    " open in previous window
-
-augroup Base
-    autocmd!
-    autocmd FileType netrw nnoremap <buffer> S <C-^>
-augroup END
+" -- Spartan Vim Configuration - minimal setup for focused development
+set nocompatible | filetype plugin indent on | syn on
+set hid noswf nobk udf udir=~/.vim/undodir cb=unnamed,unnamedplus
+set nu mouse=a nowrap nospell shm+=I tw=79 cc=+1 sb spr so=8 nolz
+set hls is ignorecase scs ws gd gp=grep\ -rn\ $*\ . ts=2 sw=2 et ai
+set backspace=indent,eol,start wmnu wim=longest:full,full wcm=<Tab> path+=**
+set ttm=50 wig=*.o,*.obj,*.pyc,*.swp,*.bak,*.class,*/.git/*,*/node_modules/*
+let g:netrw_liststyle=3 | let g:netrw_banner=0 | let g:netrw_browse_split=4
+au FileType netrw nno <buffer> S <C-^> | au FileType go setl ts=4 sw=4
 
 " -- Appearance ---------------------------------------------------------------
-colorscheme spartan
-
-set ls=2 fcs+=stl:─,stlnc:─,vert:│
+colorscheme spartan | set ls=2 fcs+=stl:─,stlnc:─,vert:│
 set stl=──\ %#User1#%f%*%<\ (%{&ft})%m%r%h%w\ %=\ (\ %3l,%3c\,%3p%%\ )
 
+" -- Functions ----------------------------------------------------------------
+fun! Tree()
+  let tree_buf = bufnr('tree')
+  if tree_buf != -1 | exe 'buffer' tree_buf | setl ma | %delete _
+  else | enew | setl bt=nofile bh=hide noswf nonu ro | file tree | endif
+  sil r !tree -a -I .git --gitignore --prune --noreport
+  sil! g/^$/d | norm! gg | setl noma
+endfun
+
+fun! Format(fn)
+  cclose | cexpr [] | normal w
+  let l:output = system(a:fn . ' ' . shellescape(expand('%')))
+  if v:shell_error | let l:lines = split(l:output, '\n') | cexpr l:lines | copen
+  else | edit! | endif
+endfun
+
+fun! SynGroup()
+  let l:s = synID(line('.'), col('.'), 1)
+  echo synIDattr(l:s, 'name') . ' -> ' . synIDattr(synIDtrans(l:s), 'name')
+endfun
+
+fun! s:SendTextToRepl(text)
+  if empty(a:text) | return | endif
+  let escaped = substitute(a:text, '"', '\\"', 'g')
+  let cmd = 'if tmux list-windows | grep -q "^99:"; then tmux send-keys'
+        \ . ' -t 99 "' . escaped . '" Enter; elif [ $(tmux display-message'
+        \ . ' -p "#{window_panes}") -eq 2 ]; then tmux send-keys -t 2 "'
+        \ . escaped . '" Enter; fi'
+  call system(cmd)
+endfun
+
+fun! SendToRepl() range
+  call s:SendTextToRepl(join(getline(a:firstline, a:lastline), "\n"))
+endfun
+
+fun! PromptAndSendToRepl()
+  call s:SendTextToRepl(input("=> "))
+endfun
+
 " -- Bindings -----------------------------------------------------------------
-function! Tree()
-    let tree_buf = bufnr('tree')
-    if tree_buf != -1
-        execute 'buffer' tree_buf
-        setl ma | %delete _
-    else
-        enew | setl bt=nofile bh=hide noswf nonu ro | file tree
-    endif
-    sil r !tree -a -I .git --gitignore --prune --noreport
-    sil! g/^$/d | norm! gg
-    setl noma
-endfunction
-
-function! Format(fn)
-    cclose
-    cexpr []
-    normal w
-    let l:output = system(a:fn . ' ' . shellescape(expand('%')))
-    if v:shell_error
-        let l:lines = split(l:output, '\n')
-        cexpr l:lines
-        copen
-    else
-        edit!  " Reload formatted file
-    endif
-endfunction
-
-inoremap <C-c> <Esc>
-nnoremap <C-g> :noh<CR><C-g>
-nnoremap <C-h> <C-w><C-h>
-nnoremap <C-j> <C-w><C-j>
-nnoremap <C-k> <C-w><C-k>
-nnoremap <C-l> <C-w><C-l>
-nnoremap <C-q> :q<CR>
-nnoremap <space> :find *
-nnoremap Q @q
-nnoremap S <C-^>
-nnoremap gD g<C-]>
-nnoremap <C-u> :call Tree()<CR>
-nnoremap gd <C-]>
-nnoremap ge :e <C-r>=len(expand('%:h')) ? expand('%:h') : getcwd()<CR>/
-nnoremap gi :e ~/.vimrc<CR>
-nnoremap gn :e ~/.tmp-notes<CR> " temp for now, needs a better name/setup
-nnoremap gr :grep<space>
-nnoremap go :copen<CR>
-nnoremap gj :cnext<CR>
-nnoremap gk :cprev<CR>
-nnoremap n nzzzv               " center search results
-nnoremap N Nzzzv
-
-
-function! SynGroup()
-    let l:s = synID(line('.'), col('.'), 1)
-    echo synIDattr(l:s, 'name') . ' -> ' . synIDattr(synIDtrans(l:s), 'name')
-endfunc
-
-nnoremap zA :call SynGroup()<CR>
+ino <C-c> <Esc> | nno <C-g> :noh<CR><C-g> | nno <C-h> <C-w><C-h>
+nno <C-j> <C-w><C-j> | nno <C-k> <C-w><C-k> | nno <C-l> <C-w><C-l>
+nno <C-q> :q<CR> | nno <space> :find *
+nno Q @q | nno S <C-^>
+nno gD g<C-]> | nno <C-u> :call Tree()<CR> | nno gd <C-]>
+nno ge :e <C-r>=len(expand('%:h')) ? expand('%:h') : getcwd()<CR>/
+nno gi :e ~/.vimrc<CR> | nno gn :e ~/.tmp-notes<CR> | nno gr :grep<space>
+nno go :copen<CR> | nno gj :cnext<CR> | nno gk :cprev<CR>
+nno zA :call SynGroup()<CR> | vno cr :call SendToRepl()<CR>
+nno cR :call PromptAndSendToRepl()<CR>
 
 " -- Language -----------------------------------------------------------------
-
-au FileType javascript,typescript,html,css,yaml,json,ruby setlocal ts=2 sw=2
-
-set tags=./tags
-au FileType go set tags+=~/.tags/go.tags
+au! | au FileType javascript,typescript,html,css,yaml,json,ruby setl ts=2 sw=2
+set tags=./tags | au FileType go set tags+=~/.tags/go.tags
 au FileType clojure,java set tags+=~/.tags/clojure.tags,~/.tags/java.tags
 au FileType javascript,typescript set tags+=~/.tags/node.tags
-
-autocmd FileType go setlocal formatprg=goimports\ -w
-autocmd FileType templ setlocal formatprg=templ\ fmt\ -w
-
-augroup Formatting
-    autocmd!
-    autocmd FileType go nnoremap <buffer> gF :call Format("goimports -w")<CR>
-    autocmd FileType templ nnoremap <buffer> gF :call Format("templ fmt -w")<CR>
-augroup END
-
+au FileType go setl formatprg=goimports\ -w
+au FileType templ setl formatprg=templ\ fmt\ -w
+au FileType go nno <buffer> gF :call Format("goimports -w")<CR>
+au FileType templ nno <buffer> gF :call Format("templ fmt -w")<CR>
 packadd matchit

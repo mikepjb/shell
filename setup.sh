@@ -12,6 +12,8 @@ main() {
 link_files() {
     echo '. ~/.bashrc' > $HOME/.bash_profile
 
+    mkdir -p ~/.config/nvim
+    ln -sfv $setup_dir/config/init.lua $HOME/.config/nvim/init.lua
     ln -sfv $setup_dir/config/bashrc $HOME/.bashrc
     ln -sfv $setup_dir/config/vimrc $HOME/.vimrc
     ln -sfv $setup_dir/config/alacritty.toml $HOME/.config/alacritty/alacritty.toml
