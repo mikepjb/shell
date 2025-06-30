@@ -64,12 +64,18 @@ nno zA :call SynGroup()<CR> | vno cr :call SendToRepl()<CR>
 nno cR :call PromptAndSendToRepl()<CR>
 
 " -- Language -----------------------------------------------------------------
-au! | au FileType javascript,typescript,html,css,yaml,json,ruby setl ts=2 sw=2
-set tags=./tags | au FileType go set tags+=~/.tags/go.tags
-au FileType clojure,java set tags+=~/.tags/clojure.tags,~/.tags/java.tags
-au FileType javascript,typescript set tags+=~/.tags/node.tags
-au FileType go setl formatprg=goimports\ -w
-au FileType templ setl formatprg=templ\ fmt\ -w
-au FileType go nno <buffer> gF :call Format("goimports -w")<CR>
-au FileType templ nno <buffer> gF :call Format("templ fmt -w")<CR>
+set tags=./tags
+augroup SpartanConfig
+  au!
+  au FileType netrw nno <buffer> S <C-^> 
+  au FileType go setl ts=4 sw=4
+  au FileType javascript,typescript,html,css,yaml,json,ruby setl ts=2 sw=2
+  au FileType go set tags+=~/.tags/go.tags
+  au FileType clojure,java set tags+=~/.tags/clojure.tags,~/.tags/java.tags
+  au FileType javascript,typescript set tags+=~/.tags/node.tags
+  au FileType go setl formatprg=goimports\ -w
+  au FileType templ setl formatprg=templ\ fmt\ -w
+  au FileType go nno <buffer> gF :call Format("goimports -w")<CR>
+  au FileType templ nno <buffer> gF :call Format("templ fmt -w")<CR>
+augroup END
 packadd matchit

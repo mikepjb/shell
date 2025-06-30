@@ -28,6 +28,11 @@ alias vi='vim'
 alias x='tmux attach -t x || tmux new -s x'
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 
+vc() {
+    [[ -f "$1" ]] || { echo "File not found: $1"; return 1; }
+    sed 's/,,/, ,/g; s/,,/, ,/g; s/,,/, ,/g' "$1" | column -s, -t | less -S
+}
+
 [[ -f $HOME/.bashrc.local ]] && . $HOME/.bashrc.local
 
 if [[ $- == *i* ]] && command -v tmux >/dev/null 2>&1 && [[ -z "$TMUX" ]]; then

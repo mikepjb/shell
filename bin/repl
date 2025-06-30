@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+#
+# A script to manage REPL/interactive processes alongside vim using tmux.
+# This is intended to be bound to M-k (or your preferred keybinding) and create
+# a new pane if a REPL pane doesn't exist, or hide it in another window if it
+# does in the current window. Finally if a REPL pane does exist in another
+# window it will pull that into the current tmux window.
+#
+# The result is that you can work in vim and pull in/out a REPL process to
+# interact with (or view fullscreen in the other window when pulled out). We
+# also name the REPL pane "repl" so it is easy to send content there from vim
+# to execute sexps/arbitrary text.
+
+set -e
+
+repl_window=99
+width_threshold=160
+horizontal_size=80
+vertical_size=25
+repl_name="repl"
+
+window_width=$(tmux display-message -p "#{window_width}")
+window_panes=$(tmux display-message -p "#{window_panes}")
+
+find_repl_pane() {
+    tmux list-panes -F "#{pane_id}:#{pane_title}" | while read pane_info; do
+        pane_id="${pane_info%:*}"
+        pane_title="${pane_info#*:}"
+        if [ "$pane_title" = "repl" ]; then
+            echo "$pane_id"
+            break
+        fi
+    done
+}
+
+if [ $window_panes -eq 1 ]; then
+    if tmux list-windows | grep -q "^$repl_window:"; then
+        # Restoring REPL pane
+        if [ $window_width -ge $width_threshold ]; then
+            tmux join-pane -h -l $horizontal_size -s $repl_window
+        else
+            tmux join-pane -v -l $vertical_size -s $repl_window
+        fi
+    else
+        Creating REPL pane
+        if [ $window_width -ge $width_threshold ]; then
+            tmux split-window -h -l $horizontal_size \; select-pane -T repl
+        else
+            tmux split-window -v -l $vertical_size \; select-pane -T repl
+        fi
+    fi
+else
+    # Multiple panes - find and hide REPL pane
+    repl_pane=$(find_repl_pane)
+    if [ -n "$repl_pane" ]; then
+        # Hiding REPL pane
+        # Kill parking window if it exists (expected to sometimes fail)
+        tmux kill-window -t $repl_window 2>/dev/null || true
+        tmux break-pane -d -s "$repl_pane" -t $repl_window
+        tmux select-pane -t 1
+    else
+        tmux display "No REPL pane found in current window"
+    fi
+fi
