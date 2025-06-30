@@ -3,7 +3,7 @@ set nocompatible | filetype plugin indent on | syn on
 set hid noswf nobk udf udir=~/.vim/undodir cb=unnamed,unnamedplus
 set nu mouse=a nowrap nospell shm+=I tw=79 cc=+1 sb spr so=8 nolz
 set hls is ignorecase scs ws gd gp=grep\ -rn\ $*\ . ts=2 sw=2 et ai
-set backspace=indent,eol,start wmnu wim=longest:full,full wcm=<Tab> path+=**
+set backspace=indent,eol,start wmnu wim=longest:full,full wcm=<Tab> path=**
 set ttm=50 wig=*.o,*.obj,*.pyc,*.swp,*.bak,*.class,*/.git/*,*/node_modules/*
 let g:netrw_liststyle=3 | let g:netrw_banner=0 | let g:netrw_browse_split=4
 au FileType netrw nno <buffer> S <C-^> | au FileType go setl ts=4 sw=4
@@ -18,7 +18,9 @@ fun! Tree()
   if tree_buf != -1 | exe 'buffer' tree_buf | setl ma | %delete _
   else | enew | setl bt=nofile bh=hide noswf nonu ro | file tree | endif
   sil r !tree -a -I .git --gitignore --prune --noreport
-  sil! g/^$/d | norm! gg | setl noma
+  sil! g/^$/d
+  norm! gg
+  setl noma
 endfun
 
 fun! Format(fn)
@@ -51,10 +53,21 @@ fun! PromptAndSendToRepl()
   call s:SendTextToRepl(input("=> "))
 endfun
 
+function! FuzzyFind()
+    let result = system('find . -type f -not -path "*/.git/*" -not -path "*/node_modules/*" -not -path "*/target/*" | fuzzy.sh')
+    let result = substitute(result, '\n$', '', '')
+    redraw!  " Force complete redraw
+    if !empty(result)
+        execute 'edit ' . fnameescape(result)
+    endif
+endfunction
+command! Fuzzy call FuzzyFind()
+
 " -- Bindings -----------------------------------------------------------------
 ino <C-c> <Esc> | nno <C-g> :noh<CR><C-g> | nno <C-h> <C-w><C-h>
 nno <C-j> <C-w><C-j> | nno <C-k> <C-w><C-k> | nno <C-l> <C-w><C-l>
-nno <C-q> :q<CR> | nno <space> :find *
+nno <C-q> :q<CR>
+nno Y y$
 nno Q @q | nno S <C-^>
 nno gD g<C-]> | nno <C-u> :call Tree()<CR> | nno gd <C-]>
 nno ge :e <C-r>=len(expand('%:h')) ? expand('%:h') : getcwd()<CR>/
@@ -62,7 +75,9 @@ nno gi :e ~/.vimrc<CR> | nno gn :e ~/.tmp-notes<CR> | nno gr :grep<space>
 nno go :copen<CR> | nno gj :cnext<CR> | nno gk :cprev<CR>
 nno zA :call SynGroup()<CR> | vno cr :call SendToRepl()<CR>
 nno cR :call PromptAndSendToRepl()<CR>
+nno <space> :find *
 
+command! TrimWhitespace %s/\s\+$//e
 " -- Language -----------------------------------------------------------------
 set tags=./tags
 augroup SpartanConfig
