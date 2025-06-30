@@ -15,12 +15,14 @@ set -e
 
 repl_window=99
 width_threshold=160
-horizontal_size=80
-vertical_size=25
 repl_name="repl"
 
+window_height=$(tmux display-message -p "#{window_height}")
 window_width=$(tmux display-message -p "#{window_width}")
 window_panes=$(tmux display-message -p "#{window_panes}")
+
+horizontal_size=80
+vertical_size=$(( $window_height / 3 ))
 
 find_repl_pane() {
     tmux list-panes -F "#{pane_id}:#{pane_title}" | while read pane_info; do
