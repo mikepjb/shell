@@ -4,6 +4,7 @@ set hid noswf nobk udf udir=~/.vim/undodir cb=unnamed,unnamedplus
 set nu mouse=a nowrap nospell shm+=I tw=79 cc=+1 sb spr so=8 nolz
 set hls is ignorecase scs ws gd gp=grep\ -rn\ $*\ . ts=2 sw=2 et ai
 set backspace=indent,eol,start wmnu wim=longest:full,full wcm=<Tab> path=**
+set wildoptions=pum,fuzzy
 set ttm=50 wig=*.o,*.obj,*.pyc,*.swp,*.bak,*.class,*/.git/*,*/node_modules/*
 let g:netrw_liststyle=3 | let g:netrw_banner=0 | let g:netrw_browse_split=4
 au FileType netrw nno <buffer> S <C-^> | au FileType go setl ts=4 sw=4
@@ -49,6 +50,10 @@ fun! SendToRepl() range
   call s:SendTextToRepl(join(getline(a:firstline, a:lastline), "\n"))
 endfun
 
+fun! SendBufferToRepl() range
+  call s:SendTextToRepl(join(getline(1, line('$')), "\n"))
+endfun
+
 fun! PromptAndSendToRepl()
   call s:SendTextToRepl(input("=> "))
 endfun
@@ -73,8 +78,10 @@ nno gD g<C-]> | nno <C-u> :call Tree()<CR> | nno gd <C-]>
 nno ge :e <C-r>=len(expand('%:h')) ? expand('%:h') : getcwd()<CR>/
 nno gi :e ~/.vimrc<CR> | nno gn :e ~/.tmp-notes<CR> | nno gr :grep<space>
 nno go :copen<CR> | nno gj :cnext<CR> | nno gk :cprev<CR>
-nno zA :call SynGroup()<CR> | vno cr :call SendToRepl()<CR>
-nno cR :call PromptAndSendToRepl()<CR>
+nno zA :call SynGroup()<CR>
+vno gs :call SendToRepl()<CR>
+nno gS :call SendBufferToRepl()<CR>
+nno cqp :call PromptAndSendToRepl()<CR>
 nno <space> :find *
 
 command! TrimWhitespace %s/\s\+$//e

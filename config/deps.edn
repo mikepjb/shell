@@ -1,0 +1,3 @@
+;; User level Clojure config
+{:aliases
+ {:repl {:main-opts ["-e" "(require '[clojure.repl :refer [doc source]])" "-r"]}}}

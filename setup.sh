@@ -21,6 +21,9 @@ link_files() {
     ln -sfv $setup_dir/config/gitconfig $HOME/.gitconfig
     ln -sfv $setup_dir/config/gitconfig_loveholidays $HOME/.gitconfig_loveholidays
 
+    mkdir -p ~/.clojure
+    ln -sfv $setup_dir/config/deps.edn $HOME/.clojure/deps.edn
+
     mkdir -p ~/.local/bin
     for f in $setup_dir/bin/*; do
         ln -sfv $f $local_bin_dir/`basename $f`
