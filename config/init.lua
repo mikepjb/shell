@@ -2,6 +2,19 @@
 -- TODO grep in vim? we used to have :Grep? regular :grep?
 -- TODO 2 the default (go/java is 4 exception?) we have a lot of 2s currently
 -- TODO consolidate notes and finally have a repo again.
+--
+-- # Run a specific test class
+-- mvn test -Dtest=TestClassName
+-- 
+-- # Run a specific test method
+-- mvn test -Dtest=TestClassName#testMethodName
+-- 
+-- # Run multiple test classes with wildcards
+-- mvn test -Dtest=**/*IntegrationTest
+-- 
+-- # Run tests in a specific package
+-- mvn test -Dtest=com.example.package.*Test
+--
 -- Core?
 vim.opt.clipboard:append({ "unnamedplus" }) -- integrate with system clipboard
 
