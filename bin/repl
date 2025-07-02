@@ -46,9 +46,11 @@ if [ $window_panes -eq 1 ]; then
     else
         # Creating REPL pane
         if [ $window_width -ge $width_threshold ]; then
-            tmux split-window -h -l $horizontal_size \; select-pane -T repl
+            tmux split-window -h -c "#{pane_current_path}" \
+                -l $horizontal_size \; select-pane -T repl
         else
-            tmux split-window -v -l $vertical_size \; select-pane -T repl
+            tmux split-window -v -c "#{pane_current_path}" \
+                -l $vertical_size \; select-pane -T repl
         fi
     fi
 else
