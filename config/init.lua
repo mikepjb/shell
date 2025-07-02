@@ -15,6 +15,20 @@
 -- # Run tests in a specific package
 -- mvn test -Dtest=com.example.package.*Test
 --
+-- gradle test --tests TestClassName
+-- 
+-- # Run a specific test method  
+-- gradle test --tests TestClassName.testMethodName
+-- 
+-- # Run tests with wildcards
+-- gradle test --tests "*IntegrationTest"
+-- 
+-- # Run tests in a specific package
+-- gradle test --tests "com.example.package.*"
+-- 
+-- # Using gradlew (wrapper)
+-- ./gradlew test --tests TestClassName
+--
 -- Core?
 vim.opt.clipboard:append({ "unnamedplus" }) -- integrate with system clipboard
 
