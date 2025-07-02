@@ -1,34 +1,16 @@
--- TODO need TODO highlight
--- TODO grep in vim? we used to have :Grep? regular :grep?
--- TODO 2 the default (go/java is 4 exception?) we have a lot of 2s currently
--- TODO consolidate notes and finally have a repo again.
+-- TODO j/k warning? that helped a lot I think, worth trying again.
 --
 -- # Run a specific test class
 -- mvn test -Dtest=TestClassName
--- 
--- # Run a specific test method
--- mvn test -Dtest=TestClassName#testMethodName
--- 
--- # Run multiple test classes with wildcards
--- mvn test -Dtest=**/*IntegrationTest
--- 
 -- # Run tests in a specific package
 -- mvn test -Dtest=com.example.package.*Test
 --
 -- gradle test --tests TestClassName
--- 
--- # Run a specific test method  
--- gradle test --tests TestClassName.testMethodName
--- 
--- # Run tests with wildcards
--- gradle test --tests "*IntegrationTest"
--- 
 -- # Run tests in a specific package
 -- gradle test --tests "com.example.package.*"
--- 
 -- # Using gradlew (wrapper)
 -- ./gradlew test --tests TestClassName
---
+
 -- Core?
 vim.opt.clipboard:append({ "unnamedplus" }) -- integrate with system clipboard
 
@@ -140,7 +122,10 @@ end
 -- TODO if there is no repl buffer, cqp will still take your prompt but there
 -- will be no feedback, no error saying there isn't a REPL LOL we want a
 -- message before the prompt is even presented
-local function send_text_to_repl(text)
+-- We actually want to do this to check before prompt:
+-- tmux list-panes -a -F "#{pane_id}:#{pane_title}" | grep ":repl"
+-- probably want to throw error message in tmux_send for the other 2 fns
+local function tmux_send(text)
     if text == '' or text == nil then
         return
     end
@@ -156,27 +141,25 @@ local function send_text_to_repl(text)
     vim.fn.system(cmd)
 end
 
-local function send_to_repl(start_line, end_line)
+local function tmux_send_visual(start_line, end_line)
     start_line = start_line or vim.fn.line('.')
     end_line = end_line or start_line
 
     local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
     local text = table.concat(lines, '\n')
-    send_text_to_repl(text)
+    tmux_send(text)
 end
 
-local function send_buffer_to_repl()
+local function tmux_send_buffer()
     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
     local text = table.concat(lines, '\n')
-    send_text_to_repl(text)
+    tmux_send(text)
 end
 
-local function prompt_and_send_to_repl()
+local function tmux_send_prompt()
     local text = vim.fn.input('=> ')
-    send_text_to_repl(text)
+    tmux_send(text)
 end
-
--- TODO also need send to
 
 local base = vim.api.nvim_create_augroup('Base', { clear = true })
 local vol = vim.opt_local
@@ -187,6 +170,10 @@ local autocmds = {
         "json", "javascriptreact", "typescriptreact",
         "html", "yaml", "ruby"
     }, function() vol.shiftwidth, vol.tabstop, vol.softtabstop = 2, 2, 2 end},
+    {"FileType", {"csv", "json", "xml"}, function() 
+        vol.textwidth = 0  -- Disable line wrapping for data files
+        vol.wrap = false
+    end},
     {"FileType", "markdown", function()
         vol.nu, vol.wrap, vol.linebreak, vol.textwidth = false, true, true, 65
     end},
@@ -205,14 +192,6 @@ local autocmds = {
         vim.keymap.set("n", "j", "j<CR><C-w>p", { buffer = true })
         vim.keymap.set("n", "k", "k<CR><C-w>p", { buffer = true })
     end},
-    {"FileType", "netrw", function()
-        vim.keymap.set("n", "S", "<C-^>", { noremap = true, buffer = true })
-        vim.keymap.set("n", "Q", ":b#<bar>bd #<CR>", { noremap = true, silent = true })
-        vim.keymap.set("n", "gp", ":call feedkeys(':tabnew<space>~/src/<tab>', 't')<CR>", { buffer = true })
-        if vim.b.netrw_curdir then
-            vim.cmd('tcd ' .. vim.fn.fnameescape(vim.b.netrw_curdir))
-        end
-    end},
     {'BufWritePre', '*', function()
         local dir = vim.fn.expand('<afile>:p:h')
         if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, 'p') end
@@ -227,23 +206,29 @@ vim.api.nvim_create_autocmd("QuickFixCmdPost", { -- open quickfix if there are r
     group = base, pattern = { "[^l]*" }, command = "cwindow"
 })
 
+vim.api.nvim_create_user_command('Grep', function(opts)
+    vim.cmd('silent! grep!' .. opts.args)
+    vim.cmd('redraw!')  -- clear any lingering output
+    local qflist = vim.fn.getqflist()
+    if #qflist > 0 then vim.cmd('copen | cfirst | wincmd j')
+    else print("No matches found") end
+end, { nargs = '+' })
+
 -- TODO readline M-d/f/b on the command/ex mode line
 local keymaps = {
     {"c", "<C-a>", "<S-Left>"}, -- more portable opt than s-left?
-    -- TODO C-d in insert mode pls.
     {"n", "<C-h>", "<C-w><C-h>"}, {"n", "<C-j>", "<C-w><C-j>"},
     {"n", "<C-k>", "<C-w><C-k>"}, {"n", "<C-l>", "<C-w><C-l>"},
     {"n", "<C-q>", ":q<CR>"},     {"n", "<C-g>", ":noh<CR><C-g>"},
     {"i", "<C-l>", " => "},       {"i", "<C-u>", " -> "},
     {"i", "<C-c>", "<Esc>"},      {"n", "S", "<C-^>"},
-    {"n", "gE", ":Explore<CR>"},  -- {"n", "gs", ":Grep "},
+    {"i", "<C-d>", "<Del>"},
     {"n", "<M-u>", tree},
     {"n", "<M-q>", ":Inspect<CR>"},
     {"n", "Q", "@q"},
-    {"n", "cqp", prompt_and_send_to_repl},
-    {"v", "gs", send_text_to_repl},
-    {"n", "gS", send_buffer_to_repl},
-    -- TODO M-s save in insert and normal mode? necessary?
+    {"n", "cqp", tmux_send_prompt},
+    {"v", "gp", tmux_send_visual},
+    {"n", "gp", tmux_send_buffer},
     {"n", "gd", "<C-]>"},           -- go to definition
     {"n", "gD", "g<C-]>"},          -- choose which definition to go to
     {"t", "<C-g>", "<C-\\><C-n>"},
@@ -251,7 +236,13 @@ local keymaps = {
     {"n", "gn", ":e ~/.tmp-notes<CR>"},
     {"n", "gN", ":tabnew ~/.notes/index.md<CR>"},
     {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
-    {"n", "gp", ":call feedkeys(':tabnew<space>~/src/<tab>', 't')<CR>"},
+    {"n", "<M-n>", ":cnext<CR>"},
+    {"n", "<M-p>", ":cprev<CR>"},
+    {"n", "gl", function()
+        local qf_winid = vim.fn.getqflist({winid = 0}).winid
+        vim.cmd(qf_winid ~= 0 and 'cclose' or 'copen')
+    end},
+    {"n", "gs", ":Grep "},
     {"n", "gS", function() vim.cmd(":Grep -w " .. vim.fn.expand("<cword>")) end},
     {'n', 'ge', function()
         local current_dir = vim.fn.expand('%:p:h')
@@ -260,11 +251,6 @@ local keymaps = {
         vim.api.nvim_feedkeys(input_cmd, 'n', true)
     end, { desc = 'Create/edit file relative to current buffer' }},
 } for _, km in ipairs(keymaps) do vim.keymap.set(km[1], km[2], km[3]) end
-
--- TODO autocmd, disable textwidth for csv/json/data files.
--- TODO go should be 4 OR js/html etc should be 2 depending on your default
--- TODO style!!
--- TODO j/k warning? that helped a lot I think, worth trying again.
 
 vim.api.nvim_create_user_command('TrimWhitespace', function()
     vim.cmd '%s/\\s\\+$//e'
