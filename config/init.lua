@@ -1,20 +1,10 @@
--- TODO j/k warning? that helped a lot I think, worth trying again.
---
--- # Run a specific test class
--- mvn test -Dtest=TestClassName
--- # Run tests in a specific package
--- mvn test -Dtest=com.example.package.*Test
---
--- gradle test --tests TestClassName
--- # Run tests in a specific package
--- gradle test --tests "com.example.package.*"
--- # Using gradlew (wrapper)
--- ./gradlew test --tests TestClassName
+-- Spartan Neovim -------------------------------------------------------------
+-- dat? what other "text block" options do we have? da( etc ":h text-objects"
 
--- Core?
+-- Core Settings
 vim.opt.clipboard:append({ "unnamedplus" }) -- integrate with system clipboard
 
--- Buffer
+-- Buffer Settings
 vim.opt.number = true
 vim.opt.wrap = false
 vim.opt.textwidth = 79
@@ -24,13 +14,13 @@ vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.smartindent = true
 
--- Backup (better name?)
+-- History Settings
 vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.undofile = true
 vim.opt.undodir = os.getenv("HOME") .. "/.config/nvim/undodir"
 
--- UI?
+-- User Interface Settings
 vim.opt.guicursor = ""
 vim.opt.shortmess:append("I")
 vim.opt.splitbelow = true
@@ -40,7 +30,7 @@ vim.opt.fillchars = "stl:─,stlnc:─,vert:│"
 vim.opt.statusline = "── %#User1#%f%*%< (%{&ft})%m%r%h%w %= ( %3l,%3c,%3p%% )"
 vim.opt.termguicolors = os.getenv("COLORTERM") == 'truecolor'
 
--- Search
+-- Search Settings
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.gdefault = true
@@ -52,21 +42,36 @@ if vim.fn.executable("rg") == 1 then
     vim.opt.grepprg, vim.opt.grepformat = "rg --vimgrep", "%f:%l:%c:%m"
 end
 
--- Misc (sort these!)
+-- Language Settings
 vim.g.markdown_fenced_languages = { 'typescript', 'javascript', 'bash', 'go' }
 vim.g.omni_sql_no_default_maps = 1 -- don't use C-c for autocompletion in SQL.
 
 
 -- Functions ------------------------------------------------------------------
 local function ogtree()
-    local tbuf = vim.api.nvim_create_buf(true, false)
-    vim.api.nvim_set_current_buf(tbuf)
-    vim.api.nvim_buf_set_name("tree")
-  -- execute tree
-  -- include the results there
-  -- but not if tree buffer already exists, just reuse/refresh the buffer with
-  -- another tree call
-  print("hello")
+    local tree_buf = vim.fn.bufnr('tree')
+
+    if tree_buf ~= -1 then
+        tree_buf = vim.api.nvim_create_buf(true, false)
+    end
+    local opts = {scope = 'local', buf = tree_buf}
+    local tree_opts = {
+        {'modifiable', true, opts}, -- do we need this?
+        {'buftype', 'nofile', opts},
+        {'bufhidden', 'hide', opts},
+    }
+    for _, o in ipairs(tree_opts) do
+        vim.api.nvim_set_option_value(o[1], o[2], o[3])
+    end
+    vim.api.nvim_buf_set_lines(tree_buf, 0, -1, false, {}) -- clear buffer
+
+    local tree_cmd = 'tree -a -I .git --gitignore --prune --noreport'
+    local output = vim.fn.systemlist(tree_cmd)
+    output = vim.tbl_filter(function(line) return line ~= '' end, output)
+    vim.api.nvim_buf_set_lines(tree_buf, 0, -1, false, output)
+    vim.api.nvim_win_set_cursor(0, {1, 0})
+
+    vim.api.nvim_set_current_buf(tree_buf)
 end
 
 -- technically works but says "attempting to modify a read only file"
@@ -96,6 +101,20 @@ local function tree()
     vim.api.nvim_win_set_cursor(0, {1, 0})
     vim.bo.modifiable = false
 end
+
+-- TODO j/k warning? that helped a lot I think, worth trying again.
+--
+-- # Run a specific test class
+-- mvn test -Dtest=TestClassName
+-- # Run tests in a specific package
+-- mvn test -Dtest=com.example.package.*Test
+--
+-- gradle test --tests TestClassName
+-- # Run tests in a specific package
+-- gradle test --tests "com.example.package.*"
+-- # Using gradlew (wrapper)
+-- ./gradlew test --tests TestClassName
+
 
 local function fmt(fn, args)
     return function()
@@ -214,6 +233,7 @@ vim.api.nvim_create_user_command('Grep', function(opts)
     else print("No matches found") end
 end, { nargs = '+' })
 
+-- Keybinds -------------------------------------------------------------------
 -- TODO readline M-d/f/b on the command/ex mode line
 local keymaps = {
     {"c", "<C-a>", "<S-Left>"}, -- more portable opt than s-left?
@@ -223,7 +243,7 @@ local keymaps = {
     {"i", "<C-l>", " => "},       {"i", "<C-u>", " -> "},
     {"i", "<C-c>", "<Esc>"},      {"n", "S", "<C-^>"},
     {"i", "<C-d>", "<Del>"},
-    {"n", "<M-u>", tree},
+    {"n", "<M-u>", ogtree},
     {"n", "<M-q>", ":Inspect<CR>"},
     {"n", "Q", "@q"},
     {"n", "cqp", tmux_send_prompt},
