@@ -31,6 +31,7 @@ link_files() {
 
     mkdir -p ~/.vim/colors
     ln -sfv $setup_dir/config/spartan.vim $HOME/.vim/colors/spartan.vim
+    ln -sfv $setup_dir/config/spartan.lua $HOME/.config/nvim/colors/spartan.lua
 }
 
 main

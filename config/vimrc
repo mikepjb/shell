@@ -58,16 +58,6 @@ fun! PromptAndSendToRepl()
   call s:SendTextToRepl(input("=> "))
 endfun
 
-function! FuzzyFind()
-    let result = system('find . -type f -not -path "*/.git/*" -not -path "*/node_modules/*" -not -path "*/target/*" | fuzzy.sh')
-    let result = substitute(result, '\n$', '', '')
-    redraw!  " Force complete redraw
-    if !empty(result)
-        execute 'edit ' . fnameescape(result)
-    endif
-endfunction
-command! Fuzzy call FuzzyFind()
-
 " -- Bindings -----------------------------------------------------------------
 ino <C-c> <Esc> | nno <C-g> :noh<CR><C-g> | nno <C-h> <C-w><C-h>
 nno <C-j> <C-w><C-j> | nno <C-k> <C-w><C-k> | nno <C-l> <C-w><C-l>

@@ -1,6 +1,6 @@
 # vim: ft=gitconfig
 [core]
-  editor = vim
+  editor = nvim
   autocrlf = false
 [alias]
   aa = add --all

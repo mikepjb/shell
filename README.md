@@ -31,3 +31,11 @@ _A collection of tools I use for development work._
 :args **/*.{js,ts,jsx,tsx}
 :argdo %s/console\.log/logger.debug/g | update
 ```
+
+---
+nvim > vim, why?
+- clipboard integration (wayland)
+- lua plugins, allows telescope/fuzzy finding without extra external/language dep (e.g
+  selecta/fzf)
+- config is much cleaner in lua. multistrings etc.
+- Alt keybindings!
