@@ -1,6 +1,7 @@
 -- TODO need TODO highlight
 -- TODO grep in vim? we used to have :Grep? regular :grep?
 -- TODO 2 the default (go/java is 4 exception?) we have a lot of 2s currently
+-- TODO consolidate notes and finally have a repo again.
 -- Core?
 vim.opt.clipboard:append({ "unnamedplus" }) -- integrate with system clipboard
 
@@ -220,8 +221,9 @@ local keymaps = {
     {"n", "gD", "g<C-]>"},          -- choose which definition to go to
     {"t", "<C-g>", "<C-\\><C-n>"},
     {"v", "<C-g>", "y<C-w><C-w>pa<CR>"},
-    {"n", "gn", ":tabnew ~/.notes/index.md<CR>"},
-    {"n", "gi", ":tabnew ~/.config/nvim/init.lua<CR>"},
+    {"n", "gn", ":e ~/.tmp-notes<CR>"},
+    {"n", "gN", ":tabnew ~/.notes/index.md<CR>"},
+    {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
     {"n", "gp", ":call feedkeys(':tabnew<space>~/src/<tab>', 't')<CR>"},
     {"n", "gS", function() vim.cmd(":Grep -w " .. vim.fn.expand("<cword>")) end},
     {'n', 'ge', function()
