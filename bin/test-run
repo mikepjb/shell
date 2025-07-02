@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -e
+
+pkg_name="dummy-package-name"
+test_class="dummy-test-class"
+
+# for pom.xml/maven + java projects
+mvn test -Dtest=$test_class -pl $pkg_name -am -DfailIfNoTests=false
