@@ -48,7 +48,7 @@ vim.g.omni_sql_no_default_maps = 1 -- don't use C-c for autocompletion in SQL.
 
 
 -- Functions ------------------------------------------------------------------
-local function ogtree()
+local function tree()
     local tree_buf = vim.fn.bufnr('tree')
 
     if tree_buf ~= -1 then
@@ -56,7 +56,7 @@ local function ogtree()
     end
     local opts = {scope = 'local', buf = tree_buf}
     local tree_opts = {
-        {'modifiable', true, opts}, -- do we need this?
+        -- {'modifiable', true, opts}, -- do we need this?
         {'buftype', 'nofile', opts},
         {'bufhidden', 'hide', opts},
     }
@@ -74,47 +74,23 @@ local function ogtree()
     vim.api.nvim_set_current_buf(tree_buf)
 end
 
--- technically works but says "attempting to modify a read only file"
-local function tree()
-    local tree_buf = vim.fn.bufnr('tree')
-
-    if tree_buf ~= -1 then
-        vim.api.nvim_set_current_buf(tree_buf)
-        vim.bo.modifiable = true
-        vim.api.nvim_buf_set_lines(tree_buf, 0, -1, false, {})
-    else
-        vim.cmd('enew')
-        tree_buf = vim.api.nvim_get_current_buf()
-        vim.bo.buftype = 'nofile'
-        vim.bo.bufhidden = 'hide'
-        vim.bo.swapfile = false
-        vim.wo.number = false
-        vim.bo.readonly = true
-        vim.api.nvim_buf_set_name(tree_buf, 'tree')
+local repeat_map = {}
+function dry(key)
+    local count = vim.v.count1
+    if count > 1 then
+        vim.api.nvim_feedkeys(count .. key, 'n', true)
+        return
     end
-
-    local output = vim.fn.systemlist('tree -a -I .git --gitignore --prune --noreport')
-    output = vim.tbl_filter(function(line) return line ~= '' end, output)
-
-    vim.bo.modifiable = true
-    vim.api.nvim_buf_set_lines(tree_buf, 0, -1, false, output)
-    vim.api.nvim_win_set_cursor(0, {1, 0})
-    vim.bo.modifiable = false
+    local now_ms = vim.uv.hrtime() / 1e6 
+    if repeat_map[key] ~= nil then
+        if now_ms >= repeat_map[key] + 200 then
+            vim.api.nvim_feedkeys(key, 'n', true)
+        else
+            vim.notify("Don't repeat yourself.")
+        end
+    end
+    repeat_map[key] = now_ms
 end
-
--- TODO j/k warning? that helped a lot I think, worth trying again.
---
--- # Run a specific test class
--- mvn test -Dtest=TestClassName
--- # Run tests in a specific package
--- mvn test -Dtest=com.example.package.*Test
---
--- gradle test --tests TestClassName
--- # Run tests in a specific package
--- gradle test --tests "com.example.package.*"
--- # Using gradlew (wrapper)
--- ./gradlew test --tests TestClassName
-
 
 local function fmt(fn, args)
     return function()
@@ -243,7 +219,8 @@ local keymaps = {
     {"i", "<C-l>", " => "},       {"i", "<C-u>", " -> "},
     {"i", "<C-c>", "<Esc>"},      {"n", "S", "<C-^>"},
     {"i", "<C-d>", "<Del>"},
-    {"n", "<M-u>", ogtree},
+    {"n", "<M-u>", tree},
+    {"n", "j", function() dry('j') end}, {"n", "k", function() dry('k') end},
     {"n", "<M-q>", ":Inspect<CR>"},
     {"n", "Q", "@q"},
     {"n", "cqp", tmux_send_prompt},
