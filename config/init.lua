@@ -21,6 +21,7 @@ vim.opt.undofile = true
 vim.opt.undodir = os.getenv("HOME") .. "/.config/nvim/undodir"
 
 -- UI?
+vim.opt.guicursor = ""
 vim.opt.shortmess:append("I")
 vim.opt.splitbelow = true
 vim.opt.splitright = true
