@@ -108,6 +108,9 @@ local function fmt(fn, args)
     end
 end
 
+-- TODO if there is no repl buffer, cqp will still take your prompt but there
+-- will be no feedback, no error saying there isn't a REPL LOL we want a
+-- message before the prompt is even presented
 local function send_text_to_repl(text)
     if text == '' or text == nil then
         return
