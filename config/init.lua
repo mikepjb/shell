@@ -1,15 +1,18 @@
 -- Spartan Neovim -------------------------------------------------------------
 
--- Buffer Options
+-- Editing & Navigation
 vim.opt.wrap = false
 vim.opt.textwidth = 79
-vim.opt.colorcolumn = "+1"
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.smartindent = true
+vim.opt.splitbelow = true
+vim.opt.splitright = true
+vim.opt.scrolloff = 8
+vim.opt.colorcolumn = "+1"
 
--- History/Backup Recording Options
+-- Persistence & State
 vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.undofile = true
@@ -20,14 +23,11 @@ vim.opt.clipboard:append({ "unnamedplus" }) -- integrate with system clipboard
 vim.opt.number = true
 vim.opt.guicursor = ""
 vim.opt.shortmess:append("I")
-vim.opt.splitbelow = true
-vim.opt.splitright = true
-vim.opt.scrolloff = 8
 vim.opt.fillchars = "stl:─,stlnc:─,vert:│"
 vim.opt.statusline = "── %#User1#%f%*%< (%{&ft})%m%r%h%w %= ( %3l,%3c,%3p%% )"
 vim.opt.termguicolors = os.getenv("COLORTERM") == 'truecolor'
 
--- Search Options
+-- Search & Completion
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.gdefault = true
@@ -45,28 +45,13 @@ vim.g.omni_sql_no_default_maps = 1 -- don't use C-c for autocompletion in SQL.
 
 -- Functions ------------------------------------------------------------------
 local function show_tree()
-    local tree_buf = vim.fn.bufnr('tree')
-    if tree_buf == -1 then
-        tree_buf = vim.api.nvim_create_buf(true, false)
-        vim.api.nvim_buf_set_name(tree_buf, 'tree')
-        local opts = {scope = 'local', buf = tree_buf}
-        vim.api.nvim_set_option_value('buftype', 'nofile', opts)
-        vim.api.nvim_set_option_value('bufhidden', 'hide', opts)
-        vim.api.nvim_set_option_value('number', false, opts)
-    else
-        vim.api.nvim_set_current_buf(tree_buf)
-    end
-
-    local tree_cmd = 'tree -a -I .git --gitignore --prune --noreport'
-    local output = vim.fn.systemlist(tree_cmd)
-    vim.api.nvim_buf_set_lines(tree_buf, 0, -1, false, output)
+    vim.cmd('terminal tree -a -I .git --gitignore --prune --noreport')
 end
 
 local function fmt(fn, args)
     return function()
         if vim.fn.executable(fn) == 0 then
-            vim.notify(fn .. " not found, cannot format the buffer")
-            return
+            return vim.notify(fn .. " not found, cannot format the buffer")
         end
 
         local file = vim.fn.expand("%:p")
@@ -77,19 +62,18 @@ local function fmt(fn, args)
                     vim.cmd('checktime')
                     vim.fn.winrestview(view)
                 else
-                    local error_msg = obj.stdout .. obj.stderr
-                    vim.notify(error_msg, vim.log.levels.INFO)
+                    vim.notify(obj.stdout .. obj.stderr, vim.log.levels.INFO)
                 end
             end)
         end)
     end
 end
 
-function repl_pane()
+local function repl_pane()
     return vim.fn.system('tmux lsp -aF "#D#T" | sed -n s/repl//p | tr -d "\n"')
 end
 
-function tmux_send(text)
+local function tmux_send(text)
     local dst = repl_pane()
     if text == '' or text == nil or dst == '' then return end
 
@@ -110,8 +94,7 @@ end
 
 local function tmux_send_prompt()
     if repl_pane() == '' then
-        vim.notify("REPL terminal could not be found", vim.log.levels.ERROR)
-        return
+        return vim.notify("REPL terminal could not be found")
     end
     tmux_send(vim.fn.input('=> '))
 end
@@ -119,8 +102,7 @@ end
 vim.api.nvim_create_user_command('Grep', function(opts)
     vim.cmd('silent! grep!' .. opts.args)
     vim.cmd('redraw!')  -- clear any lingering output
-    local qflist = vim.fn.getqflist()
-    if #qflist > 0 then vim.cmd('copen | cfirst')
+    if #vim.fn.getqflist() > 0 then vim.cmd('copen | cfirst')
     else vim.notify("No matches found") end
 end, { nargs = '+' })
 
@@ -200,6 +182,7 @@ local autocmds = {
         vim.keymap.set("n", "j", "j<CR><C-w>p", { buffer = true })
         vim.keymap.set("n", "k", "k<CR><C-w>p", { buffer = true })
     end},
+    {'TermOpen', '*', function() vim.opt_local.number = false end}, 
     {'BufWritePre', '*', function()
         local dir = vim.fn.expand('<afile>:p:h')
         if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, 'p') end
