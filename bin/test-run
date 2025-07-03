@@ -2,8 +2,23 @@
 
 set -e
 
-pkg_name="dummy-package-name"
-test_class="dummy-test-class"
+if [[ -f "Makefile" ]]; then
+    make test
+    exit 0
+fi
 
-# for pom.xml/maven + java projects
-mvn test -Dtest=$test_class -pl $pkg_name -am -DfailIfNoTests=false
+if [[ -f "pom.xml" ]]; then
+    pkg_name="dummy-package-name"
+    test_class="dummy-test-class"
+
+    # for pom.xml/maven + java projects
+    mvn test -Dtest=$test_class -pl $pkg_name -am -DfailIfNoTests=false
+    exit 0
+fi
+
+if [[ -f "go.mod" ]]; then
+    go test ./...
+    exit 0
+fi
+
+echo 'no tests found'

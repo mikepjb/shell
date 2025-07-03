@@ -50,6 +50,7 @@ hl('IncSearch', { fg = colors.bright_green })
 hl('Pmenu', { fg = colors.bright_cyan, bg = colors.black })
 hl('PmenuSel', { fg = colors.black, bg = colors.bright_cyan })
 hl('MatchParen', { fg = colors.bright_magenta })
+hl('TelescopeSelection', { fg = colors.bright_cyan })
 
 -- Messages and errors
 hl('ErrorMsg', { fg = colors.bright_magenta })
