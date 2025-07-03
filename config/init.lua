@@ -1,6 +1,6 @@
 -- Spartan Neovim -------------------------------------------------------------
 
--- Text
+-- Buffer Options
 vim.opt.wrap = false
 vim.opt.textwidth = 79
 vim.opt.colorcolumn = "+1"
@@ -9,14 +9,14 @@ vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.smartindent = true
 
--- Backups/Copy
+-- History/Backup Recording Options
 vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.undofile = true
 vim.opt.undodir = os.getenv("HOME") .. "/.config/nvim/undodir"
 vim.opt.clipboard:append({ "unnamedplus" }) -- integrate with system clipboard
 
--- UI
+-- UI Options
 vim.opt.number = true
 vim.opt.guicursor = ""
 vim.opt.shortmess:append("I")
@@ -27,7 +27,7 @@ vim.opt.fillchars = "stl:─,stlnc:─,vert:│"
 vim.opt.statusline = "── %#User1#%f%*%< (%{&ft})%m%r%h%w %= ( %3l,%3c,%3p%% )"
 vim.opt.termguicolors = os.getenv("COLORTERM") == 'truecolor'
 
--- Search Settings
+-- Search Options
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.gdefault = true
@@ -39,35 +39,27 @@ if vim.fn.executable("rg") == 1 then
     vim.opt.grepprg, vim.opt.grepformat = "rg --vimgrep", "%f:%l:%c:%m"
 end
 
--- Language Settings
+-- Language Options
 vim.g.markdown_fenced_languages = { 'typescript', 'javascript', 'bash', 'go' }
 vim.g.omni_sql_no_default_maps = 1 -- don't use C-c for autocompletion in SQL.
 
 -- Functions ------------------------------------------------------------------
 local function show_tree()
     local tree_buf = vim.fn.bufnr('tree')
-
     if tree_buf == -1 then
         tree_buf = vim.api.nvim_create_buf(true, false)
+        vim.api.nvim_buf_set_name(tree_buf, 'tree')
+        local opts = {scope = 'local', buf = tree_buf}
+        vim.api.nvim_set_option_value('buftype', 'nofile', opts)
+        vim.api.nvim_set_option_value('bufhidden', 'hide', opts)
+        vim.api.nvim_set_option_value('number', false, opts)
+    else
+        vim.api.nvim_set_current_buf(tree_buf)
     end
-    local opts = {scope = 'local', buf = tree_buf}
-    local tree_opts = {
-        -- {'modifiable', true, opts}, -- do we need this?
-        {'buftype', 'nofile', opts},
-        {'bufhidden', 'hide', opts},
-    }
-    for _, o in ipairs(tree_opts) do
-        vim.api.nvim_set_option_value(o[1], o[2], o[3])
-    end
-    vim.api.nvim_buf_set_lines(tree_buf, 0, -1, false, {}) -- clear buffer
 
     local tree_cmd = 'tree -a -I .git --gitignore --prune --noreport'
     local output = vim.fn.systemlist(tree_cmd)
-    output = vim.tbl_filter(function(line) return line ~= '' end, output)
     vim.api.nvim_buf_set_lines(tree_buf, 0, -1, false, output)
-    vim.api.nvim_win_set_cursor(0, {1, 0})
-
-    vim.api.nvim_set_current_buf(tree_buf)
 end
 
 local function fmt(fn, args)

@@ -14,11 +14,23 @@ echo 'Project Statistics'
 # hotspots/commit analysis on file change frequency?
 
 all_files=`git ls-files`
+asset_exts=(
+    "png" "svg" "jpg" "jpeg" "gif" "ico" "webp" "bmp" "tiff"
+    "pdf" "mp4" "mov" "avi" "mp3" "wav" "json"
+    "woff" "woff2" "ttf" "otf"
+)
 
-# total_lines will include files without an extension but later we show lines by
-# extension
-total_lines=`git ls-files | xargs cat | wc -l`
-exts=`git ls-files | awk -F. 'NF>1 && $NF !~ /\// && !a[$NF]++{print $NF}'`
+asset_pattern="$(IFS='|'; echo "${asset_exts[*]}")"
+generated_pattern="_templ.go"
+exclude_pattern="$asset_pattern|$generated_pattern"
+
+grep_pattern="\.($(IFS='|'; echo "${asset_exts[*]}"))"
+total_lines=`git ls-files | grep -v -E "$grep_pattern" | xargs cat | wc -l`
+
+exclude_pattern="($asset_pattern|$generated_pattern)$"
+exts=`git ls-files | awk -F. \
+    -v exclude="$exclude_pattern" \
+    'NF>1 && $NF !~ /\// && $NF !~ exclude && !a[$NF]++{print $NF}'`
 exts="$exts no-ext"
 
 echo '+--------------+------------+------------+------------+'
@@ -26,11 +38,25 @@ echo '| ext          | prod-lines | test-lines | %-share    |'
 echo '|--------------|------------|------------|------------|'
 for x in $exts; do
     if [ "$x" = "no-ext" ]; then
-        test_lines=`git ls-files | grep "test" | awk -F. 'NF==1 || $NF ~ /\//' | xargs cat 2>/dev/null | wc -l`
-        prod_lines=`git ls-files | grep -v "mock" | grep -v "test" | awk -F. 'NF==1 || $NF ~ /\//' | xargs cat 2>/dev/null | wc -l`
+        test_lines=`git ls-files \
+            | grep -v -E "$exclude_pattern" \
+            | grep "test" \
+            | awk -F. 'NF==1 || $NF ~ /\//' | xargs cat 2>/dev/null | wc -l`
+
+        prod_lines=`git ls-files \
+            | grep -v -E "$exclude_pattern" \
+            | grep -v "mock" \
+            | grep -v "test" \
+            | awk -F. 'NF==1 || $NF ~ /\//' | xargs cat 2>/dev/null | wc -l`
     else
-        test_lines=`git ls-files | grep "test" | grep "$x\$" | xargs cat 2>/dev/null | wc -l`
-        prod_lines=`git ls-files | grep -v "mock" | grep -v "test" | grep "$x\$" | xargs cat 2>/dev/null | wc -l`
+        test_lines=`git ls-files \
+            | grep -v -E "$exclude_pattern" \
+            | grep "test" \
+            | grep "$x\$" | xargs cat 2>/dev/null | wc -l`
+        prod_lines=`git ls-files \
+            | grep -v -E "$exclude_pattern" \
+            | grep -v "mock" \
+            | grep -v "test" | grep "$x\$" | xargs cat 2>/dev/null | wc -l`
     fi
     echo $x $prod_lines $test_lines
 done | sort -k2,2nr | awk -v total="$total_lines" '{
@@ -46,7 +72,7 @@ echo '+--------------+------------+------------+------------+'
 
 # Longer than 80 we want to know about, more than 3000 it's probably
 # minified/generated.
-long_files=$(git ls-files | xargs wc -L --total=never | awk '$1 > 80 && $1 < 3000' | sort -rn | head -10)
+long_files=$(git ls-files | grep -v -E "$exclude_pattern" | xargs wc -L --total=never | awk '$1 > 80 && $1 < 3000' | sort -rn | head -10)
 if [[ -n "$long_files" ]]; then
     echo
     echo 'Files with long line lengths:'
