@@ -186,8 +186,4 @@ for _, ac in ipairs(autocmds) do
     )
 end
 
-vim.api.nvim_create_autocmd("QuickFixCmdPost", { -- open if you have results
-    group = base, pattern = { "[^l]*" }, command = "cwindow"
-})
-
 pcall(vim.cmd, 'colorscheme spartan') -- Try colorscheme, fallback to default
