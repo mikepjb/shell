@@ -147,7 +147,7 @@ local keymaps = {
     {"n", "<M-n>", ":cnext<CR>"},   {"n", "<M-p>", ":cprev<CR>"},
     {"n", "<C-g>", ":noh<CR><C-g>"},
     {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
-    {"n", "gn", ":e ~/.tmp-notes<CR>"},
+    {"n", "gn", ":tabnew ~/.notes/index.md | tcd %:h<CR>"},
     {"n", "<M-t>", ":terminal test-run<CR>"},
     {"n", "gl", function()
         local qf_winid = vim.fn.getqflist({winid = 0}).winid
@@ -168,6 +168,9 @@ local autocmds = {
     }, apply_opts({shiftwidth = 2, tabstop = 2, softtabstop = 2})},
     {"FileType", {"csv", "json", "xml"}, apply_opts({tw = 0, wrap = false})},
     {"FileType", "markdown", apply_opts({nu = false, wrap = true, lbr = true, tw = 65})},
+    {"FileType", "netrw", function()
+        vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { buffer = true })
+    end},
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
     {"BufWritePre", "*.templ", fmt("templ", "fmt", "-w")},
     {'TermOpen', '*', apply_opts({nu = false})},
