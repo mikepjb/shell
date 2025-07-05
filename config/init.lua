@@ -1,52 +1,40 @@
 -- Spartan Neovim -------------------------------------------------------------
 
--- Editing
-vim.opt.wrap = false
-vim.opt.textwidth = 79
-vim.opt.tabstop = 4
-vim.opt.shiftwidth = 4
-vim.opt.expandtab = true
-vim.opt.smartindent = true
-vim.opt.splitbelow = true
-vim.opt.splitright = true
-vim.opt.scrolloff = 8
-vim.opt.colorcolumn = "+1"
+local config = {
+    -- Editing
+    wrap = false, textwidth = 79, colorcolumn = '+1',
+    tabstop = 4, shiftwidth = 4, expandtab = true, smartindent = true,
+    splitbelow = true, splitright = true,
+    scrolloff = 8,
 
--- Persistence & State
-vim.opt.swapfile = false
-vim.opt.backup = false
-vim.opt.undofile = true
-vim.opt.undodir = os.getenv("HOME") .. "/.config/nvim/undodir"
-vim.opt.clipboard:append({ "unnamedplus" }) -- integrate with system clipboard
+    -- Persistence & State
+    swapfile = false, backup = false, undofile = true,
+    undodir = os.getenv("HOME") .. "/.config/nvim/undodir",
+    clipboard = 'unnamedplus',
 
--- UI Options
-vim.opt.number = true
-vim.opt.guicursor = ""
-vim.opt.shortmess:append("I")
-vim.opt.fillchars = "stl:─,stlnc:─,vert:│"
-vim.opt.statusline = "── %#User1#%f%*%< (%{&ft})%m%r%h%w %= ( %3l,%3c,%3p%% )"
-vim.opt.termguicolors = os.getenv("COLORTERM") == 'truecolor'
+    -- User Interface
+    number = true, guicursor = '', shortmess = 'CTIoltOF',
+    fillchars = "stl:─,stlnc:─,vert:│",
+    statusline = "── %#User1#%f%*%< (%{&ft})%m%r%h%w %= ( %3l,%3c,%3p%% )",
+    termguicolors = os.getenv("COLORTERM") == 'truecolor',
 
--- Search & Completion
-vim.opt.ignorecase = true
-vim.opt.smartcase = true
-vim.opt.gdefault = true
-vim.opt.wildmode = "longest:full,full"
-vim.opt.wildignore = "*.o,*.obj,*.pyc,*.class,*/.git/*,*/node_modules/*"
-vim.opt.grepprg = "grep -rn $* ."
-if vim.fn.executable("rg") == 1 then
-    vim.opt.grepprg, vim.opt.grepformat = "rg --vimgrep", "%f:%l:%c:%m"
-end
+    -- Search & Completion
+    ignorecase = true, smartcase = true, gdefault = true,
+    wildmode = 'longest:full,full', 
+    wildignore = '*.o,*.obj,*.pyc,*.class,*/.git/*,*/node_modules/*',
+    grepprg = vim.fn.executable("rg") == 1 and 'rg --vimgrep' or 'grep -rn $* .',
+    grepformat = vim.fn.executable("rg") == 1 and '%f:%l:%c:%m' or '%f:%l:%m',
+} for k, v in pairs(config) do vim.opt[k] = v end
 
--- Netrw & Navigation
-vim.g.netrw_banner = 0
-vim.g.netrw_liststyle = 3
-vim.g.netrw_winsize = 25
-vim.g.netrw_list_hide = vim.o.wildignore
+local global_config = {
+    -- Netrw & Navigation
+    netrw_banner = 0, netrw_liststyle = 3, netrw_winsize = 25,
+    netrw_list_hide = '^\\.git/$,^\\..*$,\\.swp$,\\.tmp$,node_modules',
 
--- Language Options
-vim.g.markdown_fenced_languages = { 'typescript', 'javascript', 'bash', 'go' }
-vim.g.omni_sql_no_default_maps = 1 -- don't use C-c for autocompletion in SQL.
+    -- Language Options
+    markdown_fenced_languages = { 'typescript', 'javascript', 'bash', 'go' },
+    omni_sql_no_default_maps = 1, -- don't use C-c for autocompletion in SQL.
+} for k, v in pairs(global_config) do vim.g[k] = v end
 
 -- Functions ------------------------------------------------------------------
 local function fmt(fn, args)
