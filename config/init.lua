@@ -28,7 +28,7 @@ local config = {
 
 local global_config = {
     -- Netrw & Navigation
-    netrw_banner = 0, netrw_liststyle = 3, netrw_winsize = 25,
+    netrw_banner = 0, netrw_liststyle = 3, netrw_winsize = -25,
     netrw_list_hide = '^\\.git/$,^\\..*$,\\.swp$,\\.tmp$,node_modules',
 
     -- Language Options
