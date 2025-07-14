@@ -48,7 +48,7 @@ local function fmt(fn, args)
             vim.schedule(function() -- reload but save view position
                 if obj.code == 0 then
                     local view = vim.fn.winsaveview()
-                    vim.cmd('checktime')
+                    vim.cmd('edit!')
                     vim.fn.winrestview(view)
                 else
                     vim.notify(obj.stdout .. obj.stderr, vim.log.levels.INFO)
@@ -152,7 +152,7 @@ local autocmds = {
     {"FileType", {
         "clojure", "scheme", "javascript", "typescript",
         "json", "javascriptreact", "typescriptreact",
-        "html", "yaml", "ruby"
+        "html", "yaml", "ruby", "markdown"
     }, apply_opts({shiftwidth = 2, tabstop = 2, softtabstop = 2})},
     {"FileType", {"csv", "json", "xml"}, apply_opts({tw = 0, wrap = false})},
     {"FileType", "markdown", apply_opts({nu = false, wrap = true, lbr = true, tw = 65})},

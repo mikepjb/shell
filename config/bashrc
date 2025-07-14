@@ -33,6 +33,7 @@ alias x='tmux attach -t x || tmux new -s x'
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 alias cljx='clj -M:repl:dev'
 alias scrape='wget -p -k -E -H'
+[[ $(command -v xdg-open) ]] && alias open=xdg-open
 
 vc() {
     [[ -f "$1" ]] || { echo "File not found: $1"; return 1; }
