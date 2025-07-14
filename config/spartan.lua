@@ -74,3 +74,6 @@ hl('TabLineFill', { fg = colors.bright_black, bg = colors.black })
 hl('TabLineSel', { fg = colors.white, bg = colors.bright_black })
 hl('WildMenu', { fg = colors.black, bg = colors.yellow })
 hl('Directory', { fg = colors.blue })
+
+hl('markdownCode', { fg = colors.cyan })
+hl('markdownCodeBlock', { fg = colors.cyan })
