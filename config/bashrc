@@ -17,7 +17,7 @@ sys_paths="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin"
 user_paths="$HOME/.local/bin"
 export PATH="$user_paths:$go_paths:$node_paths:$mac_paths:$sys_paths"
 
-if [[ -v PREFIX ]]; then # for termux
+if [[ -n "${PREFIX+x}" ]]; then # for termux
     export PATH="$PREFIX:$PATH"
 fi
 
