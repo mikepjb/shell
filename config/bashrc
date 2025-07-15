@@ -18,7 +18,7 @@ user_paths="$HOME/.local/bin"
 export PATH="$user_paths:$go_paths:$node_paths:$mac_paths:$sys_paths"
 
 if [[ -n "${PREFIX+x}" ]]; then # for termux
-    export PATH="$PREFIX:$PATH"
+    export PATH="$PREFIX/bin:$PATH"
 fi
 
 HISTSIZE=50000

@@ -13,6 +13,9 @@ link_files() {
     echo '. ~/.bashrc' > $HOME/.bash_profile
 
     mkdir -p ~/.config/nvim
+    mkdir -p ~/.config/tmux
+    mkdir -p ~/.config/alacritty
+
     ln -sfv $setup_dir/config/init.lua $HOME/.config/nvim/init.lua
     ln -sfv $setup_dir/config/bashrc $HOME/.bashrc
     ln -sfv $setup_dir/config/vimrc $HOME/.vimrc
