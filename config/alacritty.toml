@@ -1,15 +1,3 @@
-# -- Keybinds -----------------------------------------------------------------
-
-[[keyboard.bindings]]
-action = "ToggleFullscreen"
-key = "Return"
-mods = "Alt"
-
-[window]
-opacity = 0.95
-decorations = "Full"
-option_as_alt = "Both" # treat option as alt in mac os
-
 # -- Appearance ---------------------------------------------------------------
 
 [font]
@@ -58,3 +46,50 @@ blue = "#00ccff"        # UI blue
 magenta = "#ff00ff"     # UI cur search
 cyan = "#00ffff"        # UI teal
 white = "#ffffff"       # Pure white
+
+# -- Keybinds -----------------------------------------------------------------
+
+[[keyboard.bindings]]
+action = "ToggleFullscreen"
+key = "Return"
+mods = "Alt"
+
+[window]
+opacity = 0.95
+decorations = "Full"
+option_as_alt = "Both" # treat option as alt in mac os
+
+[[keyboard.bindings]]
+key = "N"
+mods = "Command"
+chars = "\u001bn"  # Alt+N
+
+[[keyboard.bindings]]
+key = "P"
+mods = "Command"
+chars = "\u001bp"  # Alt+P
+
+[[keyboard.bindings]]
+key = "D"
+mods = "Command"
+chars = "\u001bd"  # Alt+D
+
+[[keyboard.bindings]]
+key = "F"
+mods = "Command"
+chars = "\u001bf"  # Alt+F
+
+[[keyboard.bindings]]
+key = "B"
+mods = "Command"
+chars = "\u001bb"  # Alt+B
+
+[[keyboard.bindings]]
+key = "O"
+mods = "Command"
+chars = "\u001bo"  # Alt+O
+
+[[keyboard.bindings]]
+key = "K"
+mods = "Command"
+chars = "\u001bk"  # Alt+K
