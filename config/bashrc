@@ -29,6 +29,7 @@ shopt -s histappend
 CDPATH=.:$HOME/src
 
 alias vi='nvim'
+alias k='kubectl'
 alias x='tmux attach -t x || tmux new -s x'
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 alias gn="cd ~/.notes"
