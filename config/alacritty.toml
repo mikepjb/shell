@@ -54,10 +54,25 @@ action = "ToggleFullscreen"
 key = "Return"
 mods = "Alt"
 
+[[keyboard.bindings]]
+action = "ToggleFullscreen"
+key = "Return"
+mods = "Command"
+
 [window]
 opacity = 0.95
 decorations = "Full"
 option_as_alt = "Both" # treat option as alt in mac os
+
+[[keyboard.bindings]]
+key = "1"
+mods = "Command"
+chars = "\u001b1"  # Alt+1
+
+[[keyboard.bindings]]
+key = "2"
+mods = "Command"
+chars = "\u001b2"  # Alt+2
 
 [[keyboard.bindings]]
 key = "N"

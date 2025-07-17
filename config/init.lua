@@ -96,7 +96,12 @@ vim.api.nvim_create_user_command('FindFiles', function(opts)
         vim.fn.setqflist(vim.tbl_map(function(file)
             return { filename = file }
         end, files))
-        vim.cmd('copen | cfirst')
+        if #files > 1 then
+            vim.cmd('copen')
+        else
+            vim.cmd('cclose')
+        end
+        vim.cmd('cfirst')
     else vim.notify("No matches found") end
   end
 end, { nargs = '?' })
