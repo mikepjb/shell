@@ -88,7 +88,7 @@ end
 
 vim.api.nvim_create_user_command('FindFiles', function(opts)
   if opts.args ~= '' then
-    local cmd = string.format('rg --files | rg "%s"', opts.args)
+    local cmd = string.format('rg --files | rg -S "%s"', opts.args)
     local output = vim.fn.system(cmd)
     local files = vim.split(output, '\n', { trimempty = true })
     
