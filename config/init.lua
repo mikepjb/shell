@@ -136,7 +136,7 @@ local keymaps = {
     {"n", "cqp", tmux_send_prompt},
     {"v", "gp", tmux_send_lines},   {"n", "gp", tmux_send_buffer},
     {"n", "gs", ":Grep "}, {"n", "gS", grep_under_cursor},
-    {"n", "gL", ":FindFiles "},
+    {"n", "gL", ":FindFiles "}, {"i", "<C-l>", " => "},
     {"n", "<M-n>", ":cnext<CR>"},   {"n", "<M-p>", ":cprev<CR>"},
     {"n", "<C-g>", ":noh<CR><C-g>"},
     {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
