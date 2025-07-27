@@ -136,9 +136,9 @@ local keymaps = {
     {"n", "cqp", tmux_send_prompt},
     {"v", "gp", tmux_send_lines},   {"n", "gp", tmux_send_buffer},
     {"n", "gs", ":Grep "}, {"n", "gS", grep_under_cursor},
-    {"n", "gL", ":FindFiles "}, {"i", "<C-l>", " => "},
+    {"n", "<space>", ":FindFiles "}, {"i", "<C-l>", " => "},
     {"n", "<M-n>", ":cnext<CR>"},   {"n", "<M-p>", ":cprev<CR>"},
-    {"n", "<C-g>", ":noh<CR><C-g>"},
+    {"n", "<C-g>", ":noh<CR><C-g>"}, {"i", "<C-d>", "<Del>"},
     {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
     {"n", "gn", ":tabnew ~/.notes/index.md | tcd %:h<CR>"},
     {"n", "<M-t>", ":terminal test-run<CR>"},
@@ -147,7 +147,7 @@ local keymaps = {
         vim.cmd(qf_winid ~= 0 and 'cclose' or 'copen')
     end},
     {'n', 'ge', edit_relative},
-    {'n', '<space>', ":Lexplore<CR>"},
+    {'n', 'gL', ":Lexplore<CR>"},
 } for _, km in ipairs(keymaps) do vim.keymap.set(km[1], km[2], km[3]) end
 
 -- Autocmds
@@ -166,6 +166,7 @@ local autocmds = {
     end},
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
     {"BufWritePre", "*.templ", fmt("templ", "fmt", "-w")},
+    {"BufWritePre", "*.js,*.jsx", fmt("prettier", "--write")},
     {'TermOpen', '*', apply_opts({nu = false})},
     {'BufWritePre', '*', function()
         local dir = vim.fn.expand('<afile>:p:h')
