@@ -82,3 +82,8 @@ fi
 echo 'General'
 echo $total_lines
 
+if [[ -f "package.json" ]]; then
+    echo
+    echo "number of direct npm deps: $(npm ls --depth=0 | grep -c "─")"
+    echo "number of indirect npm deps: $(npm ls --depth=999 2>/dev/null | grep -c "─")"
+fi
