@@ -157,7 +157,7 @@ local autocmds = {
     {"FileType", {
         "clojure", "scheme", "javascript", "typescript",
         "json", "javascriptreact", "typescriptreact",
-        "html", "yaml", "ruby", "markdown"
+        "html", "yaml", "ruby", "markdown", "css"
     }, apply_opts({shiftwidth = 2, tabstop = 2, softtabstop = 2})},
     {"FileType", {"csv", "json", "xml"}, apply_opts({tw = 0, wrap = false})},
     {"FileType", "markdown", apply_opts({nu = false, wrap = true, lbr = true, tw = 65})},
@@ -166,7 +166,7 @@ local autocmds = {
     end},
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
     {"BufWritePre", "*.templ", fmt("templ", "fmt", "-w")},
-    {"BufWritePre", "*.js,*.jsx", fmt("prettier", "--write")},
+    {"BufWritePre", "*.js,*.jsx,*.css", fmt("prettier", "--write")},
     {'TermOpen', '*', apply_opts({nu = false})},
     {'BufWritePre', '*', function()
         local dir = vim.fn.expand('<afile>:p:h')
