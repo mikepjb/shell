@@ -7,6 +7,7 @@ local_bin_dir="$HOME/.local/bin"
 
 main() {
     link_files
+    npm_deps
 }
 
 link_files() {
@@ -36,6 +37,11 @@ link_files() {
     ln -sfv $setup_dir/config/spartan.vim $HOME/.vim/colors/spartan.vim
     mkdir -p ~/.config/nvim/colors
     ln -sfv $setup_dir/config/spartan.lua $HOME/.config/nvim/colors/spartan.lua
+}
+
+npm_deps() {
+    # if not installed..
+    # sql-formatter
 }
 
 main

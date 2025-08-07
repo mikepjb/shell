@@ -37,14 +37,17 @@ local global_config = {
 } for k, v in pairs(global_config) do vim.g[k] = v end
 
 -- Functions ------------------------------------------------------------------
-local function fmt(fn, args)
+local function fmt(fn, ...)
+    local args = {...}
     return function()
         if vim.fn.executable(fn) == 0 then
             return vim.notify(fn .. " not found, cannot format the buffer")
         end
 
-        local file = vim.fn.expand("%:p")
-        vim.system({fn, args, file}, { text = true }, function(obj)
+        local cmd, file = {fn}, vim.fn.expand("%:p")
+        for _, arg in ipairs(args) do table.insert(cmd, arg) end
+        table.insert(cmd, file)
+        vim.system(cmd, { text = true }, function(obj)
             vim.schedule(function() -- reload but save view position
                 if obj.code == 0 then
                     local view = vim.fn.winsaveview()
@@ -167,6 +170,7 @@ local autocmds = {
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
     {"BufWritePre", "*.templ", fmt("templ", "fmt", "-w")},
     {"BufWritePre", "*.js,*.jsx,*.css", fmt("prettier", "--write")},
+    {"BufWritePre", "*.sql", fmt("sql-formatter", "--fix", "-l", "postgresql")},
     {'TermOpen', '*', apply_opts({nu = false})},
     {'BufWritePre', '*', function()
         local dir = vim.fn.expand('<afile>:p:h')
