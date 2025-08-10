@@ -37,6 +37,7 @@ alias nr='npm run'
 alias cljx='clj -M:repl:dev'
 alias scrape='wget -p -k -E -H'
 alias tree='tree -I node_modules'
+alias ks='kill -9 $(lsof -ti:8080)'
 [[ $(command -v xdg-open) ]] && alias open=xdg-open
 
 vc() {
