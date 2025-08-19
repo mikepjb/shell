@@ -12,10 +12,11 @@ export N_PREFIX=$HOME/.config/n
 
 go_paths="/usr/local/go/bin:$HOME/go/bin"
 node_paths="$HOME/.config/n/bin:$HOME/.npm/bin"
+deno_paths="$HOME/.deno/bin/"
 mac_paths="/sbin:/opt/homebrew/bin"
 sys_paths="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin"
 user_paths="$HOME/.local/bin"
-export PATH="$user_paths:$go_paths:$node_paths:$mac_paths:$sys_paths"
+export PATH="$user_paths:$go_paths:$deno_paths:$node_paths:$mac_paths:$sys_paths"
 
 if [[ -n "${PREFIX+x}" ]]; then # for termux
     export PATH="$PREFIX/bin:$PATH"
@@ -34,10 +35,12 @@ alias x='tmux attach -t x || tmux new -s x'
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 alias gn='cd ~/.notes'
 alias nr='npm run'
+alias dr='deno run'
 alias cljx='clj -M:repl:dev'
 alias scrape='wget -p -k -E -H'
 alias tree='tree -I node_modules'
 alias ks='kill -9 $(lsof -ti:8080)'
+alias ch='claude --model sonnet < ~/.notes/CLAUDE.md'
 [[ $(command -v xdg-open) ]] && alias open=xdg-open
 
 vc() {
@@ -54,3 +57,4 @@ fi
 
 jobs_signal() { [[ $(jobs) != "" ]] && echo -e "\x01\033[0;36m\x02\$\x01\033[0m\x02" || echo -e "\$"; }
 PS1='\W($(git branch --show-current 2>/dev/null || echo "!")) $(jobs_signal) '
+
