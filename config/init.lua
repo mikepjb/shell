@@ -170,6 +170,7 @@ local autocmds = {
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
     {"BufWritePre", "*.templ", fmt("templ", "fmt", "-w")},
     {"BufWritePre", "*.js,*.jsx,*.css", fmt("prettier", "--write")},
+    {"BufWritePre", "*.ts,*.tsx,*.json", fmt("deno", "fmt")},
     {"BufWritePre", "*.sql", fmt("sql-formatter", "--fix", "-l", "postgresql")},
     {'TermOpen', '*', apply_opts({nu = false})},
     {'BufWritePre', '*', function()
