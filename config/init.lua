@@ -168,7 +168,7 @@ local autocmds = {
         vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { buffer = true })
     end},
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
-    {"BufWritePre", "*.templ", fmt("templ", "fmt", "-w")},
+    {"BufWritePre", "*.templ", fmt("templ", "fmt")},
     {"BufWritePre", "*.js,*.jsx,*.css", fmt("prettier", "--write")},
     {"BufWritePre", "*.ts,*.tsx,*.css,*.json,*.svg", fmt("deno", "fmt")},
     {"BufWritePre", "*.sql", fmt("sql-formatter", "--fix", "-l", "postgresql")},
