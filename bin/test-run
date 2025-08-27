@@ -2,19 +2,96 @@
 
 set -e
 
-filepath=$*
+# Source SDKMAN if available
+if [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+    source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-if [[ ! -z "${filepath}" ]]; then
-    echo "filepath provided: $filepath"
-    exit 1
+    # Check for .sdkmanrc in current directory and use it
+    if [[ -f ".sdkmanrc" ]]; then
+        sdk env
+    fi
 fi
 
+filepath=$1
+
 main() {
-    [[ -f "gradlew" ]] && gradle_test
-    [[ -f "pom.xml" ]] && maven_test
-    [[ -f "Makefile" ]] && make_test
-    [[ -f "go.mod" ]] && go_test
-    echo 'no tests found'
+    if [[ -n "${filepath}" ]]; then
+        # Handle file-specific test
+        if [[ "${filepath}" == *.java ]]; then
+            run_java_test_from_file "${filepath}"
+        else
+            echo "Unsupported file type: ${filepath}"
+            exit 1
+        fi
+    else
+        # Run all tests based on project type
+        [[ -f "gradlew" ]] && gradle_test
+        [[ -f "pom.xml" ]] || [[ -f "./mvnw" ]] && maven_test
+        [[ -f "Makefile" ]] && make_test
+        [[ -f "go.mod" ]] && go_test
+        echo 'no tests found'
+    fi
+}
+
+run_java_test_from_file() {
+    local file=$1
+
+    # Extract test class name from file path
+    local test_class=$(basename "${file}" .java)
+
+    # Try to detect module from path (looking for common Maven module patterns)
+    local module=""
+
+    # Check if we're in a multi-module project by looking for parent pom.xml
+    if [[ -f "pom.xml" ]] && grep -q "<modules>" pom.xml 2>/dev/null; then
+        # Extract potential module name from path
+        # Handle both absolute and relative paths
+        # Pattern: module-name/src/(test|main)/java/... or .../module-name/src/(test|main)/java/...
+        if [[ "${file}" =~ ([^/]+)/src/(test|main)/java/ ]]; then
+            module="${BASH_REMATCH[1]}"
+            # Verify this module exists
+            if [[ ! -d "${module}" ]] || [[ ! -f "${module}/pom.xml" ]]; then
+                module=""
+            fi
+        fi
+
+        # If we couldn't detect module but we're in a multi-module project,
+        # we MUST specify a module to avoid running test in all modules
+        if [[ -z "${module}" ]]; then
+            echo "ERROR: Multi-module project detected but couldn't determine module from path: ${file}"
+            echo "Please run from project root or ensure file path contains module-name/src/test/java/"
+            exit 1
+        fi
+    fi
+
+    # Build the command
+    local cmd=""
+    if [[ -f "./mvnw" ]]; then
+        cmd="./mvnw test -Dtest=\"${test_class}\""
+        if [[ -n "${module}" ]]; then
+            cmd="${cmd} -pl \"${module}\" -am -DfailIfNoTests=false"
+        fi
+    elif command -v mvn &> /dev/null; then
+        cmd="mvn test -Dtest=\"${test_class}\""
+        if [[ -n "${module}" ]]; then
+            cmd="${cmd} -pl \"${module}\" -am -DfailIfNoTests=false"
+        fi
+    elif [[ -f "gradlew" ]]; then
+        cmd="./gradlew test --tests \"*${test_class}\""
+    else
+        echo "No supported build system found"
+        exit 1
+    fi
+
+    # Debug output
+    java -version
+    echo "Test class: ${test_class}"
+    [[ -n "${module}" ]] && echo "Module: ${module}"
+    echo "Command: ${cmd}"
+    echo "----------------------------------------"
+
+    # Execute the command
+    eval ${cmd}
 }
 
 gradle_test() {
@@ -24,11 +101,12 @@ gradle_test() {
 }
 
 maven_test() {
-    pkg_name="dummy-package-name"
-    test_class="dummy-test-class"
-
-    # for pom.xml/maven + java projects
-    mvn test -Dtest=$test_class -pl $pkg_name -am -DfailIfNoTests=false
+    # Run all tests with Maven wrapper if available
+    if [[ -f "./mvnw" ]]; then
+        ./mvnw test
+    else
+        mvn test
+    fi
     exit 0
 }
 
