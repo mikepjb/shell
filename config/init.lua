@@ -32,7 +32,7 @@ local global_config = {
     netrw_list_hide = '^\\.git/$,^\\..*$,\\.swp$,\\.tmp$,node_modules',
 
     -- Language Options
-    markdown_fenced_languages = { 'css', 'javascript', 'bash', 'go' },
+    markdown_fenced_languages = { 'css', 'javascript', 'bash', 'go', 'sql' },
     omni_sql_no_default_maps = 1, -- don't use C-c for autocompletion in SQL.
 } for k, v in pairs(global_config) do vim.g[k] = v end
 
@@ -186,3 +186,6 @@ for _, ac in ipairs(autocmds) do
 end
 
 pcall(vim.cmd, 'colorscheme spartan') -- Try colorscheme, fallback to default
+
+-- TODO include typescript + deno LSP without plugins
+-- potentially include `test-run` as CR alias.
