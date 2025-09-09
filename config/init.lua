@@ -169,7 +169,7 @@ local autocmds = {
     end},
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
     {"BufWritePre", "*.templ", fmt("templ", "fmt")},
-    {"BufWritePre", "*.js,*.jsx,*.css", fmt("prettier", "--write")},
+    {"BufWritePre", "*.js,*.jsx,", fmt("prettier", "--write")},
     {"BufWritePre", "*.ts,*.tsx,*.css,*.json,*.svg", fmt("deno", "fmt")},
     {"BufWritePre", "*.sql", fmt("sql-formatter", "--fix", "-l", "postgresql")},
     {'TermOpen', '*', apply_opts({nu = false})},
@@ -184,6 +184,53 @@ for _, ac in ipairs(autocmds) do
         ac[1], {group = base, pattern = ac[2], callback = ac[3]}
     )
 end
+
+-- LSP Configuration ----------------------------------------------------------
+local function find_root(markers)
+    local path = vim.fn.expand('%:p:h')
+    while path ~= '/' do
+        for _, marker in ipairs(markers) do
+            if vim.loop.fs_stat(path .. '/' .. marker) then
+                return path
+            end
+        end
+        path = vim.fn.fnamemodify(path, ':h')
+    end
+    return nil
+end
+
+vim.api.nvim_create_autocmd('FileType', {
+    pattern = {'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'json'},
+    callback = function()
+        local deno_root = find_root({'deno.json', 'deno.jsonc'})
+        if deno_root then
+            vim.lsp.start({
+                name = 'denols',
+                cmd = {'deno', 'lsp'},
+                root_dir = deno_root,
+            })
+        else
+            local ts_root = find_root({'package.json', 'tsconfig.json'})
+            if ts_root then
+                vim.lsp.start({
+                    name = 'tsserver',
+                    cmd = {'typescript-language-server', '--stdio'},
+                    root_dir = ts_root,
+                })
+            end
+        end
+    end,
+})
+
+-- Basic LSP keymaps
+vim.api.nvim_create_autocmd('LspAttach', {
+    callback = function(ev)
+        local opts = { buffer = ev.buf }
+        vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+        vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+        vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+    end,
+})
 
 pcall(vim.cmd, 'colorscheme spartan') -- Try colorscheme, fallback to default
 
