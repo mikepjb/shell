@@ -136,6 +136,7 @@ local keymaps = {
     {"n", "<C-h>", "<C-w><C-h>"}, {"n", "<C-j>", "<C-w><C-j>"},
     {"n", "<C-k>", "<C-w><C-k>"}, {"n", "<C-l>", "<C-w><C-l>"},
     {"i", "<C-c>", "<Esc>"}, {"n", "S", "<C-^>"}, {"n", "<C-q>", ":q<CR>"},
+    {"v", "t", "<Esc>`<^i<div><Esc>`>a</div><Esc>"}, -- div wrapper
     {"n", "cqp", tmux_send_prompt},
     {"v", "gp", tmux_send_lines},   {"n", "gp", tmux_send_buffer},
     {"n", "gs", ":Grep "}, {"n", "gS", grep_under_cursor},
@@ -228,7 +229,14 @@ vim.api.nvim_create_autocmd('LspAttach', {
         local opts = { buffer = ev.buf }
         vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
         vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-        vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+        vim.keymap.set('n', 'K', function()
+            local diagnostics = vim.diagnostic.get(0, { lnum = vim.fn.line('.') - 1 })
+            if #diagnostics > 0 then
+                vim.diagnostic.open_float()
+            else
+                vim.lsp.buf.hover()
+            end
+        end, opts)
     end,
 })
 
