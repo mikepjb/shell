@@ -142,7 +142,7 @@ local keymaps = {
     {"n", "gs", ":Grep "}, {"n", "gS", grep_under_cursor},
     {"n", "<space>", ":FindFiles "},
     {"i", "<C-l>", " => "},
-    {"i", "<C-y>", " - [ ] "},
+    {"i", "<C-y>", "- [ ] "},
     {"n", "<M-n>", ":cnext<CR>"},   {"n", "<M-p>", ":cprev<CR>"},
     {"n", "<C-g>", ":noh<CR><C-g>"}, {"i", "<C-d>", "<Del>"},
     {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
