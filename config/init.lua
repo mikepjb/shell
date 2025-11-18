@@ -228,10 +228,11 @@ vim.api.nvim_create_autocmd('FileType', {
 vim.api.nvim_create_autocmd('FileType', {
     pattern = {'go'},
     callback = function()
+        local go_root = find_root({'go.mod'})
         vim.lsp.start({
             name = 'gopls',
             cmd = {'gopls'},
-            root_dir = deno_root,
+            root_dir = go_root,
         })
     end,
 })
