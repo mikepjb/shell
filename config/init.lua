@@ -225,6 +225,17 @@ vim.api.nvim_create_autocmd('FileType', {
     end,
 })
 
+vim.api.nvim_create_autocmd('FileType', {
+    pattern = {'go'},
+    callback = function()
+        vim.lsp.start({
+            name = 'gopls',
+            cmd = {'gopls'},
+            root_dir = deno_root,
+        })
+    end,
+})
+
 -- Basic LSP keymaps
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(ev)
