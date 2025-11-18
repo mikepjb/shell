@@ -1,0 +1,9 @@
+save-exact=true
+engine-strict=true
+save=true
+lockfile-version=3
+legacy-peer-deps=false
+fund=false
+update-notifier=false
+prefer-offline=true
+progress=true

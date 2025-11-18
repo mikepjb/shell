@@ -21,7 +21,6 @@
   ra = log --pretty=format:\"%C(yellow)%h%Creset %<(7,trunc)%ae%C(auto)%d %Creset%s %Cgreen(%cr)\"
   up = pull --rebase
   li = update-index --assume-unchanged
-  cc = !git commit -e -m \"\" -m \"Co-Authored-By: Claude <noreply@anthropic.com>\"
 [user]
   name = Mike Bruce
   email = mike@hypalynx.com

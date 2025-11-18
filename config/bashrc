@@ -30,7 +30,7 @@ shopt -s histappend
 CDPATH=.:$HOME/src
 
 alias vi='nvim'
-alias k='kubectl'
+alias k='kubectl' kc='kubectl config current-context'
 alias x='tmux attach -t x || tmux new -s x'
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 alias gn='cd ~/.notes'
@@ -59,4 +59,3 @@ fi
 
 jobs_signal() { [[ $(jobs) != "" ]] && echo -e "\x01\033[0;36m\x02\$\x01\033[0m\x02" || echo -e "\$"; }
 PS1='\W($(git branch --show-current 2>/dev/null || echo "!")) $(jobs_signal) '
-

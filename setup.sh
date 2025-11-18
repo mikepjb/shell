@@ -7,7 +7,7 @@ local_bin_dir="$HOME/.local/bin"
 
 main() {
     link_files
-    npm_deps
+    # npm_deps
 }
 
 link_files() {
@@ -19,6 +19,7 @@ link_files() {
 
     ln -sfv $setup_dir/config/init.lua $HOME/.config/nvim/init.lua
     ln -sfv $setup_dir/config/bashrc $HOME/.bashrc
+    ln -sfv $setup_dir/config/npmrc $HOME/.npmrc
     ln -sfv $setup_dir/config/vimrc $HOME/.vimrc
     ln -sfv $setup_dir/config/alacritty.toml $HOME/.config/alacritty/alacritty.toml
     ln -sfv $setup_dir/config/tmux.conf $HOME/.config/tmux/tmux.conf
@@ -39,9 +40,9 @@ link_files() {
     ln -sfv $setup_dir/config/spartan.lua $HOME/.config/nvim/colors/spartan.lua
 }
 
-npm_deps() {
-    # if not installed..
-    # sql-formatter
-}
+# npm_deps() {
+#     # if not installed..
+#     # sql-formatter
+# }
 
 main
