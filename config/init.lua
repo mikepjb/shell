@@ -163,7 +163,7 @@ local autocmds = {
     {"FileType", {
         "clojure", "scheme", "javascript", "typescript",
         "json", "javascriptreact", "typescriptreact",
-        "html", "yaml", "ruby", "markdown", "css", "sql"
+        "html", "tmpl", "yaml", "ruby", "markdown", "css", "sql"
     }, apply_opts({shiftwidth = 2, tabstop = 2, softtabstop = 2})},
     {"FileType", {"csv", "json", "xml"}, apply_opts({tw = 0, wrap = false})},
     {"FileType", "markdown", apply_opts({nu = false, wrap = true, lbr = true, tw = 65})},
