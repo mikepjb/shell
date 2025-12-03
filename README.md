@@ -39,3 +39,12 @@ nvim > vim, why?
   selecta/fzf)
 - config is much cleaner in lua. multistrings etc.
 - Alt keybindings!
+
+## Java LSP
+
+```
+  To use it:
+  1. Install jdtls: brew install jdtls
+  2. Download lombok: curl -L https://projectlombok.org/downloads/lombok.jar -o ~/.config/nvim/lombok.jar
+  3. Add to your init.lua: vim.api.nvim_create_autocmd('FileType', {pattern = 'java', callback = function() dofile(os.getenv('HOME') .. '/src/shell/jdtls.lua') end})
+```
