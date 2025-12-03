@@ -256,5 +256,15 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
 pcall(vim.cmd, 'colorscheme spartan') -- Try colorscheme, fallback to default
 
+vim.fn.setreg('n', [[
+  # Facts
+
+  # Procedures
+
+  # Concepts
+
+  # Questions
+  ]])
+
 -- TODO include typescript + deno LSP without plugins
 -- potentially include `test-run` as CR alias.
