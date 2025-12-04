@@ -146,7 +146,7 @@ local keymaps = {
     {"n", "<M-n>", ":cnext<CR>"},   {"n", "<M-p>", ":cprev<CR>"},
     {"n", "<C-g>", ":noh<CR><C-g>"}, {"i", "<C-d>", "<Del>"},
     {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
-    {"n", "gn", ":tabnew ~/.notes/index.md | tcd %:h<CR>"},
+    {"n", "gn", ":e ~/.notes/index.md"},
     {"n", "<M-t>", ":terminal test-run<CR>"},
     {"n", "gl", function()
         local qf_winid = vim.fn.getqflist({winid = 0}).winid
