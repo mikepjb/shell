@@ -1,0 +1,10 @@
+# Global Gitignore, for those personal project files that would otherwise
+# litter common codebases.
+
+*mikepjb-work*
+.run/
+.claude/
+.classpath
+.factorypath
+.project
+.settings/

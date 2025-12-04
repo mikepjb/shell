@@ -25,6 +25,7 @@ link_files() {
     ln -sfv $setup_dir/config/tmux.conf $HOME/.config/tmux/tmux.conf
     ln -sfv $setup_dir/config/gitconfig $HOME/.gitconfig
     ln -sfv $setup_dir/config/gitconfig_loveholidays $HOME/.gitconfig_loveholidays
+    ln -sfv $setup_dir/config/gitignore $HOME/.gitignore
 
     mkdir -p ~/.clojure
     ln -sfv $setup_dir/config/deps.edn $HOME/.clojure/deps.edn

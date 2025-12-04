@@ -2,6 +2,7 @@
 [core]
   editor = nvim
   autocrlf = false
+  excludesfile = ~/.gitignore
 [alias]
   aa = add --all
   br = branch --sort=committerdate
