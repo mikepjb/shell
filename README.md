@@ -16,6 +16,12 @@ _A collection of tools I use for development work._
 - Greenfield and replace systems that are important to you (complex -> simple).
 - 10k LOC for a service, 20k as an upper bound (limit service complexity).
 
+## Tools you may want to implement
+
+- curl caller (like postman.. stores historical calls)
+- same for 
+- bash history grep oneliner
+
 ## Avoid
 
 - Light mode (you never use it)
