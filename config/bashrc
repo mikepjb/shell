@@ -42,7 +42,6 @@ alias cljx='clj -M:repl:dev'
 alias scrape='wget -p -k -E -H'
 alias tree='tree -I node_modules'
 alias ks='kill -9 $(lsof -ti:8080)'
-alias ch='claude --model sonnet < ~/.notes/CLAUDE.md'
 [[ $(command -v xdg-open) ]] && alias open=xdg-open
 
 vc() {
