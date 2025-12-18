@@ -22,6 +22,7 @@ local config = {
     ignorecase = true, smartcase = true, gdefault = true,
     wildmode = 'longest:full,full', 
     wildignore = '*.o,*.obj,*.pyc,*.class,*/.git/*,*/node_modules/*',
+    completeopt = { 'menu', 'menuone', 'noselect' },
     grepprg = vim.fn.executable("rg") == 1 and 'rg --vimgrep' or 'grep -rn $* .',
     grepformat = vim.fn.executable("rg") == 1 and '%f:%l:%c:%m' or '%f:%l:%m',
 } for k, v in pairs(config) do vim.opt[k] = v end
