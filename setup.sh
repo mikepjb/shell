@@ -39,6 +39,16 @@ link_files() {
     ln -sfv $setup_dir/config/spartan.vim $HOME/.vim/colors/spartan.vim
     mkdir -p ~/.config/nvim/colors
     ln -sfv $setup_dir/config/spartan.lua $HOME/.config/nvim/colors/spartan.lua
+
+    # Claude Code config
+    mkdir -p ~/.claude/skills
+    ln -sfv $setup_dir/config/claude/CLAUDE.md $HOME/.claude/CLAUDE.md
+    ln -sfv $setup_dir/config/claude/settings.json $HOME/.claude/settings.json
+    for f in $setup_dir/config/claude/skills/*.md; do
+        skill=`basename $f .md`
+        mkdir -p $HOME/.claude/skills/$skill
+        ln -sfv $f $HOME/.claude/skills/$skill/SKILL.md
+    done
 }
 
 # npm_deps() {
