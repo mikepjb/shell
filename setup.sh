@@ -42,12 +42,16 @@ link_files() {
 
     # Claude Code config
     mkdir -p ~/.claude/skills
+    mkdir -p ~/.claude/agents
     ln -sfv $setup_dir/config/claude/CLAUDE.md $HOME/.claude/CLAUDE.md
     ln -sfv $setup_dir/config/claude/settings.json $HOME/.claude/settings.json
     for f in $setup_dir/config/claude/skills/*.md; do
         skill=`basename $f .md`
         mkdir -p $HOME/.claude/skills/$skill
         ln -sfv $f $HOME/.claude/skills/$skill/SKILL.md
+    done
+    for f in $setup_dir/config/claude/agents/*.md; do
+        ln -sfv $f $HOME/.claude/agents/`basename $f`
     done
 }
 

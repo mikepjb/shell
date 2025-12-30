@@ -1,34 +1,45 @@
 # Claude Instructions
 
-## Workflow: Skills-Based Development
+## Workflow: Hybrid Skills + Subagent
 
-Follow this sequential workflow for all development tasks:
+### Flow: Analyze → Plan → [Implement] ↔ Review
 
-### 1. Analyze → 2. Plan → 3. Implement ↔ Review
-
-| Stage | Skill | Purpose |
-|-------|-------|---------|
-| 1 | `analyze` | Gather context from codebase, web if needed |
-| 2 | `plan` | Output markdown plan for user approval |
-| 3 | `implement` | Make changes, iterate with review |
-| 4 | `review` | Validate changes, provide summary |
+| Stage | Type | Context |
+|-------|------|---------|
+| Analyze | skill | Main (fast, retains history) |
+| Plan | skill | Main (fast, retains history) |
+| Implement | **subagent** | Isolated (heavy lifting) |
+| Review | skill | Main (sees implement output) |
 
 ### Stage Details
 
-**Analyze**: Collects relevant context before any planning. Outputs concise markdown summary of findings with file:line references.
+**Analyze** (skill - main context)
+Use the `analyze` skill to gather context. Output stays in conversation for planning.
 
-**Plan**: Produces a clear plan specifying exact files and line ranges to modify. ALWAYS wait for user approval before proceeding to implement.
+**Plan** (skill - main context)
+Use the `plan` skill. ALWAYS wait for user approval before proceeding.
 
-**Implement**: Executes the approved plan. For UI work, use the `ui-design` skill. Passes changes to review automatically.
+**Implement** (subagent - isolated)
+Spawn the `implement` agent for code changes. Pass:
+- The approved plan
+- Key file:line references from analyze
+- Any constraints from user
 
-**Review**: Validates changes and iterates with implement until satisfied. Final output includes:
-- Summary of changes made
-- Test coverage status
-- Manual testing instructions
+The agent works in isolation, returns summary of changes.
+
+**Review** (skill - main context)
+Use the `review` skill on the implement agent's output. If changes needed:
+- Pass feedback back to implement agent (resume with agent ID)
+- Iterate until review passes
+
+### Why This Split
+
+- **Analyze/Plan/Review in main**: Fast, low-latency, benefits from conversation history
+- **Implement isolated**: Generates lots of tool calls and output that would pollute main context
 
 ### Rules
 
-- Never skip the analyze stage for non-trivial tasks
+- Never skip analyze for non-trivial tasks
 - Never proceed from plan to implement without user approval
-- Implement and review iterate until review is satisfied
-- All tests must pass before review signs off
+- When spawning implement, include full context (it starts fresh)
+- Resume implement agent with its ID when iterating with review
