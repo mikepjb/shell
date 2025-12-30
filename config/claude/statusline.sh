@@ -2,23 +2,64 @@
 
 input=$(cat)
 
-CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size')
-USAGE=$(echo "$input" | jq '.context_window.current_usage')
+MODEL=$(echo "$input" | jq -r '.model.display_name')
+EXCEEDS=$(echo "$input" | jq -r '.exceeds_200k_tokens')
+TRANSCRIPT=$(echo "$input" | jq -r '.transcript_path')
 
-if [ "$USAGE" != "null" ]; then
-    CURRENT_TOKENS=$(echo "$USAGE" | jq '.input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens')
-    PERCENT_USED=$((CURRENT_TOKENS * 100 / CONTEXT_SIZE))
+# Model-specific context window sizes (in tokens)
+case "$MODEL" in
+    *"Sonnet"*|*"sonnet"*)
+        MAX_CONTEXT=200000
+        ;;
+    *"Opus"*|*"opus"*)
+        MAX_CONTEXT=200000
+        ;;
+    *"Haiku"*|*"haiku"*)
+        MAX_CONTEXT=200000
+        ;;
+    *)
+        MAX_CONTEXT=200000
+        ;;
+esac
 
-    # Color code based on usage
-    if [ "$PERCENT_USED" -lt 50 ]; then
-        COLOR="green"
-    elif [ "$PERCENT_USED" -lt 80 ]; then
-        COLOR="yellow"
+# Check if context_window field exists (newer versions)
+CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size // null')
+
+if [ "$CONTEXT_SIZE" != "null" ]; then
+    # Use context_window data if available
+    USAGE=$(echo "$input" | jq '.context_window.current_usage')
+    if [ "$USAGE" != "null" ]; then
+        CURRENT_TOKENS=$(echo "$USAGE" | jq '.input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens')
+        PERCENT_USED=$((CURRENT_TOKENS * 100 / CONTEXT_SIZE))
+        echo "[$MODEL] Context: ${PERCENT_USED}%"
     else
-        COLOR="red"
+        echo "[$MODEL] Context: 0%"
     fi
-
-    echo "Context: ${PERCENT_USED}%"
 else
-    echo "Context: 0%"
+    # Calculate from transcript file if available
+    if [ -f "$TRANSCRIPT" ]; then
+        # Rough token estimation: 1 token ≈ 4 characters
+        CHAR_COUNT=$(wc -c < "$TRANSCRIPT" 2>/dev/null || echo "0")
+        ESTIMATED_TOKENS=$((CHAR_COUNT / 4))
+
+        if [ $ESTIMATED_TOKENS -gt 0 ]; then
+            PERCENT_USED=$((ESTIMATED_TOKENS * 100 / MAX_CONTEXT))
+
+            # Cap at 100% for display purposes
+            if [ $PERCENT_USED -gt 100 ]; then
+                PERCENT_USED=100
+            fi
+
+            echo "[$MODEL] Context: ~${PERCENT_USED}%"
+        else
+            echo "[$MODEL] Context: 0%"
+        fi
+    else
+        # Final fallback: use exceeds_200k_tokens flag
+        if [ "$EXCEEDS" == "true" ]; then
+            echo "[$MODEL] Context: >90%"
+        else
+            echo "[$MODEL]"
+        fi
+    fi
 fi

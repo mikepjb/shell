@@ -14,10 +14,17 @@
       "Bash(git branch:*)",
       "Bash(git show:*)",
       "Bash(git blame:*)",
-      "Bash(git stash list:*)"
+      "Bash(git stash list:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ]
   },
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true
-  }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "defaultModel": "sonnet"
 }

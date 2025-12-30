@@ -46,6 +46,8 @@ link_files() {
     mkdir -p ~/.claude/commands
     ln -sfv $setup_dir/config/claude/CLAUDE.md $HOME/.claude/CLAUDE.md
     ln -sfv $setup_dir/config/claude/settings.json $HOME/.claude/settings.json
+    ln -sfv $setup_dir/config/claude/statusline.sh $HOME/.claude/statusline.sh
+    chmod +x $HOME/.claude/statusline.sh
     for f in $setup_dir/config/claude/skills/*.md; do
         skill=`basename $f .md`
         mkdir -p $HOME/.claude/skills/$skill
