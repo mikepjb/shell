@@ -17,6 +17,7 @@
   dn = diff --name-status
   list = config --global --list
   amend = commit --amend
+  x = ls-files --others --exclude-standard
   ffa = fetch --all && git rebase origin/master
   push-new = push -u origin HEAD
   ra = log --pretty=format:\"%C(yellow)%h%Creset %<(7,trunc)%ae%C(auto)%d %Creset%s %Cgreen(%cr)\"
