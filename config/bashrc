@@ -43,6 +43,9 @@ alias scrape='wget -p -k -E -H'
 alias tree='tree -I node_modules'
 alias ks='kill -9 $(lsof -ti:8080)'
 alias cl='claude'
+alias gp='gh pr create --fill'
+alias gd='gh pr create --draft --fill'
+alias gw='gh pr view --web'
 [[ $(command -v xdg-open) ]] && alias open=xdg-open
 
 vc() {
