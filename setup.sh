@@ -48,14 +48,67 @@ link_files() {
     ln -sfv $setup_dir/config/claude/settings.json $HOME/.claude/settings.json
     ln -sfv $setup_dir/config/claude/statusline.sh $HOME/.claude/statusline.sh
     chmod +x $HOME/.claude/statusline.sh
+
+    # Build list of expected skills from repo
+    expected_skills=""
+    for f in $setup_dir/config/claude/skills/*.md; do
+        expected_skills="$expected_skills $(basename $f .md)"
+    done
+
+    # Clean up skills not in repo
+    for dir in $HOME/.claude/skills/*/; do
+        skill=$(basename "$dir")
+        if ! echo "$expected_skills" | grep -qw "$skill"; then
+            echo "Removing stale skill: $skill"
+            rm -rf "$dir"
+        fi
+    done
+
+    # Link skills from repo
     for f in $setup_dir/config/claude/skills/*.md; do
         skill=`basename $f .md`
         mkdir -p $HOME/.claude/skills/$skill
         ln -sfv $f $HOME/.claude/skills/$skill/SKILL.md
     done
+
+    # Build list of expected agents from repo
+    expected_agents=""
+    for f in $setup_dir/config/claude/agents/*.md; do
+        expected_agents="$expected_agents $(basename $f)"
+    done
+
+    # Clean up agents not in repo
+    for f in $HOME/.claude/agents/*.md; do
+        [ -e "$f" ] || continue
+        agent=$(basename "$f")
+        if ! echo "$expected_agents" | grep -qw "$agent"; then
+            echo "Removing stale agent: $agent"
+            rm -f "$f"
+        fi
+    done
+
+    # Link agents from repo
     for f in $setup_dir/config/claude/agents/*.md; do
         ln -sfv $f $HOME/.claude/agents/`basename $f`
     done
+
+    # Build list of expected commands from repo
+    expected_commands=""
+    for f in $setup_dir/config/claude/commands/*.md; do
+        expected_commands="$expected_commands $(basename $f)"
+    done
+
+    # Clean up commands not in repo
+    for f in $HOME/.claude/commands/*.md; do
+        [ -e "$f" ] || continue
+        cmd=$(basename "$f")
+        if ! echo "$expected_commands" | grep -qw "$cmd"; then
+            echo "Removing stale command: $cmd"
+            rm -f "$f"
+        fi
+    done
+
+    # Link commands from repo
     for f in $setup_dir/config/claude/commands/*.md; do
         ln -sfv $f $HOME/.claude/commands/`basename $f`
     done

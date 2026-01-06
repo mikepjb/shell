@@ -14,10 +14,10 @@ Validate implementation quality and provide sign-off.
 - Are edge cases handled?
 - No obvious bugs or logic errors?
 
-### Safety
-- No security vulnerabilities (injection, XSS, etc.)
-- No hardcoded secrets or credentials
-- Proper input validation at boundaries
+### Security
+- No hardcoded secrets, credentials, or API keys
+- Proper input validation at system boundaries
+- Outputs are properly encoded/escaped for context (HTML, SQL, shell, etc.)
 
 ### Tests
 - All tests passing?
@@ -29,33 +29,85 @@ Validate implementation quality and provide sign-off.
 - No unnecessary complexity?
 - Clean, readable code?
 
-## Web Service Security & Ops
+## Security Review (OWASP-Informed)
 
-### API Security
-- [ ] New endpoints have appropriate auth
-- [ ] Authorization checks in place (who can access what)
-- [ ] Input validation on all user data
-- [ ] Rate limiting considered for public endpoints
-- [ ] No SQL injection vulnerabilities (parameterized queries)
-- [ ] No sensitive data in URL parameters
+### Injection
+- [ ] SQL: Parameterized queries only, no string concatenation
+- [ ] Command: No user input in shell commands; if unavoidable, strict allowlist
+- [ ] LDAP/NoSQL/XPath: Inputs escaped for target interpreter
+- [ ] Template: Server-side templates don't evaluate user input
 
-### Error Handling
-- [ ] Errors don't leak internal details (stack traces, SQL)
-- [ ] Consistent error response format
-- [ ] Appropriate HTTP status codes
-- [ ] Errors are logged with context
+### Authentication & Session
+- [ ] Passwords hashed with bcrypt/argon2 (not MD5/SHA1)
+- [ ] Session tokens are random, long, and httpOnly
+- [ ] Logout actually invalidates session server-side
+- [ ] Failed logins don't reveal if user exists
+- [ ] MFA flows can't be bypassed
+
+### Authorization
+- [ ] Every endpoint checks permissions (not just UI hiding)
+- [ ] No IDOR: Users can't access others' data by changing IDs
+- [ ] Privilege escalation: Can't grant yourself higher roles
+- [ ] Default deny: New resources are private by default
+
+### XSS & Output Encoding
+- [ ] User content HTML-escaped before rendering
+- [ ] JSON responses use proper Content-Type
+- [ ] CSP headers in place for web apps
+- [ ] No `dangerouslySetInnerHTML` or `innerHTML` with user data
+
+### CSRF & Request Forgery
+- [ ] State-changing operations require CSRF tokens
+- [ ] SSRF: URLs from users validated against allowlist
+- [ ] Webhooks verify signatures/origins
+
+### Cryptography
+- [ ] Using well-known libraries, not custom crypto
+- [ ] Secrets in env vars or secret manager, not code
+- [ ] TLS for all external communications
+- [ ] Timing-safe comparison for secrets/tokens
+
+### Data Exposure
+- [ ] API responses don't leak extra fields (use explicit serialization)
+- [ ] Errors don't expose stack traces, SQL, or internal paths
+- [ ] Logs redact PII, passwords, tokens
+- [ ] No sensitive data in URLs (appears in logs/referer)
+
+### Output Validation
+- [ ] API responses validated against schema before sending
+- [ ] Redirects only to allowlisted domains/paths
+- [ ] Generated URLs validated (no open redirect)
+- [ ] File downloads have correct Content-Type and Content-Disposition
+- [ ] Emails/notifications don't reflect user input unsanitized
+
+### Rate Limiting & DoS
+- [ ] Public endpoints have rate limits
+- [ ] File uploads have size limits
+- [ ] Regex patterns aren't vulnerable to ReDoS
+- [ ] Pagination prevents unbounded queries
+
+### Dependencies
+- [ ] No known vulnerable dependencies (check npm audit, cargo audit, etc.)
+- [ ] Lock files committed
+- [ ] Dependencies from trusted sources only
+
+## Operational Concerns
 
 ### Database
-- [ ] Queries are efficient (check for N+1, missing indexes)
+- [ ] Queries efficient (no N+1, indexes exist)
 - [ ] Transactions used where needed
 - [ ] Migrations are reversible
 - [ ] No data loss scenarios
 
-### Observability
-- [ ] Key operations are logged
-- [ ] Logs include correlation/request IDs
-- [ ] No sensitive data logged
-- [ ] Metrics/monitoring considered
+### Observability (Wide Events)
+Prefer one context-rich log event per request per service over scattered log lines.
+
+- [ ] Single structured event per request with all context (user, request_id, duration, status, etc.)
+- [ ] Include timing breakdowns (db_ms, external_api_ms, total_ms)
+- [ ] Capture request metadata (endpoint, method, params, user_agent)
+- [ ] Include business context (order_id, customer_tier, feature_flags)
+- [ ] No sensitive data logged (redact tokens, passwords, PII)
+- [ ] Errors include full context for debugging without log correlation
 
 ## Customer Impact Awareness
 

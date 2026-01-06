@@ -19,12 +19,13 @@
       "WebFetch(domain:github.com)"
     ]
   },
-  "enabledPlugins": {
-    "typescript-lsp@claude-plugins-official": true
-  },
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh"
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true
   },
   "defaultModel": "sonnet"
 }
