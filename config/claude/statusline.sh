@@ -6,6 +6,17 @@ MODEL=$(echo "$input" | jq -r '.model.display_name')
 EXCEEDS=$(echo "$input" | jq -r '.exceeds_200k_tokens')
 TRANSCRIPT=$(echo "$input" | jq -r '.transcript_path')
 
+# Get current folder name
+FOLDER=$(basename "$PWD")
+
+# Get git branch if in a git repo
+BRANCH=$(git branch --show-current 2>/dev/null)
+if [ -n "$BRANCH" ]; then
+    GIT_INFO=" ($BRANCH)"
+else
+    GIT_INFO=""
+fi
+
 # Model-specific context window sizes (in tokens)
 case "$MODEL" in
     *"Sonnet"*|*"sonnet"*)
@@ -29,11 +40,11 @@ if [ "$CONTEXT_SIZE" != "null" ]; then
     # Use context_window data if available
     USAGE=$(echo "$input" | jq '.context_window.current_usage')
     if [ "$USAGE" != "null" ]; then
-        CURRENT_TOKENS=$(echo "$USAGE" | jq '.input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens')
+        CURRENT_TOKENS=$(echo "$USAGE" | jq '.input_tokens + .output_tokens + .cache_creation_input_tokens + .cache_read_input_tokens')
         PERCENT_USED=$((CURRENT_TOKENS * 100 / CONTEXT_SIZE))
-        echo "[$MODEL] Context: ${PERCENT_USED}%"
+        echo "[$FOLDER$GIT_INFO] [$MODEL] Context: ${PERCENT_USED}%"
     else
-        echo "[$MODEL] Context: 0%"
+        echo "[$FOLDER$GIT_INFO] [$MODEL] Context: 0%"
     fi
 else
     # Calculate from transcript file if available
@@ -50,16 +61,16 @@ else
                 PERCENT_USED=100
             fi
 
-            echo "[$MODEL] Context: ~${PERCENT_USED}%"
+            echo "[$FOLDER$GIT_INFO] [$MODEL] Context: ~${PERCENT_USED}%"
         else
-            echo "[$MODEL] Context: 0%"
+            echo "[$FOLDER$GIT_INFO] [$MODEL] Context: 0%"
         fi
     else
         # Final fallback: use exceeds_200k_tokens flag
         if [ "$EXCEEDS" == "true" ]; then
-            echo "[$MODEL] Context: >90%"
+            echo "[$FOLDER$GIT_INFO] [$MODEL] Context: >90%"
         else
-            echo "[$MODEL]"
+            echo "[$FOLDER$GIT_INFO] [$MODEL]"
         fi
     fi
 fi
