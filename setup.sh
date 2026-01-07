@@ -105,7 +105,7 @@ link_files() {
 
     # Clean up commands not in repo
     for f in $HOME/.claude/commands/*.md; do
-        [ -e "$f" ] || continue
+        [ -L "$f" ] || continue
         cmd=$(basename "$f")
         if ! echo "$expected_commands" | grep -qw "$cmd"; then
             echo "Removing stale command: $cmd"

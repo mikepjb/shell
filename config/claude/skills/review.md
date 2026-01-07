@@ -20,9 +20,29 @@ Validate implementation quality and provide sign-off.
 - Outputs are properly encoded/escaped for context (HTML, SQL, shell, etc.)
 
 ### Tests
-- All tests passing?
-- New code has appropriate coverage?
-- No skipped or disabled tests?
+**CRITICAL: Must execute test suite before sign-off**
+
+1. **Locate test command** (in priority order):
+   - Check for `npm run test` or `make test`
+   - Check package.json scripts section
+   - Check Makefile targets
+   - Check README/docs for test instructions
+   - Check for test frameworks (pytest, jest, cargo test, go test, etc.)
+
+2. **Execute tests**: Run the test suite and capture output
+
+3. **Execute linting** (in priority order):
+   - Check for `npm run lint` or `make lint`
+   - Check for common linters (eslint, pylint, rubocop, clippy, etc.)
+   - Run linting and capture output
+
+4. **Verification**:
+   - All tests passing? ❌ BLOCKER if any failures
+   - Linting clean? ❌ BLOCKER if any lint errors
+   - New code has appropriate coverage?
+   - No skipped or disabled tests?
+
+**If tests or linting fail, this is an automatic BLOCKER - return to implement for fixes.**
 
 ### Style
 - Matches existing codebase patterns?
