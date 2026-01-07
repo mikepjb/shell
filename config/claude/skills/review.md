@@ -36,13 +36,21 @@ Validate implementation quality and provide sign-off.
    - Check for common linters (eslint, pylint, rubocop, clippy, etc.)
    - Run linting and capture output
 
-4. **Verification**:
+4. **Execute CodeScene review** (if available):
+   - Check if `cs` is available: `which cs` or `command -v cs`
+   - If available, run `cs review <changed-files>` on modified files
+   - Review CodeScene output for code health issues
+   - If `cs` not available, skip this step
+
+5. **Verification**:
    - All tests passing? ❌ BLOCKER if any failures
    - Linting clean? ❌ BLOCKER if any lint errors
+   - CodeScene issues? ⚠️ WARNING - review for code health concerns
    - New code has appropriate coverage?
    - No skipped or disabled tests?
 
 **If tests or linting fail, this is an automatic BLOCKER - return to implement for fixes.**
+**CodeScene findings should be reviewed but are typically warnings unless they indicate serious issues.**
 
 ### Style
 - Matches existing codebase patterns?
