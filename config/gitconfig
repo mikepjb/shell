@@ -23,7 +23,7 @@
   ra = log --pretty=format:\"%C(yellow)%h%Creset %<(7,trunc)%ae%C(auto)%d %Creset%s %Cgreen(%cr)\"
   up = pull --rebase
   li = update-index --assume-unchanged
-	cc = \\!git commit --edit --template=<(echo -e \"\\n\\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\\n\\nCo-Authored-By: Claude <noreply@anthropic.com>\")
+  cc = commit --edit --template=<(echo -e \"\\n\\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\\n\\nCo-Authored-By: Claude <noreply@anthropic.com>\")
 [user]
   name = Mike Bruce
   email = mike@hypalynx.com
@@ -33,6 +33,8 @@
   rebase = true
 [push]
   autoSetupRemote = true
+[commit]
+  template = ~/.gitmessage
 
 # Use alternative email for work projects
 [includeIf "hasconfig:remote.*.url:git@github.com:loveholidays/*"]

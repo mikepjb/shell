@@ -24,6 +24,7 @@ link_files() {
     ln -sfv $setup_dir/config/alacritty.toml $HOME/.config/alacritty/alacritty.toml
     ln -sfv $setup_dir/config/tmux.conf $HOME/.config/tmux/tmux.conf
     ln -sfv $setup_dir/config/gitconfig $HOME/.gitconfig
+    ln -sfv $setup_dir/config/gitmessage $HOME/.gitmessage
     ln -sfv $setup_dir/config/gitconfig_loveholidays $HOME/.gitconfig_loveholidays
     ln -sfv $setup_dir/config/gitignore $HOME/.gitignore
 
