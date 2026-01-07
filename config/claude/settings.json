@@ -52,5 +52,8 @@
     "typescript-lsp@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true
   },
-  "defaultModel": "sonnet"
+  "defaultModel": "sonnet",
+  "read": {
+    "maxTokens": 32000
+  }
 }
