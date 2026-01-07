@@ -49,6 +49,11 @@ link_files() {
     ln -sfv $setup_dir/config/claude/statusline.sh $HOME/.claude/statusline.sh
     chmod +x $HOME/.claude/statusline.sh
 
+    # Clean up broken symlinks in claude directories
+    find -L $HOME/.claude/commands -type l -delete 2>/dev/null
+    find -L $HOME/.claude/agents -type l -delete 2>/dev/null
+    find -L $HOME/.claude/skills -type l -delete 2>/dev/null
+
     # Build list of expected skills from repo
     expected_skills=""
     for f in $setup_dir/config/claude/skills/*.md; do
