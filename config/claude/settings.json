@@ -1,13 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Skill(analyze)",
-      "Skill(api-design)",
-      "Skill(debug)",
-      "Skill(implement)",
-      "Skill(plan)",
-      "Skill(review)",
-      "Skill(ui-design)",
+      "Skill(*)",
       "Read(/home/mikepjb/src/**)",
       "Edit",
       "Write",
