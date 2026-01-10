@@ -1,45 +1,67 @@
 # Claude Instructions
 
-## Workflow: Hybrid Skills + Subagent
+## Mandatory Workflow
 
-### Flow: Analyze → Plan → [Implement] ↔ Review
+For ANY non-trivial task (more than a one-line fix), you MUST follow this sequence:
 
-| Stage | Type | Context |
-|-------|------|---------|
-| Analyze | skill | Main (fast, retains history) |
-| Plan | skill | Main (fast, retains history) |
-| Implement | **subagent** | Isolated (heavy lifting) |
-| Review | skill | Main (sees implement output) |
+```
+ANALYZE → PLAN → [await approval] → IMPLEMENT → REVIEW
+```
 
-### Stage Details
+**This is not optional.** Do not skip steps. Do not combine steps.
 
-**Analyze** (skill - main context)
-Use the `analyze` skill to gather context. Output stays in conversation for planning.
+### Step 1: Analyze
+Use the `analyze` skill. Gather context: find relevant files, trace data flow, understand existing patterns. Output a context summary with file:line references.
 
-**Plan** (skill - main context)
-Use the `plan` skill. ALWAYS wait for user approval before proceeding.
+### Step 2: Plan
+Use the `plan` skill. Propose specific changes with exact file paths and line numbers.
 
-**Implement** (subagent - isolated)
-Spawn the `implement` agent for code changes. Pass:
+**STOP and explicitly ask**: "Approve this plan to proceed?"
+
+Do NOT proceed until user says yes.
+
+### Step 3: Implement
+Only after explicit approval, spawn the `implement` subagent. Pass:
 - The approved plan
 - Key file:line references from analyze
 - Any constraints from user
 
-The agent works in isolation, returns summary of changes.
+### Step 4: Review
+Use the `review` skill on implementation output. If issues found, iterate with implement until resolved.
 
-**Review** (skill - main context)
-Use the `review` skill on the implement agent's output. If changes needed:
-- Pass feedback back to implement agent (resume with agent ID)
-- Iterate until review passes
+## Why Subagent for Implement
 
-### Why This Split
+- Analyze/Plan/Review run in main context (fast, retains history)
+- Implement runs isolated (heavy tool use, doesn't pollute main context)
+- Resume implement agent with its ID when iterating
 
-- **Analyze/Plan/Review in main**: Fast, low-latency, benefits from conversation history
-- **Implement isolated**: Generates lots of tool calls and output that would pollute main context
+## Web Service Development
 
-### Rules
+When working on web services, pay attention to:
 
-- Never skip analyze for non-trivial tasks
-- Never proceed from plan to implement without user approval
-- When spawning implement, include full context (it starts fresh)
-- Resume implement agent with its ID when iterating with review
+### API Design
+- Consistent URL structure: `/api/v1/resources/:id`
+- Correct HTTP methods and status codes (201 for create, 204 for delete, etc.)
+- Clear error responses with error codes
+- Pagination from the start for list endpoints
+
+### Database
+- Parameterized queries only (never string concatenation)
+- Transactions for multi-step operations
+- Check for N+1 queries
+- Reversible migrations
+
+### Debugging
+When investigating issues:
+1. Reproduce first - understand how to trigger it
+2. Gather evidence - logs, errors, stack traces
+3. Trace the flow - follow the request path
+4. Check the obvious - config, connectivity, permissions
+5. Look at recent changes - prime suspects
+
+## Principles
+
+- **Minimal changes**: Only what's necessary for the task
+- **Match existing patterns**: Follow codebase conventions
+- **No over-engineering**: Don't add abstractions for hypothetical futures
+- **Security by default**: Validate inputs, escape outputs, parameterize queries

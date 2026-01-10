@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Skill(*)",
-      "Read(/home/mikepjb/src/**)",
+      "Glob",
+      "Grep",
+      "Read(~/src/**)",
+      "Read(~/.claude/**)",
       "Edit",
       "Write",
       "Bash(git status:*)",
@@ -21,6 +24,7 @@
       "Bash(git fetch:*)",
       "Bash(git restore:*)",
       "Bash(git reset:*)",
+      "Bash(chmod:*)",
       "Bash(cs:*)",
       "Bash(make:*)",
       "Bash(go:*)",
@@ -38,6 +42,49 @@
       "Bash(tree:*)",
       "WebSearch",
       "WebFetch"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/src/shell/config/claude/hooks/prompt-context.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/src/shell/config/claude/hooks/post-edit.sh",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "~/src/shell/config/claude/hooks/codescene-review.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/src/shell/config/claude/hooks/pre-stop.sh",
+            "timeout": 120
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
