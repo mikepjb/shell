@@ -6,8 +6,12 @@ set -euo pipefail
 
 INPUT=$(cat)
 
-# Check if we have uncommitted changes (meaning work was done)
-if ! git diff --quiet HEAD 2>/dev/null && ! git diff --cached --quiet HEAD 2>/dev/null; then
+# Check if any CODE files changed (skip .md, .txt, etc)
+CODE_EXTS='\.(go|js|ts|tsx|jsx|py|rs|c|cpp|h|hpp|java|rb|sh|sql|css|scss|html|vue|svelte)$'
+CHANGED_CODE=$(git diff --name-only HEAD 2>/dev/null; git diff --cached --name-only HEAD 2>/dev/null)
+CHANGED_CODE=$(echo "$CHANGED_CODE" | grep -E "$CODE_EXTS" || true)
+
+if [[ -n "$CHANGED_CODE" ]]; then
     # There are changes - we should verify tests pass
 
     # Detect test command
