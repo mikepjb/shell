@@ -33,10 +33,12 @@ if [[ -n "$CHANGED_CODE" ]]; then
 
     if [[ -n "$TEST_CMD" ]]; then
         echo "Running tests before stop: $TEST_CMD" >&2
-        if ! $TEST_CMD 2>&1; then
+        if ! $TEST_CMD >&2; then
             echo "Tests failed. Please fix before completing." >&2
             exit 2
         fi
+    else
+        echo "No test command detected, skipping." >&2
     fi
 fi
 
