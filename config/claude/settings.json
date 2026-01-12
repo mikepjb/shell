@@ -1,11 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Skill(*)",
+      "Skill(analyze)",
+      "Skill(api-design)",
+      "Skill(clickup)",
+      "Skill(debug)",
+      "Skill(implement)",
+      "Skill(overseer)",
+      "Skill(plan)",
+      "Skill(review)",
+      "Skill(ui-design)",
       "Glob",
       "Grep",
       "Read(~/src/**)",
       "Read(~/.claude/**)",
+      "Read(~/Downloads/**)",
       "Edit",
       "Write",
       "Bash(git status:*)",
@@ -65,11 +74,6 @@
             "type": "command",
             "command": "~/src/shell/config/claude/hooks/post-edit.sh",
             "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "~/src/shell/config/claude/hooks/codescene-review.sh",
-            "timeout": 60
           }
         ]
       }
