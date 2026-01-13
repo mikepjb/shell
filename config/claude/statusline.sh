@@ -47,21 +47,36 @@ if [ "$CONTEXT_SIZE" != "null" ]; then
         echo "[$FOLDER$GIT_INFO] [$MODEL] Context: 0%"
     fi
 else
-    # Calculate from transcript file if available
+    # Calculate from transcript JSONL file if available
     if [ -f "$TRANSCRIPT" ]; then
-        # Rough token estimation: 1 token ≈ 4 characters
-        CHAR_COUNT=$(wc -c < "$TRANSCRIPT" 2>/dev/null || echo "0")
-        ESTIMATED_TOKENS=$((CHAR_COUNT / 4))
+        # Find the most recent main-chain entry with usage data
+        # Filter out sidechain agents, errors, and entries without usage
+        USAGE_LINE=$(tac "$TRANSCRIPT" 2>/dev/null | while read -r line; do
+            # Skip empty lines
+            [ -z "$line" ] && continue
+            # Check if line has usage data and is not a sidechain/error
+            has_usage=$(echo "$line" | jq -r 'select(.usage != null) | select(.isSidechain != true) | select(.error == null) | .usage' 2>/dev/null)
+            if [ -n "$has_usage" ] && [ "$has_usage" != "null" ]; then
+                echo "$line"
+                break
+            fi
+        done)
 
-        if [ $ESTIMATED_TOKENS -gt 0 ]; then
-            PERCENT_USED=$((ESTIMATED_TOKENS * 100 / MAX_CONTEXT))
+        if [ -n "$USAGE_LINE" ]; then
+            # Extract actual token counts from usage object
+            INPUT_TOKENS=$(echo "$USAGE_LINE" | jq -r '.usage.input_tokens // 0')
+            CACHE_READ=$(echo "$USAGE_LINE" | jq -r '.usage.cache_read_input_tokens // 0')
+            CACHE_CREATE=$(echo "$USAGE_LINE" | jq -r '.usage.cache_creation_input_tokens // 0')
+
+            CURRENT_TOKENS=$((INPUT_TOKENS + CACHE_READ + CACHE_CREATE))
+            PERCENT_USED=$((CURRENT_TOKENS * 100 / MAX_CONTEXT))
 
             # Cap at 100% for display purposes
             if [ $PERCENT_USED -gt 100 ]; then
                 PERCENT_USED=100
             fi
 
-            echo "[$FOLDER$GIT_INFO] [$MODEL] Context: ~${PERCENT_USED}%"
+            echo "[$FOLDER$GIT_INFO] [$MODEL] Context: ${PERCENT_USED}%"
         else
             echo "[$FOLDER$GIT_INFO] [$MODEL] Context: 0%"
         fi
