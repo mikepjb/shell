@@ -21,6 +21,34 @@ Validate implementation quality, strategic decisions, and provide sign-off.
 - Are edge cases handled?
 - No obvious bugs or logic errors?
 
+### Code Quality & Testing
+
+**Readability & Maintainability**
+- [ ] Code is easily understood by other developers
+- [ ] Self-documenting: clear names, simple logic
+- [ ] Comments only where logic is non-obvious (business rules, algorithms)
+- [ ] No comments explaining bad code (refactor instead)
+
+**Testability**
+- [ ] Code designed for testing (loosely coupled, injectable dependencies)
+- [ ] Functions/methods have clear inputs and outputs
+- [ ] External dependencies can be mocked/stubbed
+
+**Test Coverage** (Testing Pyramid)
+- [ ] Unit tests exist for core logic (base of pyramid)
+- [ ] Integration tests for component interactions (middle)
+- [ ] E2E tests for critical paths only (top - minimal)
+- [ ] Happy paths tested
+- [ ] Edge cases tested (boundaries, empty inputs, limits)
+- [ ] Error handling tested (invalid inputs, failures, exceptions)
+- [ ] All tests pass
+
+**Test Quality**
+- [ ] Tests are simple and focused
+- [ ] Descriptive test names (clearly state what is tested)
+- [ ] Tests run independently (no interdependencies)
+- [ ] External dependencies properly mocked in unit tests
+
 ### Strategic Concerns (from Overseer)
 
 **Naming**

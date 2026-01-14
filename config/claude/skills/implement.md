@@ -76,11 +76,44 @@ When the implementation involves frontend/UI changes:
 - Skip tests or leave them failing
 - Add features not in the approved plan
 
+## Code Quality & Testing Standards
+
+### Production-Ready Code
+Write code that is:
+- **Easily testable**: Design with testing in mind, avoid tight coupling
+- **Easily understood**: Other developers should grasp intent quickly
+- **Edge-case aware**: Handle errors and boundary conditions gracefully
+
+### Comments vs Self-Documenting Code
+- **Bias towards self-documenting code**: Use clear names, simple logic
+- **Comment when appropriate**: Non-obvious algorithms, business rules, "why" not "what"
+- **Never**: Comment to explain bad code - refactor instead
+
+### Testing Pyramid
+Follow the testing pyramid principle:
+- **Unit tests** (base): Most numerous, test individual functions/methods
+- **Integration tests** (middle): Test components working together
+- **E2E tests** (top): Minimal, test critical user journeys
+
+### Test Coverage Requirements
+Always write tests that cover:
+- **Happy paths**: Expected successful scenarios
+- **Edge cases**: Boundary conditions, empty inputs, limits
+- **Error handling**: Invalid inputs, failures, exceptions
+- **Integration points**: External dependencies, APIs, database
+
+### Test Quality
+- Keep tests simple and focused (one assertion per test when practical)
+- Use descriptive test names: `test_transfer_fails_with_insufficient_funds`
+- Avoid test interdependencies (each test should run independently)
+- Mock external dependencies in unit tests
+
 ## Handoff to Review
 
 When implementation is complete, provide:
 - List of files modified with brief description
 - Test results (all must pass)
+- Test coverage summary (unit, integration, edge cases)
 - Any deviations from the plan and why
 
 ## Iteration
