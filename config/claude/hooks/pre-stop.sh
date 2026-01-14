@@ -18,6 +18,11 @@ if [[ "$STOP_HOOK_ACTIVE" == "true" ]]; then
     exit 0
 fi
 
+# Skip if this doesn't look like a code project
+if [[ ! -f "Makefile" && ! -f "./gradlew" && ! -f "package.json" && ! -f "deno.json" && ! -f "go.mod" ]]; then
+    exit 0  # Not a code project, allow stop
+fi
+
 # Only these extensions trigger tests
 TEST_EXTS='\.(go|ts|tsx|js|jsx|templ)$'
 
