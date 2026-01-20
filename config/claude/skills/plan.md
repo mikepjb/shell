@@ -14,6 +14,12 @@ Create clear, actionable implementation plans based on analysis output.
 3. **Specify changes**: List exact files and line ranges to modify
 4. **Identify risks**: Note anything that could go wrong
 5. **Present for approval**: Wait for user to approve before proceeding
+6. **Write plan file**:
+   - Generate a task-specific filename: `<task-name>_PLAN.md` (e.g., `add-auth_PLAN.md`, `fix-login-bug_PLAN.md`)
+   - Use lowercase with hyphens, derived from the task summary
+   - BEFORE writing, check if the file already exists using Read tool
+   - If it exists, STOP and ask the user whether to overwrite or use a different name
+   - Write to `$PWD/<task-name>_PLAN.md`, NOT to `~/.claude/skills/plan/`
 
 ## Output Format
 
@@ -90,3 +96,6 @@ One-sentence description of what will be done.
 - No implementation until user approves
 - If multiple approaches exist, present options with trade-offs
 - Flag any breaking changes or migrations needed
+- IMPORTANT: Write your plan to `$PWD/<task-name>_PLAN.md` where `<task-name>` is a lowercase hyphenated version of the task (e.g., `add-user-auth_PLAN.md`)
+- BEFORE writing, use Read tool to check if the file exists - if it does, ask the user before overwriting
+- Never write plan files to `~/.claude/skills/plan/` - that directory is only for the skill definition itself

@@ -55,6 +55,30 @@ if command -v cs &>/dev/null; then
     fi
 fi
 
+# --- Linter (blocking on failure) ---
+# Run before tests to fail fast on style issues
+# Priority: make lint → npm run lint → deno task lint
+
+if [[ -f "Makefile" ]] && grep -q '^lint:' Makefile 2>/dev/null; then
+    echo "Running make lint..." >&2
+    if ! make lint >&2; then
+        echo "Linting failed. Please fix before completing." >&2
+        exit 2
+    fi
+elif [[ -f "package.json" ]] && grep -q '"lint"' package.json 2>/dev/null; then
+    echo "Running npm run lint..." >&2
+    if ! npm run lint >&2; then
+        echo "Linting failed. Please fix before completing." >&2
+        exit 2
+    fi
+elif [[ -f "deno.json" ]] && grep -q '"lint"' deno.json 2>/dev/null; then
+    echo "Running deno task lint..." >&2
+    if ! deno task lint >&2; then
+        echo "Linting failed. Please fix before completing." >&2
+        exit 2
+    fi
+fi
+
 # --- Unit/Integration Tests (blocking on failure) ---
 # Excludes: e2e, browser, cypress, playwright, puppeteer tests
 

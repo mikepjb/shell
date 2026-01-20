@@ -7,12 +7,9 @@
       "Read(~/.claude/**)",
       "Read(~/Downloads/**)",
       "Skill(analyze)",
-      "Skill(api-design)",
-      "Skill(debug)",
       "Skill(implement)",
       "Skill(plan)",
       "Skill(ui-design)",
-      "Skill(overseer)",
       "Skill(review)",
       "Skill(clickup)",
       "Edit",
@@ -66,18 +63,6 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/src/shell/config/claude/hooks/post-edit.sh",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "matcher": "",
@@ -102,5 +87,6 @@
   "defaultModel": "sonnet",
   "read": {
     "maxTokens": 32000
-  }
+  },
+  "model": "sonnet"
 }
