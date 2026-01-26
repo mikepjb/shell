@@ -7,10 +7,16 @@
       "Read(~/.claude/**)",
       "Read(~/Downloads/**)",
       "Skill(analyze)",
-      "Skill(guide)",
-      "Skill(document)",
+      "Skill(api-design)",
+      "Skill(debug)",
+      "Skill(implement)",
+      "Skill(plan)",
+      "Skill(ui-design)",
+      "Skill(overseer)",
       "Skill(review)",
       "Skill(clickup)",
+      "Edit",
+      "Write",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -36,6 +42,8 @@
       "Bash(npm:*)",
       "Bash(pnpm:*)",
       "Bash(npx:*)",
+      "Bash(python:*)",
+      "Bash(pytest:*)",
       "Bash(ls:*)",
       "Bash(mkdir:*)",
       "Bash(cp:*)",
@@ -52,8 +60,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/prompt-context.sh",
+            "command": "~/src/shell/config/claude/hooks/prompt-context.sh",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/src/shell/config/claude/hooks/post-edit.sh",
+            "timeout": 30
           }
         ]
       }
@@ -64,7 +84,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/pre-stop.sh",
+            "command": "~/src/shell/config/claude/hooks/pre-stop.sh",
             "timeout": 120
           }
         ]
@@ -82,6 +102,5 @@
   "defaultModel": "sonnet",
   "read": {
     "maxTokens": 32000
-  },
-  "model": "sonnet"
+  }
 }
