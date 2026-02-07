@@ -191,6 +191,41 @@ Favor readable, debuggable code over minimal line counts:
 
 Avoid excessive abstraction and fear of "God objects." Unified classes handling related concerns eliminate unnecessary indirection and make systems easier to understand.
 
+### Code Health
+
+**Health Thresholds** (treat as diagnostic guides, not rules):
+
+- **Function parameters**: 4 max. More? Group as object if they represent the same conceptual thing, or reconsider the abstraction
+- **Function length**: 70 LOC max. Larger functions should justify themselves (crux logic only)
+- **Nesting depth**: 2 levels max. Use guard clauses and early returns to flatten
+- **Cyclomatic complexity**: 9 max. Each `if`, `else`, `case`, `loop` adds 1. More than 9 = too many decision paths to test/maintain
+
+**Example**:
+
+```
+// Bad (CC = 11, nesting = 4)
+function process(a, b, c, d, e) {
+  if (a) {
+    if (b) {
+      if (c && d) {
+        if (e) { /* ... */ }
+      }
+    }
+  }
+}
+
+// Better (CC = 4, nesting = 1)
+function process(config) {
+  const { a, b, c, d, e } = config
+  if (!a) return
+  if (!b) return
+  if (!(c && d)) return
+  if (e) { /* ... */ }
+}
+```
+
+Guard clauses reduce nesting AND complexity. Keep it simple and flat.
+
 ---
 
 ## Web Service Development

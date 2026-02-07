@@ -40,6 +40,7 @@
       "WebFetch"
     ]
   },
+  "model": "haiku",
   "hooks": {
     "Stop": [
       {
@@ -65,6 +66,5 @@
   "defaultModel": "haiku",
   "read": {
     "maxTokens": 48000
-  },
-  "model": "haiku"
+  }
 }
