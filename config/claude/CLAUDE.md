@@ -9,7 +9,7 @@ Complexity is the apex predator of software development. It is a spirit demon th
 Your primary duty is to help the programmer say "no" to complexity:
 - **Say no**: Decline unnecessary features and abstractions. This is your most powerful weapon.
 - **Say ok (with compromise)**: When you can't say no, pursue the 80/20 solution—deliver 80% of desired value with 20% of the code.
-- **Question abstractions**: "Is this solving a problem we have TODAY?" Wait for natural "cut points" to emerge organically.
+- **Question abstractions**: "Is this solving a problem we have TODAY?"
 - **Respect Chesterton's Fence**: Before removing or refactoring code, understand WHY it exists. The world is ugly and gronky, and systems reflect that reality necessarily.
 
 **Fear Of Looking Dumb (FOLD)**: Openly admit confusion with complex systems. If you don't understand something, say so clearly. This legitimizes the programmer's confusion and reduces the complexity demon's psychological hold.
@@ -30,7 +30,7 @@ Do not skip steps. Do not implement without explicit approval.
 
 ### Step 1: Analyze
 
-Search the repository for relevant code, patterns, and conventions. Trace data flow, understand interactions. Identify gotchas and edge cases. Respect existing code—understand WHY it exists before changing it.
+Search the repository for relevant code, patterns, and conventions. Trace data flow, understand interactions. Identify gotchas and edge cases. Respect existing code.
 
 ---
 
@@ -103,14 +103,12 @@ If issues found, iterate with the implement agent until resolved.
 
 ### Function Size: Important Things Should Be Big
 
-Functions come in three tiers:
-- **Crux functions** (200-300+ LOC): Contain important core logic. Keep these big and cohesive so the important stuff is visually prominent. Splitting diminishes clarity.
-- **Support functions** (10-20 LOC): Moderate helpers that support crux functions
+Three tiers:
+- **Crux functions** (200-300+ LOC): Core logic, kept big and cohesive for clarity
+- **Support functions** (10-20 LOC): Moderate helpers
 - **Utility functions** (5-10 LOC): Small, reusable pieces
 
-**Don't fear large functions.** If a function contains the crux logic of your system, it SHOULD be big. Important things should be big, whereas unimportant things should be little.
-
-Examples: SQLite, Chrome, Redis, IntelliJ—all highly successful projects containing substantial functions.
+Important things should be big. Examples: SQLite, Chrome, Redis, IntelliJ all contain substantial functions.
 
 ### Abstraction: Wait for Natural Cut Points
 
@@ -129,16 +127,13 @@ Bad factoring:
 
 ### DRY Has Limits
 
-Don't Repeat Yourself is a guideline, not a law:
-- **2 occurrences**: Leave it (might be coincidence)
-- **3 occurrences**: Consider abstracting, but only if the abstraction is simple
-- **Simple repetition > complex DRY**: Three similar lines of code is better than a premature abstraction involving callbacks and complex object models
+Don't Repeat Yourself is a guideline, not a law. Three similar lines beat a complex abstraction.
+- **2 occurrences**: Leave it (coincidence)
+- **3+ occurrences**: Abstract only if the abstraction is simple
 
 ### Locality of Behavior
 
-Prefer "put code on the thing that do the thing" over separation of concerns. When related functionality is scattered across files, it becomes hard to understand and modify.
-
-Example: Active Record combines database mapping, domain logic, and view helpers in one class. This is GOOD—it eliminates intermediate DTOs and unnecessary layers.
+Put code on the thing that does it. Scattered functionality (the "separation of concerns" anti-pattern) is hard to understand and modify. Example: Active Record combines database mapping, domain logic, and view helpers in one class—eliminating unnecessary layers.
 
 ### Expression Complexity
 
@@ -161,31 +156,21 @@ Avoid excessive abstraction and fear of "God objects." Unified classes handling 
 - **Nesting depth**: 2 levels max. Use guard clauses and early returns to flatten
 - **Cyclomatic complexity**: 9 max. Each `if`, `else`, `case`, `loop` adds 1. More than 9 = too many decision paths to test/maintain
 
-**Example**:
+**Example** - Guard clauses flatten complexity:
 
 ```
-// Bad (CC = 11, nesting = 4)
-function process(a, b, c, d, e) {
-  if (a) {
-    if (b) {
-      if (c && d) {
-        if (e) { /* ... */ }
-      }
-    }
+// Bad: deep nesting
+if (a) {
+  if (b) {
+    if (c && d) { /* ... */ }
   }
 }
 
-// Better (CC = 4, nesting = 1)
-function process(config) {
-  const { a, b, c, d, e } = config
-  if (!a) return
-  if (!b) return
-  if (!(c && d)) return
-  if (e) { /* ... */ }
-}
+// Better: guard clauses
+if (!a) return
+if (!b) return
+if (!(c && d)) return
 ```
-
-Guard clauses reduce nesting AND complexity. Keep it simple and flat.
 
 ---
 
@@ -284,9 +269,7 @@ Keep tests simple, focused, and easy to understand. Use clear names: `test_trans
 
 ## Refactoring
 
-**Large refactors frequently fail. Keep changes small.**
-
-Before removing code, understand WHY it exists. Code that looks stupid might be handling an ugly edge case.
+**Large refactors frequently fail. Keep changes small.** Before removing code, understand WHY it exists (Chesterton's Fence). Code that looks stupid might be handling an ugly edge case.
 
 **Rules**:
 - Refactor in tiny, working increments
