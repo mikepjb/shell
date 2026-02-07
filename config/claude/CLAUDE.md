@@ -26,44 +26,23 @@ For non-trivial tasks (more than a one-line fix), follow this sequence:
 ANALYZE → PLAN → [user approval] → IMPLEMENT → REVIEW
 ```
 
-**Do not skip steps. Do not implement without explicit approval.**
+Do not skip steps. Do not implement without explicit approval.
 
 ### Step 1: Analyze
 
-**Goal**: Deeply understand the task and codebase before acting.
-
-**What to do**:
-- Search the repository for relevant code, patterns, and conventions
-- Trace data flow and understand how systems interact
-- Search online for documentation, libraries, and best practices when needed
-- Use multiple Explore agents in parallel for complex tasks
-- Identify potential gotchas and edge cases
-- **Respect existing code**: Before proposing changes, understand WHY the current code exists
-
-**Output**: Context summary with file:line references, key findings, and areas of concern.
-
-**Important**: Scale investigation to the task. Simple changes need lightweight analysis. Complex features need deep exploration.
-
-**Early code is like water**: New systems are shapeless and difficult to factor properly. Don't force abstractions early—wait for patterns to emerge naturally.
+Search the repository for relevant code, patterns, and conventions. Trace data flow, understand interactions. Identify gotchas and edge cases. Respect existing code—understand WHY it exists before changing it.
 
 ---
 
 ### Step 2: Plan
 
-**Goal**: Design the simplest implementation that works and get user approval.
+Design the simplest implementation that works and get user approval.
 
-**What to do**:
-- Present the 80/20 solution: 80% of the value with 20% of the code
+- Present the 80/20 solution: 80% value with 20% code
 - Say "no" to unnecessary complexity—push back on feature creep
 - Specify exact files and line ranges to modify
-- Identify risks and edge cases
-- Note any database migrations, API changes, or breaking changes
+- Identify risks, database migrations, API changes, breaking changes
 - Write a plan file: `<task-name>_PLAN.md` in the current directory
-
-**When proposing factoring**:
-- Wait for natural "cut points" to emerge—don't force decomposition
-- Create narrow interfaces that trap complexity internally ("complexity demon trapped properly in crystal")
-- Prefer locality of behavior: put code on the thing that do the thing
 
 **Format**:
 ```markdown
@@ -92,49 +71,31 @@ One-sentence description of what will be done.
 - Potential issues to watch for
 ```
 
-**STOP and explicitly ask**: "Approve this plan to proceed?"
+Ask: "Approve this plan to proceed?"
 
-**Do NOT proceed until user says yes.**
+Do NOT proceed until user says yes.
 
 ---
 
 ### Step 3: Implement
 
-**Goal**: Execute the approved plan with minimal, correct code.
-
-**What to do**:
-- Spawn the implement agent with the approved plan and analysis context
-- The agent will make exactly the changes specified
-- Agent runs tests and fixes any failures
-- Agent returns summary for review
-
-**When iterating**: Resume the implement agent by ID with feedback rather than spawning a new one.
+Execute the approved plan with minimal, correct code. Spawn the implement agent with the approved plan and analysis context. Resume by ID with feedback rather than spawning new agents.
 
 ---
 
 ### Step 4: Review
 
-**Goal**: Validate the implementation meets quality standards.
+Validate the implementation meets quality standards:
 
-**What to check**:
-1. **Tests**: Do they exist? Do they pass? Are they useful?
-   - Missing tests: HARD BLOCKER
-   - Failing tests: HARD BLOCKER
-   - Flaky tests: HARD BLOCKER
-   - Hard-to-understand tests: HARD BLOCKER
-   - Useless tests (testing mocks, not behavior): HARD BLOCKER
-2. **Linting**: Does code pass linters?
-3. **Complexity**: Is code reasonably simple? Are complexity demons present?
-4. **Patterns**: Does it match existing codebase conventions?
-5. **Security**: Any obvious vulnerabilities?
-
-**Language-specific commands**:
-- **Go**: `make`, `make test`, `make lint`
-- **JavaScript/TypeScript**: `npm test`, `npm run lint`, `npm run build`
+1. **Tests**: Exist? Pass? Clear and useful? (HARD BLOCKER if missing/failing/flaky/unclear)
+2. **Linting**: Code passes linters?
+3. **Complexity**: Reasonably simple? Complexity demons present?
+4. **Patterns**: Match existing conventions?
+5. **Security**: Obvious vulnerabilities?
 
 If issues found, iterate with the implement agent until resolved.
 
-**Hard rule**: Tests are mandatory. No exceptions (except trivial scripts).
+**Hard rule**: Tests mandatory. No exceptions (except trivial scripts).
 
 ---
 
@@ -282,25 +243,15 @@ When investigating issues:
 ### CSS Guidelines
 - System font stack: `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
 - High contrast text (near-black on white, or white on near-black)
-- Minimal palette: 1-2 colors maximum
-- Use color for meaning only:
-  - Blue for links/actions
-  - Red for errors/destructive
-  - Green for success
-  - Yellow for warnings
-  - Gray scale for everything else
+- Minimal palette: 1-2 colors maximum (Blue=links, Red=errors, Green=success, Yellow=warnings)
 - Simple grid or flexbox layouts
 - Standard HTML form controls (style minimally)
 - Visible focus states for keyboard navigation
 
 ### Anti-Patterns to Avoid
-- Rounded corners everywhere
-- Drop shadows for depth
-- Gradient backgrounds
 - Icons without labels
 - Hamburger menus when space exists
 - Modals for simple actions
-- Skeleton loaders (show nothing or show content)
 - Animations that delay interaction
 - Custom styled form controls that break accessibility
 - Separation of concerns (HTML/CSS/JS in different files for same component)
@@ -315,33 +266,19 @@ When investigating issues:
 
 ## Testing Strategy
 
-### Integration Tests Are The Sweet Spot
+Integration tests are the sweet spot—they verify overall system behavior, remain stable through refactoring, and test what matters (DOM state, API responses, database state), not internal functions.
 
-- **Unit tests**: Break with implementation changes, become tightly coupled to internals
-- **E2E tests**: Confuse when they fail, hard to debug
-- **Integration tests**: Verify overall system behavior, remain stable through refactoring, express higher-level invariants
+Wait until core APIs stabilize before writing comprehensive test suites. Early unit tests become maintenance burden as code evolves.
 
-**Prefer integration tests** that verify DOM state, API responses, database state—not individual function internals.
+Always test:
+- Happy paths (expected successful scenarios)
+- Edge cases (boundary conditions, empty inputs)
+- Error handling (invalid inputs, failures)
+- Integration points (dependencies, APIs, database)
 
-### Wait Until APIs Crystallize
+Keep tests simple, focused, and easy to understand. Use clear names: `test_transfer_fails_with_insufficient_funds`. Tests should run independently.
 
-Don't build comprehensive test suites immediately. Wait until core APIs and interfaces stabilize, then write integration tests that verify system-level behavior.
-
-Unit tests written too early become maintenance burden as codebases evolve.
-
-### Test Coverage Requirements
-
-Always write tests that cover:
-- **Happy paths**: Expected successful scenarios
-- **Edge cases**: Boundary conditions, empty inputs, limits
-- **Error handling**: Invalid inputs, failures, exceptions
-- **Integration points**: External dependencies, APIs, database
-
-### Test Quality
-- Keep tests simple and focused
-- Use descriptive test names: `test_transfer_fails_with_insufficient_funds`
-- Avoid test interdependencies (each test should run independently)
-- Tests should be easy to understand - if they're not, they're a blocker
+**Hard rule**: Tests mandatory (except trivial scripts).
 
 ---
 
@@ -349,27 +286,18 @@ Always write tests that cover:
 
 **Large refactors frequently fail. Keep changes small.**
 
-### Chesterton's Fence
+Before removing code, understand WHY it exists. Code that looks stupid might be handling an ugly edge case.
 
-Before removing or refactoring code, understand WHY it exists. Code that looks stupid might be handling an ugly edge case. The world is ugly and gronky, and systems reflect that reality necessarily.
-
-### Rules
+**Rules**:
 - Refactor in tiny, working increments
 - Keep the system working after each step
 - Don't add abstraction during refactoring unless it emerges naturally
 - If refactoring reveals complexity demons, simplify first, then refactor
 - Wait for natural "cut points" to become obvious
 
-### When to Refactor
-- When you understand the code deeply
-- When you see the natural cut point clearly
-- When the benefit is concrete and immediate
+**When to Refactor**: When you understand the code deeply, see the natural cut point clearly, and the benefit is concrete and immediate.
 
-### When NOT to Refactor
-- To make code "cleaner" without clear benefit
-- To match a pattern from another project
-- Because the code "feels wrong" but works correctly
-- Early in a project when code is still "like water"
+**When NOT to Refactor**: To make code "cleaner" without clear benefit, to match another project's pattern, because it "feels wrong," or early in a project when code is still "like water."
 
 ---
 
@@ -386,15 +314,33 @@ When you can't say no outright, pursue the 80/20 solution and deliver most value
 
 ---
 
-## Principles Summary
+## Language & Framework Guidance
 
-- **Complexity is the enemy**: Say no, wait for natural patterns, admit confusion
-- **Big functions OK**: Important crux logic should be big and cohesive (200-300+ LOC)
-- **Integration tests**: Sweet spot between unit tests and E2E
-- **Locality of behavior**: Put code on the thing that do the thing
-- **DRY has limits**: Simple repetition beats complex abstraction
-- **Chesterton's Fence**: Understand why before removing
-- **Minimal changes**: Only what's necessary for the task
-- **Match existing patterns**: Follow codebase conventions
-- **Security by default**: Validate inputs, escape outputs, parameterize queries
-- **Tests mandatory**: Exception only for trivial scripts
+### Java
+**Anti-pattern**: Isolated data holder classes (DTO packages, standalone model files). Data lives where it's used. Embed inner classes next to the logic consuming them—follow Go/Clojure thinking.
+
+```java
+// Better: inner class with TransferService, not its own file
+public class TransferService {
+  public static class Request {
+    BigDecimal amount;
+    String fromAccount, toAccount;
+  }
+  public void transfer(Request req) { /* ... */ }
+}
+```
+
+Split only when multiple unrelated consumers and semantic boundaries are clear.
+
+### CSS
+**Rule**: Never inline styles. All styling lives in separate CSS files. Styles are the source of truth; keep them organized and discoverable, not hidden in markup.
+
+```html
+<!-- Bad -->
+<div style="color: blue; margin: 16px;">Alert</div>
+
+<!-- Good -->
+<div class="alert">Alert</div>
+<!-- styles.css: .alert { color: blue; margin: 16px; } -->
+```
+
