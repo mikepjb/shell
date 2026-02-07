@@ -75,6 +75,11 @@ mods = "Command"
 chars = "\u001b2"  # Alt+2
 
 [[keyboard.bindings]]
+key = "3"
+mods = "Command"
+chars = "\u001b3"  # Alt+3
+
+[[keyboard.bindings]]
 key = "N"
 mods = "Command"
 chars = "\u001bn"  # Alt+N
