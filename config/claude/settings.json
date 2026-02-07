@@ -62,9 +62,9 @@
     "typescript-lsp@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true
   },
-  "defaultModel": "sonnet",
+  "defaultModel": "haiku",
   "read": {
-    "maxTokens": 32000
+    "maxTokens": 48000
   },
-  "model": "sonnet"
+  "model": "haiku"
 }
