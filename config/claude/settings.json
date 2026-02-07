@@ -6,11 +6,6 @@
       "Read(~/src/**)",
       "Read(~/.claude/**)",
       "Read(~/Downloads/**)",
-      "Skill(analyze)",
-      "Skill(guide)",
-      "Skill(document)",
-      "Skill(review)",
-      "Skill(clickup)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -46,18 +41,6 @@
     ]
   },
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/prompt-context.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "matcher": "",

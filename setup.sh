@@ -5,12 +5,6 @@ set +e
 setup_dir=`dirname $(realpath $0)`
 local_bin_dir="$HOME/.local/bin"
 
-# Default to regular claude config, use auto-claude if --auto flag is passed
-claude_config="claude"
-if [ "$1" = "--auto" ]; then
-    claude_config="auto-claude"
-fi
-
 main() {
     link_files
     # npm_deps
@@ -48,54 +42,28 @@ link_files() {
     ln -sfv $setup_dir/config/spartan.lua $HOME/.config/nvim/colors/spartan.lua
 
     # Claude Code config
-    echo "Setting up Claude Code with config: $claude_config"
-    mkdir -p ~/.claude/skills
+    echo "Setting up Claude Code config"
     mkdir -p ~/.claude/agents
-    mkdir -p ~/.claude/commands
     mkdir -p ~/.claude/hooks
-    ln -sfv $setup_dir/config/$claude_config/CLAUDE.md $HOME/.claude/CLAUDE.md
-    ln -sfv $setup_dir/config/$claude_config/settings.json $HOME/.claude/settings.json
-    ln -sfv $setup_dir/config/$claude_config/statusline.sh $HOME/.claude/statusline.sh
+    ln -sfv $setup_dir/config/claude/CLAUDE.md $HOME/.claude/CLAUDE.md
+    ln -sfv $setup_dir/config/claude/settings.json $HOME/.claude/settings.json
+    ln -sfv $setup_dir/config/claude/statusline.sh $HOME/.claude/statusline.sh
     chmod +x $HOME/.claude/statusline.sh
 
     # Link hooks
-    for f in $setup_dir/config/$claude_config/hooks/*; do
+    for f in $setup_dir/config/claude/hooks/*; do
         [ -e "$f" ] || continue
         ln -sfv $f $HOME/.claude/hooks/`basename $f`
         chmod +x $HOME/.claude/hooks/`basename $f`
     done
 
     # Clean up broken symlinks in claude directories
-    find -L $HOME/.claude/commands -type l -delete 2>/dev/null
     find -L $HOME/.claude/agents -type l -delete 2>/dev/null
-    find -L $HOME/.claude/skills -type l -delete 2>/dev/null
     find -L $HOME/.claude/hooks -type l -delete 2>/dev/null
-
-    # Build list of expected skills from repo
-    expected_skills=""
-    for f in $setup_dir/config/$claude_config/skills/*.md; do
-        expected_skills="$expected_skills $(basename $f .md)"
-    done
-
-    # Clean up skills not in repo
-    for dir in $HOME/.claude/skills/*/; do
-        skill=$(basename "$dir")
-        if ! echo "$expected_skills" | grep -qw "$skill"; then
-            echo "Removing stale skill: $skill"
-            rm -rf "$dir"
-        fi
-    done
-
-    # Link skills from repo
-    for f in $setup_dir/config/$claude_config/skills/*.md; do
-        skill=`basename $f .md`
-        mkdir -p $HOME/.claude/skills/$skill
-        ln -sfv $f $HOME/.claude/skills/$skill/SKILL.md
-    done
 
     # Build list of expected agents from repo
     expected_agents=""
-    for f in $setup_dir/config/$claude_config/agents/*.md; do
+    for f in $setup_dir/config/claude/agents/*.md; do
         [ -e "$f" ] || continue
         expected_agents="$expected_agents $(basename $f)"
     done
@@ -111,32 +79,9 @@ link_files() {
     done
 
     # Link agents from repo
-    for f in $setup_dir/config/$claude_config/agents/*.md; do
+    for f in $setup_dir/config/claude/agents/*.md; do
         [ -e "$f" ] || continue
         ln -sfv $f $HOME/.claude/agents/`basename $f`
-    done
-
-    # Build list of expected commands from repo
-    expected_commands=""
-    for f in $setup_dir/config/$claude_config/commands/*.md; do
-        [ -e "$f" ] || continue
-        expected_commands="$expected_commands $(basename $f)"
-    done
-
-    # Clean up commands not in repo
-    for f in $HOME/.claude/commands/*.md; do
-        [ -L "$f" ] || continue
-        cmd=$(basename "$f")
-        if ! echo "$expected_commands" | grep -qw "$cmd"; then
-            echo "Removing stale command: $cmd"
-            rm -f "$f"
-        fi
-    done
-
-    # Link commands from repo
-    for f in $setup_dir/config/$claude_config/commands/*.md; do
-        [ -e "$f" ] || continue
-        ln -sfv $f $HOME/.claude/commands/`basename $f`
     done
 }
 
