@@ -1,0 +1,294 @@
+#!/bin/bash
+# verify - Standalone verification script for code quality and tests
+# Can run as CLI tool or Claude Code prestop hook
+#
+# Usage:
+#   verify                    # When called as hook (reads JSON from stdin)
+#   verify                    # When called standalone (no stdin)
+#
+# Checks:
+# 1. Prevents infinite loops if called from Claude hook
+# 2. Finds base branch (main/master, whichever is more recent)
+# 3. Blocks if >300 lines added in current branch
+# 4. Runs CodeScene review (must be 10/10)
+# 5. Runs linter (make lint / npm lint / deno task lint)
+# 6. Runs tests (Go, Node, Java, Deno)
+# 7. Any non-zero exit code blocks
+
+set -euo pipefail
+
+# Detect if running as hook (stdin contains JSON) or CLI
+IS_HOOK=false
+STOP_HOOK_ACTIVE=false
+if [[ -t 0 ]]; then
+    # stdin is a terminal, we're CLI
+    IS_HOOK=false
+else
+    # stdin has data, we might be a hook
+    INPUT=$(cat 2>/dev/null || true)
+    if [[ -n "$INPUT" ]]; then
+        IS_HOOK=true
+        # Extract stop_hook_active flag
+        STOP_HOOK_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null || echo "false")
+    fi
+fi
+
+# Prevent infinite loops: if Claude already tried to fix and failed, let it stop
+if [[ "$STOP_HOOK_ACTIVE" == "true" ]]; then
+    if [[ "$IS_HOOK" == "true" ]]; then
+        echo "Stop hook already ran once, allowing stop to prevent infinite loop." >&2
+        echo '{"decision": "allow"}'
+    fi
+    exit 0
+fi
+
+BLOCK_REASON=""
+CURRENT_DIR="$PWD"
+
+# Helper: output decision JSON (for hook) or human text (for CLI)
+output_result() {
+    local reason="$1"
+    if [[ "$IS_HOOK" == "true" ]]; then
+        if [[ -n "$reason" ]]; then
+            echo "{\"decision\": \"block\", \"reason\": \"$reason\"}"
+        else
+            echo '{"decision": "allow"}'
+        fi
+    else
+        if [[ -n "$reason" ]]; then
+            echo "❌ Verification blocked: $reason" >&2
+            return 1
+        else
+            echo "✅ All checks passed." >&2
+            return 0
+        fi
+    fi
+}
+
+# Helper: run a subcommand and track failure
+run_cmd() {
+    local name="$1"
+    shift
+    echo "Running $name..." >&2
+    if ! "$@" >&2; then
+        echo "$name failed." >&2
+        return 1
+    fi
+    return 0
+}
+
+# === EARLY EXIT: Not a code project ===
+is_code_project() {
+    [[ -f "Makefile" || -f "./gradlew" || -f "package.json" || -f "deno.json" || -f "go.mod" || -f "pom.xml" || -f "build.gradle" ]]
+}
+
+if ! is_code_project; then
+    # Check parent directory (monorepo pattern)
+    if [[ -d ".." ]]; then
+        cd ..
+        if ! is_code_project; then
+            # Not a code project, allow
+            output_result ""
+            exit 0
+        fi
+        # Found project in parent, continue from parent dir
+    else
+        # Not a code project, allow
+        output_result ""
+        exit 0
+    fi
+fi
+
+# === EARLY EXIT: Skip if no code changes ===
+TEST_EXTS='\.(go|ts|tsx|js|jsx|templ|java)$'
+CHANGED_CODE=$(git diff --name-only HEAD 2>/dev/null; git diff --cached --name-only HEAD 2>/dev/null)
+CHANGED_CODE=$(echo "$CHANGED_CODE" | grep -E "$TEST_EXTS" | sort -u || true)
+
+if [[ -z "$CHANGED_CODE" ]]; then
+    output_result ""
+    exit 0
+fi
+
+echo "Changed files:" >&2
+echo "$CHANGED_CODE" | sed 's/^/  /' >&2
+
+# === CHECK: Find base branch and compare ===
+find_base_branch() {
+    # Find which of main/master has the most recent commit
+    local main_date=""
+    local master_date=""
+
+    if git rev-parse --verify main >/dev/null 2>&1; then
+        main_date=$(git log -1 --format=%at main 2>/dev/null || echo "0")
+    fi
+
+    if git rev-parse --verify master >/dev/null 2>&1; then
+        master_date=$(git log -1 --format=%at master 2>/dev/null || echo "0")
+    fi
+
+    if [[ "$main_date" -gt "$master_date" ]]; then
+        echo "main"
+    else
+        echo "master"
+    fi
+}
+
+BASE_BRANCH=$(find_base_branch)
+if ! git rev-parse --verify "$BASE_BRANCH" >/dev/null 2>&1; then
+    # Fallback if neither exists
+    BASE_BRANCH="HEAD~1"
+fi
+
+echo "Using base branch: $BASE_BRANCH" >&2
+
+# === CHECK: Line count (hard block if >300 lines added) ===
+LINES_ADDED=$(git diff "$BASE_BRANCH"...HEAD --stat | tail -1 | awk '{print $4}' || echo "0")
+LINES_ADDED=${LINES_ADDED//[^0-9]/}  # Strip non-digits
+
+echo "Lines added: $LINES_ADDED" >&2
+
+if [[ $LINES_ADDED -gt 300 ]]; then
+    output_result "Too many lines added ($LINES_ADDED > 300)"
+    exit 0
+fi
+
+# === CHECK: CodeScene Review (must be 10/10) ===
+if command -v cs &>/dev/null; then
+    echo "Running CodeScene review..." >&2
+    CS_FAILED=0
+    while IFS= read -r file; do
+        if [[ -f "$file" ]]; then
+            OUTPUT=$(cs review "$file" 2>&1) || true
+            # Check if review shows any issues (🚩 Issue)
+            if [[ "$OUTPUT" == *"🚩 Issue"* ]]; then
+                echo "CodeScene issues in $file:" >&2
+                echo "$OUTPUT" >&2
+                CS_FAILED=1
+            fi
+        fi
+    done <<< "$CHANGED_CODE"
+
+    if [[ $CS_FAILED -eq 1 ]]; then
+        output_result "CodeScene review found issues (must be 10/10)"
+        exit 0
+    fi
+fi
+
+# === CHECK: Linter ===
+LINT_FAILED=0
+
+if [[ -f "Makefile" ]] && grep -q '^lint:' Makefile 2>/dev/null; then
+    if ! run_cmd "make lint"; then
+        LINT_FAILED=1
+    fi
+elif [[ -f "package.json" ]] && grep -q '"lint"' package.json 2>/dev/null; then
+    if ! run_cmd "npm run lint"; then
+        LINT_FAILED=1
+    fi
+elif [[ -f "deno.json" ]] && grep -q '"lint"' deno.json 2>/dev/null; then
+    if ! run_cmd "deno task lint"; then
+        LINT_FAILED=1
+    fi
+fi
+
+if [[ $LINT_FAILED -eq 1 ]]; then
+    output_result "Linting failed"
+    exit 0
+fi
+
+# === CHECK: Tests ===
+run_go_tests() {
+    if [[ ! -f "go.mod" ]]; then
+        return 0
+    fi
+    if ! command -v go &>/dev/null; then
+        return 0
+    fi
+    echo "Running Go tests..." >&2
+    go test $(go list ./... | grep -v -E '/(e2e|browser|integration)') >&2
+}
+
+run_node_tests() {
+    if [[ ! -f "package.json" ]]; then
+        return 0
+    fi
+
+    if grep -q '"test:unit"' package.json 2>/dev/null; then
+        echo "Running npm run test:unit..." >&2
+        npm run test:unit >&2
+    elif grep -q '"vitest"' package.json 2>/dev/null; then
+        echo "Running vitest (excluding e2e)..." >&2
+        npx vitest run --exclude '**/e2e/**' --exclude '**/browser/**' --exclude '**/cypress/**' --exclude '**/playwright/**' >&2
+    elif grep -q '"jest"' package.json 2>/dev/null; then
+        echo "Running jest (excluding e2e)..." >&2
+        npx jest --testPathIgnorePatterns='e2e|browser|cypress|playwright' >&2
+    elif grep -q '"test"' package.json 2>/dev/null; then
+        TEST_SCRIPT=$(grep '"test"' package.json | head -1)
+        if echo "$TEST_SCRIPT" | grep -qE 'cypress|playwright|puppeteer|e2e'; then
+            echo "Skipping npm test (appears to be browser tests)" >&2
+            return 0
+        fi
+        echo "Running npm test..." >&2
+        npm test >&2
+    fi
+}
+
+run_java_tests() {
+    if [[ -f "./gradlew" ]]; then
+        echo "Running Gradle tests..." >&2
+        ./gradlew test >&2
+    elif [[ -f "pom.xml" ]] && command -v mvn &>/dev/null; then
+        echo "Running Maven tests..." >&2
+        mvn test >&2
+    fi
+}
+
+run_deno_tests() {
+    if [[ ! -f "deno.json" ]]; then
+        return 0
+    fi
+    echo "Running Deno tests..." >&2
+    deno test >&2
+}
+
+# Detect what kind of changes we have
+HAS_GO=$(echo "$CHANGED_CODE" | grep -E '\.go$' || true)
+HAS_NODE=$(echo "$CHANGED_CODE" | grep -E '\.(ts|tsx|js|jsx)$' || true)
+HAS_TEMPL=$(echo "$CHANGED_CODE" | grep -E '\.templ$' || true)
+HAS_JAVA=$(echo "$CHANGED_CODE" | grep -E '\.java$' || true)
+HAS_DENO=$(echo "$CHANGED_CODE" | grep -E '\.(ts|tsx)$' || true)
+
+TEST_FAILED=0
+
+if [[ -n "$HAS_GO" || -n "$HAS_TEMPL" ]]; then
+    if ! run_go_tests; then
+        TEST_FAILED=1
+    fi
+fi
+
+if [[ -n "$HAS_NODE" ]]; then
+    if ! run_node_tests; then
+        TEST_FAILED=1
+    fi
+fi
+
+if [[ -n "$HAS_JAVA" ]]; then
+    if ! run_java_tests; then
+        TEST_FAILED=1
+    fi
+fi
+
+if [[ -n "$HAS_DENO" ]] && [[ -f "deno.json" ]]; then
+    if ! run_deno_tests; then
+        TEST_FAILED=1
+    fi
+fi
+
+if [[ $TEST_FAILED -eq 1 ]]; then
+    output_result "Tests failed"
+    exit 0
+fi
+
+# === SUCCESS ===
+output_result ""
+exit 0

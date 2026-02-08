@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/pre-stop.sh",
+            "command": "verify",
             "timeout": 120
           }
         ]
