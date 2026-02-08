@@ -37,7 +37,7 @@ fi
 if [[ "$STOP_HOOK_ACTIVE" == "true" ]]; then
     if [[ "$IS_HOOK" == "true" ]]; then
         echo "Stop hook already ran once, allowing stop to prevent infinite loop." >&2
-        echo '{"decision": "allow"}'
+        echo '{"decision": "approve"}'
     fi
     exit 0
 fi
@@ -52,7 +52,7 @@ output_result() {
         if [[ -n "$reason" ]]; then
             echo "{\"decision\": \"block\", \"reason\": \"$reason\"}"
         else
-            echo '{"decision": "allow"}'
+            echo '{"decision": "approve"}'
         fi
     else
         if [[ -n "$reason" ]]; then
@@ -101,7 +101,7 @@ fi
 
 # === EARLY EXIT: Skip if no code changes ===
 TEST_EXTS='\.(go|ts|tsx|js|jsx|templ|java)$'
-CHANGED_CODE=$(git diff --name-only HEAD 2>/dev/null; git diff --cached --name-only HEAD 2>/dev/null)
+CHANGED_CODE=$(git diff --name-only HEAD 2>/dev/null; git diff --cached --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null)
 CHANGED_CODE=$(echo "$CHANGED_CODE" | grep -E "$TEST_EXTS" | sort -u || true)
 
 if [[ -z "$CHANGED_CODE" ]]; then
@@ -142,10 +142,16 @@ fi
 echo "Using base branch: $BASE_BRANCH" >&2
 
 # === CHECK: Line count (hard block if >300 lines added) ===
-LINES_ADDED=$(git diff "$BASE_BRANCH"...HEAD --stat | tail -1 | awk '{print $4}' || echo "0")
-LINES_ADDED=${LINES_ADDED//[^0-9]/}  # Strip non-digits
+# Combine staged and unstaged changes
+DIFF_STAT=$(git diff --stat 2>/dev/null; git diff --cached --stat 2>/dev/null | tail -1)
+DIFF_STAT=$(echo "$DIFF_STAT" | tail -1)
+# Parse: "8 files changed, 282 insertions(+), 117 deletions(-)"
+LINES_ADDED=$(echo "$DIFF_STAT" | awk '{for(i=1;i<=NF;i++) if($i ~ /insertions?\(/) print $(i-1)}' || echo "0")
+LINES_REMOVED=$(echo "$DIFF_STAT" | awk '{for(i=1;i<=NF;i++) if($i ~ /deletions?\(/) print $(i-1)}' || echo "0")
+[[ -z "$LINES_ADDED" ]] && LINES_ADDED="0"
+[[ -z "$LINES_REMOVED" ]] && LINES_REMOVED="0"
 
-echo "Lines added: $LINES_ADDED" >&2
+printf "Diff summary: %s files changed, +%s insertions, -%s deletions\n" "$(echo "$DIFF_STAT" | awk '{print $1}')" "$LINES_ADDED" "$LINES_REMOVED" >&2
 
 if [[ $LINES_ADDED -gt 300 ]]; then
     output_result "Too many lines added ($LINES_ADDED > 300)"
@@ -154,16 +160,30 @@ fi
 
 # === CHECK: CodeScene Review (must be 10/10) ===
 if command -v cs &>/dev/null; then
-    echo "Running CodeScene review..." >&2
+    echo "CodeScene Review:" >&2
     CS_FAILED=0
     while IFS= read -r file; do
-        if [[ -f "$file" ]]; then
-            OUTPUT=$(cs review "$file" 2>&1) || true
-            # Check if review shows any issues (🚩 Issue)
-            if [[ "$OUTPUT" == *"🚩 Issue"* ]]; then
-                echo "CodeScene issues in $file:" >&2
-                echo "$OUTPUT" >&2
-                CS_FAILED=1
+        # Handle monorepo case where git paths include subdirectory prefix
+        LOCAL_FILE="$file"
+        if [[ ! -f "$LOCAL_FILE" ]]; then
+            LOCAL_FILE="${file#*/}"
+        fi
+        if [[ -f "$LOCAL_FILE" ]]; then
+            OUTPUT=$(cs review "$LOCAL_FILE" 2>/dev/null)
+            FILENAME=$(basename "$file")
+            SCORE=$(echo "$OUTPUT" | grep 'Overall code health score:' | sed 's/.*Overall code health score: \([0-9.]*\).*/\1/' || echo "")
+
+            if [[ -n "$SCORE" ]]; then
+                if [[ "$SCORE" == "10.0" ]]; then
+                    printf "  ✅ %-50s %s\n" "$FILENAME:" "$SCORE/10" >&2
+                else
+                    printf "  ❌ %-50s %s\n" "$FILENAME:" "$SCORE/10" >&2
+                    echo "$OUTPUT" >&2
+                    CS_FAILED=1
+                fi
+            else
+                # Show raw CodeScene output for non-scorable files
+                printf "  ℹ %-50s %s\n" "$FILENAME:" "$(echo "$OUTPUT" | head -1)" >&2
             fi
         fi
     done <<< "$CHANGED_CODE"
