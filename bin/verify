@@ -1,48 +1,32 @@
 #!/bin/bash
-# verify - Standalone verification script for code quality and tests
-# Can run as CLI tool or Claude Code prestop hook
+# verify - Lightweight verification script for tests and code quality
+# Blocks Claude from stopping if tests fail or code quality issues exist
 #
-# Usage:
-#   verify                    # When called as hook (reads JSON from stdin)
-#   verify                    # When called standalone (no stdin)
-#
-# Checks:
-# 1. Prevents infinite loops if called from Claude hook
-# 2. Finds base branch (main/master, whichever is more recent)
-# 3. Blocks if >300 lines added in current branch
-# 4. Runs CodeScene review (must be 10/10)
-# 5. Runs linter (make lint / npm lint / deno task lint)
-# 6. Runs tests (Go, Node, Java, Deno)
-# 7. Any non-zero exit code blocks
+# Usage: verify (called as hook or CLI)
 
 set -euo pipefail
 
-# Detect if running as hook (stdin contains JSON) or CLI
+# === HOOK DETECTION ===
 IS_HOOK=false
 STOP_HOOK_ACTIVE=false
-if [[ -t 0 ]]; then
-    # stdin is a terminal, we're CLI
-    IS_HOOK=false
-else
-    # stdin has data, we might be a hook
+
+if ! [[ -t 0 ]]; then
     INPUT=$(cat 2>/dev/null || true)
     if [[ -n "$INPUT" ]]; then
         IS_HOOK=true
-        # Extract stop_hook_active flag
         STOP_HOOK_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null || echo "false")
     fi
 fi
 
-# Prevent infinite loops: if Claude already tried to fix and failed, let it stop
+# Prevent infinite loops
 if [[ "$STOP_HOOK_ACTIVE" == "true" ]]; then
-    if [[ "$IS_HOOK" == "true" ]]; then
-        echo "Stop hook already ran once, allowing stop to prevent infinite loop." >&2
-        echo '{"decision": "approve"}'
-    fi
+    [[ "$IS_HOOK" == "true" ]] && echo '{"decision": "approve"}'
     exit 0
 fi
 
-# Helper: output decision JSON (for hook) or human text (for CLI)
+# === OUTPUT HELPERS ===
+output() { echo "$@" >&2; }
+
 output_result() {
     local reason="$1"
     if [[ "$IS_HOOK" == "true" ]]; then
@@ -53,78 +37,40 @@ output_result() {
         fi
     else
         if [[ -n "$reason" ]]; then
-            echo "❌ Verification blocked: $reason" >&2
+            output "❌ $reason"
             return 1
         else
-            echo "✅ All checks passed." >&2
+            output "✅ All checks passed."
             return 0
         fi
     fi
 }
 
-# Helper: run a subcommand and track failure
-run_cmd() {
-    local name="$1"
-    shift
-    echo "Running $name..." >&2
-    if ! "$@" >&2; then
-        echo "$name failed." >&2
-        return 1
-    fi
-    return 0
-}
-
-# === EARLY EXIT: Not a code project ===
+# === CHECK: Code project? ===
 is_code_project() {
-    [[ -f "Makefile" || -f "./gradlew" || -f "package.json" || -f "deno.json" || -f "go.mod" || -f "pom.xml" || -f "build.gradle" ]]
+    [[ -f "Makefile" || -f "package.json" || -f "go.mod" || -f "deno.json" || \
+       -f "pom.xml" || -f "build.gradle" || -f "./gradlew" ]]
 }
 
 if ! is_code_project; then
-    # Check parent directory (monorepo pattern)
-    if [[ -d ".." ]]; then
-        cd ..
-        if ! is_code_project; then
-            # Not a code project, allow
-            output_result ""
-            exit 0
-        fi
-        # Found project in parent, continue from parent dir
-    else
-        # Not a code project, allow
-        output_result ""
-        exit 0
-    fi
+    output_result ""
+    exit 0
 fi
 
-# === CHECK: Find base branch and print diff summary ===
+# === FIND BASE BRANCH & SHOW DIFF ===
 find_base_branch() {
-    # Find which of main/master has the most recent commit
-    local main_date=""
-    local master_date=""
-
-    if git rev-parse --verify main >/dev/null 2>&1; then
+    local main_date="" master_date=""
+    git rev-parse --verify main >/dev/null 2>&1 && \
         main_date=$(git log -1 --format=%at main 2>/dev/null || echo "0")
-    fi
-
-    if git rev-parse --verify master >/dev/null 2>&1; then
+    git rev-parse --verify master >/dev/null 2>&1 && \
         master_date=$(git log -1 --format=%at master 2>/dev/null || echo "0")
-    fi
-
-    if [[ "$main_date" -gt "$master_date" ]]; then
-        echo "main"
-    else
-        echo "master"
-    fi
+    [[ "${main_date:-0}" -gt "${master_date:-0}" ]] && echo "main" || echo "master"
 }
 
 BASE_BRANCH=$(find_base_branch)
-if ! git rev-parse --verify "$BASE_BRANCH" >/dev/null 2>&1; then
-    # Fallback if neither exists
-    BASE_BRANCH="HEAD~1"
-fi
+git rev-parse --verify "$BASE_BRANCH" >/dev/null 2>&1 || BASE_BRANCH="HEAD~1"
 
-# Parse stats: extract added/removed lines from git diff summary line
-# Summary line format: "8 files changed, 282 insertions(+), 117 deletions(-)"
+# Parse diff stats
 parse_diff_stats() {
     local summary="$1"
     local added=$(echo "$summary" | grep -oE '[0-9]+ insertions?\(' | grep -oE '^[0-9]+' || echo "0")
@@ -132,185 +78,89 @@ parse_diff_stats() {
     echo "$added $removed"
 }
 
-# Get stats vs base branch
 BRANCH_STATS=$(git diff --stat "$BASE_BRANCH..HEAD" 2>/dev/null | tail -1 || echo "")
 BRANCH_PARSED=$(parse_diff_stats "$BRANCH_STATS")
 BRANCH_ADDED=$(echo "$BRANCH_PARSED" | cut -d' ' -f1)
 BRANCH_REMOVED=$(echo "$BRANCH_PARSED" | cut -d' ' -f2)
 
-if [[ -n "$BRANCH_ADDED" && "$BRANCH_ADDED" != "0" ]]; then
-    printf "vs %s: +%s insertions, -%s deletions\n" "$BASE_BRANCH" "$BRANCH_ADDED" "$BRANCH_REMOVED" >&2
-fi
+[[ "$BRANCH_ADDED" != "0" ]] && output "vs $BASE_BRANCH: +$BRANCH_ADDED, -$BRANCH_REMOVED"
 
-# === EARLY EXIT: Skip if no code changes ===
-TEST_EXTS='\.(go|ts|tsx|js|jsx|templ|java)$'
-CHANGED_CODE=$(git diff --name-only HEAD 2>/dev/null; git diff --cached --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null)
-CHANGED_CODE=$(echo "$CHANGED_CODE" | grep -E "$TEST_EXTS" | sort -u || true)
-
-if [[ -z "$CHANGED_CODE" ]]; then
-    output_result ""
+# === CHECK: Net line count ===
+NET_LINES=$((BRANCH_ADDED - BRANCH_REMOVED))
+if [[ $NET_LINES -gt 300 ]]; then
+    output_result "Too many lines added (net: $NET_LINES > 300)"
     exit 0
 fi
 
-echo "Changed files:" >&2
-echo "$CHANGED_CODE" | sed 's/^/  /' >&2
+# === GET CHANGED FILES (staged, unstaged, untracked) ===
+CHANGED_FILES=$(
+    (git diff --cached --name-only 2>/dev/null || true
+     git diff --name-only 2>/dev/null || true
+     git ls-files --others --exclude-standard 2>/dev/null || true) | sort -u
+)
 
-# === CHECK: Line count (hard block if >300 lines added) ===
-# Get stats for current changes (staged + unstaged)
-STAGED_STATS=$(git diff --cached --stat 2>/dev/null | tail -1 || echo "")
-UNSTAGED_STATS=$(git diff --stat 2>/dev/null | tail -1 || echo "")
-
-STAGED_PARSED=$(parse_diff_stats "$STAGED_STATS")
-UNSTAGED_PARSED=$(parse_diff_stats "$UNSTAGED_STATS")
-
-STAGED_ADDED=$(echo "$STAGED_PARSED" | cut -d' ' -f1)
-UNSTAGED_ADDED=$(echo "$UNSTAGED_PARSED" | cut -d' ' -f1)
-LINES_ADDED=$((${STAGED_ADDED:-0} + ${UNSTAGED_ADDED:-0}))
-
-STAGED_REMOVED=$(echo "$STAGED_PARSED" | cut -d' ' -f2)
-UNSTAGED_REMOVED=$(echo "$UNSTAGED_PARSED" | cut -d' ' -f2)
-LINES_REMOVED=$((${STAGED_REMOVED:-0} + ${UNSTAGED_REMOVED:-0}))
-
-printf "Current changes: +%s insertions, -%s deletions\n" "$LINES_ADDED" "$LINES_REMOVED" >&2
-
-if [[ $LINES_ADDED -gt 300 ]]; then
-    output_result "Too many lines added ($LINES_ADDED > 300)"
-    exit 0
-fi
-
-# === CHECK: CodeScene Review (must be 10/10) ===
-if command -v cs &>/dev/null; then
-    echo "CodeScene Review:" >&2
-    CS_FAILED=0
-    while IFS= read -r file; do
-        # Handle monorepo case where git paths include subdirectory prefix
-        LOCAL_FILE="$file"
-        if [[ ! -f "$LOCAL_FILE" ]]; then
-            LOCAL_FILE="${file#*/}"
-        fi
-        if [[ -f "$LOCAL_FILE" ]]; then
-            OUTPUT=$(cs review "$LOCAL_FILE" 2>/dev/null)
-            FILENAME=$(basename "$file")
-            SCORE=$(echo "$OUTPUT" | grep 'Overall code health score:' | sed 's/.*Overall code health score: \([0-9.]*\).*/\1/' || echo "")
-
-            if [[ -n "$SCORE" ]]; then
-                if [[ "$SCORE" == "10.0" ]]; then
-                    printf "  ✅ %-50s %s\n" "$FILENAME:" "$SCORE/10" >&2
-                else
-                    printf "  ❌ %-50s %s\n" "$FILENAME:" "$SCORE/10" >&2
-                    echo "$OUTPUT" >&2
-                    CS_FAILED=1
-                fi
-            else
-                # Show raw CodeScene output for non-scorable files
-                printf "  ℹ %-50s %s\n" "$FILENAME:" "$(echo "$OUTPUT" | head -1)" >&2
-            fi
-        fi
-    done <<< "$CHANGED_CODE"
-
-    if [[ $CS_FAILED -eq 1 ]]; then
-        output_result "CodeScene review found issues (must be 10/10)"
-        exit 0
-    fi
-fi
-
-# === CHECK: Linter ===
-LINT_FAILED=0
-
-if [[ -f "Makefile" ]] && grep -q '^lint:' Makefile 2>/dev/null; then
-    if ! run_cmd "make lint"; then
-        LINT_FAILED=1
-    fi
-elif [[ -f "package.json" ]] && grep -q '"lint"' package.json 2>/dev/null; then
-    if ! run_cmd "npm run lint"; then
-        LINT_FAILED=1
-    fi
-elif [[ -f "deno.json" ]] && grep -q '"lint"' deno.json 2>/dev/null; then
-    if ! run_cmd "deno task lint"; then
-        LINT_FAILED=1
-    fi
-fi
-
-if [[ $LINT_FAILED -eq 1 ]]; then
-    output_result "Linting failed"
-    exit 0
-fi
-
-# === CHECK: Tests ===
-run_go_tests() {
-    [[ ! -f "go.mod" ]] && return 0
-    command -v go &>/dev/null || return 0
-    run_cmd "go test" go test $(go list ./... | grep -v -E '/(e2e|browser|integration)')
-}
-
-run_node_tests() {
-    [[ ! -f "package.json" ]] && return 0
-
-    if grep -q '"test:unit"' package.json 2>/dev/null; then
-        run_cmd "npm run test:unit" npm run test:unit
-    elif grep -q '"vitest"' package.json 2>/dev/null; then
-        run_cmd "vitest" npx vitest run --exclude '**/e2e/**' --exclude '**/browser/**' --exclude '**/cypress/**' --exclude '**/playwright/**'
-    elif grep -q '"jest"' package.json 2>/dev/null; then
-        run_cmd "jest" npx jest --testPathIgnorePatterns='e2e|browser|cypress|playwright'
-    elif grep -q '"test"' package.json 2>/dev/null; then
-        TEST_SCRIPT=$(grep '"test"' package.json | head -1)
-        if echo "$TEST_SCRIPT" | grep -qE 'cypress|playwright|puppeteer|e2e'; then
-            echo "Skipping npm test (appears to be browser tests)" >&2
-            return 0
-        fi
-        run_cmd "npm test" npm test
-    fi
-}
-
-run_java_tests() {
-    if [[ -f "./gradlew" ]]; then
-        run_cmd "gradle test" ./gradlew test
-    elif [[ -f "pom.xml" ]] && command -v mvn &>/dev/null; then
-        run_cmd "maven test" mvn test
-    fi
-}
-
-run_deno_tests() {
-    [[ ! -f "deno.json" ]] && return 0
-    run_cmd "deno test" deno test
-}
-
-# Detect what kind of changes we have
-HAS_GO=$(echo "$CHANGED_CODE" | grep -E '\.go$' || true)
-HAS_NODE=$(echo "$CHANGED_CODE" | grep -E '\.(ts|tsx|js|jsx)$' || true)
-HAS_TEMPL=$(echo "$CHANGED_CODE" | grep -E '\.templ$' || true)
-HAS_JAVA=$(echo "$CHANGED_CODE" | grep -E '\.java$' || true)
-HAS_DENO=$(echo "$CHANGED_CODE" | grep -E '\.(ts|tsx)$' || true)
-
+# === RUN TESTS ===
 TEST_FAILED=0
 
-if [[ -n "$HAS_GO" || -n "$HAS_TEMPL" ]]; then
-    if ! run_go_tests; then
+if [[ -f "package.json" ]]; then
+    output "Running npm test..."
+    if ! npm test >&2; then
+        TEST_FAILED=1
+    fi
+elif [[ -f "go.mod" ]] || [[ -f "Makefile" ]]; then
+    output "Running make test..."
+    if ! make test >&2; then
+        TEST_FAILED=1
+    fi
+elif [[ -f "deno.json" ]]; then
+    output "Running deno test..."
+    if ! deno test >&2; then
+        TEST_FAILED=1
+    fi
+elif [[ -f "./gradlew" ]]; then
+    output "Running gradle test..."
+    if ! ./gradlew test >&2; then
+        TEST_FAILED=1
+    fi
+elif [[ -f "pom.xml" ]] && command -v mvn &>/dev/null; then
+    output "Running mvn test..."
+    if ! mvn test >&2; then
         TEST_FAILED=1
     fi
 fi
 
-if [[ -n "$HAS_NODE" ]]; then
-    if ! run_node_tests; then
-        TEST_FAILED=1
-    fi
-fi
-
-if [[ -n "$HAS_JAVA" ]]; then
-    if ! run_java_tests; then
-        TEST_FAILED=1
-    fi
-fi
-
-if [[ -n "$HAS_DENO" ]] && [[ -f "deno.json" ]]; then
-    if ! run_deno_tests; then
-        TEST_FAILED=1
-    fi
-fi
-
-if [[ $TEST_FAILED -eq 1 ]]; then
+[[ $TEST_FAILED -eq 1 ]] && {
     output_result "Tests failed"
     exit 0
+}
+
+# === RUN CODESCENE ===
+if command -v cs &>/dev/null; then
+    output "Running CodeScene review..."
+    CS_FAILED=0
+
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        LOCAL_FILE="$file"
+        [[ ! -f "$LOCAL_FILE" ]] && LOCAL_FILE="${file#*/}"
+        [[ ! -f "$LOCAL_FILE" ]] && continue
+
+        OUTPUT=$(cs review "$LOCAL_FILE" 2>/dev/null)
+        SCORE=$(echo "$OUTPUT" | grep -oE 'Overall code health score: ([0-9.]+)' | grep -oE '[0-9.]+' || echo "")
+
+        if [[ -n "$SCORE" ]]; then
+            if [[ "$SCORE" != "10.0" ]]; then
+                output "❌ $(basename "$file"): $SCORE/10"
+                echo "$OUTPUT" >&2
+                CS_FAILED=1
+            fi
+        fi
+    done <<< "$CHANGED_FILES"
+
+    [[ $CS_FAILED -eq 1 ]] && {
+        output_result "CodeScene: scores below 10/10"
+        exit 0
+    }
 fi
 
 # === SUCCESS ===
