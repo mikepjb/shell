@@ -42,9 +42,6 @@ if [[ "$STOP_HOOK_ACTIVE" == "true" ]]; then
     exit 0
 fi
 
-BLOCK_REASON=""
-CURRENT_DIR="$PWD"
-
 # Helper: output decision JSON (for hook) or human text (for CLI)
 output_result() {
     local reason="$1"
@@ -99,20 +96,7 @@ if ! is_code_project; then
     fi
 fi
 
-# === EARLY EXIT: Skip if no code changes ===
-TEST_EXTS='\.(go|ts|tsx|js|jsx|templ|java)$'
-CHANGED_CODE=$(git diff --name-only HEAD 2>/dev/null; git diff --cached --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null)
-CHANGED_CODE=$(echo "$CHANGED_CODE" | grep -E "$TEST_EXTS" | sort -u || true)
-
-if [[ -z "$CHANGED_CODE" ]]; then
-    output_result ""
-    exit 0
-fi
-
-echo "Changed files:" >&2
-echo "$CHANGED_CODE" | sed 's/^/  /' >&2
-
-# === CHECK: Find base branch and compare ===
+# === CHECK: Find base branch and print diff summary ===
 find_base_branch() {
     # Find which of main/master has the most recent commit
     local main_date=""
@@ -139,19 +123,55 @@ if ! git rev-parse --verify "$BASE_BRANCH" >/dev/null 2>&1; then
     BASE_BRANCH="HEAD~1"
 fi
 
-echo "Using base branch: $BASE_BRANCH" >&2
+# Parse stats: extract added/removed lines from git diff summary line
+# Summary line format: "8 files changed, 282 insertions(+), 117 deletions(-)"
+parse_diff_stats() {
+    local summary="$1"
+    local added=$(echo "$summary" | grep -oE '[0-9]+ insertions?\(' | grep -oE '^[0-9]+' || echo "0")
+    local removed=$(echo "$summary" | grep -oE '[0-9]+ deletions?\(' | grep -oE '^[0-9]+' || echo "0")
+    echo "$added $removed"
+}
+
+# Get stats vs base branch
+BRANCH_STATS=$(git diff --stat "$BASE_BRANCH..HEAD" 2>/dev/null | tail -1 || echo "")
+BRANCH_PARSED=$(parse_diff_stats "$BRANCH_STATS")
+BRANCH_ADDED=$(echo "$BRANCH_PARSED" | cut -d' ' -f1)
+BRANCH_REMOVED=$(echo "$BRANCH_PARSED" | cut -d' ' -f2)
+
+if [[ -n "$BRANCH_ADDED" && "$BRANCH_ADDED" != "0" ]]; then
+    printf "vs %s: +%s insertions, -%s deletions\n" "$BASE_BRANCH" "$BRANCH_ADDED" "$BRANCH_REMOVED" >&2
+fi
+
+# === EARLY EXIT: Skip if no code changes ===
+TEST_EXTS='\.(go|ts|tsx|js|jsx|templ|java)$'
+CHANGED_CODE=$(git diff --name-only HEAD 2>/dev/null; git diff --cached --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null)
+CHANGED_CODE=$(echo "$CHANGED_CODE" | grep -E "$TEST_EXTS" | sort -u || true)
+
+if [[ -z "$CHANGED_CODE" ]]; then
+    output_result ""
+    exit 0
+fi
+
+echo "Changed files:" >&2
+echo "$CHANGED_CODE" | sed 's/^/  /' >&2
 
 # === CHECK: Line count (hard block if >300 lines added) ===
-# Combine staged and unstaged changes
-DIFF_STAT=$(git diff --stat 2>/dev/null; git diff --cached --stat 2>/dev/null | tail -1)
-DIFF_STAT=$(echo "$DIFF_STAT" | tail -1)
-# Parse: "8 files changed, 282 insertions(+), 117 deletions(-)"
-LINES_ADDED=$(echo "$DIFF_STAT" | awk '{for(i=1;i<=NF;i++) if($i ~ /insertions?\(/) print $(i-1)}' || echo "0")
-LINES_REMOVED=$(echo "$DIFF_STAT" | awk '{for(i=1;i<=NF;i++) if($i ~ /deletions?\(/) print $(i-1)}' || echo "0")
-[[ -z "$LINES_ADDED" ]] && LINES_ADDED="0"
-[[ -z "$LINES_REMOVED" ]] && LINES_REMOVED="0"
+# Get stats for current changes (staged + unstaged)
+STAGED_STATS=$(git diff --cached --stat 2>/dev/null | tail -1 || echo "")
+UNSTAGED_STATS=$(git diff --stat 2>/dev/null | tail -1 || echo "")
 
-printf "Diff summary: %s files changed, +%s insertions, -%s deletions\n" "$(echo "$DIFF_STAT" | awk '{print $1}')" "$LINES_ADDED" "$LINES_REMOVED" >&2
+STAGED_PARSED=$(parse_diff_stats "$STAGED_STATS")
+UNSTAGED_PARSED=$(parse_diff_stats "$UNSTAGED_STATS")
+
+STAGED_ADDED=$(echo "$STAGED_PARSED" | cut -d' ' -f1)
+UNSTAGED_ADDED=$(echo "$UNSTAGED_PARSED" | cut -d' ' -f1)
+LINES_ADDED=$((${STAGED_ADDED:-0} + ${UNSTAGED_ADDED:-0}))
+
+STAGED_REMOVED=$(echo "$STAGED_PARSED" | cut -d' ' -f2)
+UNSTAGED_REMOVED=$(echo "$UNSTAGED_PARSED" | cut -d' ' -f2)
+LINES_REMOVED=$((${STAGED_REMOVED:-0} + ${UNSTAGED_REMOVED:-0}))
+
+printf "Current changes: +%s insertions, -%s deletions\n" "$LINES_ADDED" "$LINES_REMOVED" >&2
 
 if [[ $LINES_ADDED -gt 300 ]]; then
     output_result "Too many lines added ($LINES_ADDED > 300)"
@@ -218,57 +238,41 @@ fi
 
 # === CHECK: Tests ===
 run_go_tests() {
-    if [[ ! -f "go.mod" ]]; then
-        return 0
-    fi
-    if ! command -v go &>/dev/null; then
-        return 0
-    fi
-    echo "Running Go tests..." >&2
-    go test $(go list ./... | grep -v -E '/(e2e|browser|integration)') >&2
+    [[ ! -f "go.mod" ]] && return 0
+    command -v go &>/dev/null || return 0
+    run_cmd "go test" go test $(go list ./... | grep -v -E '/(e2e|browser|integration)')
 }
 
 run_node_tests() {
-    if [[ ! -f "package.json" ]]; then
-        return 0
-    fi
+    [[ ! -f "package.json" ]] && return 0
 
     if grep -q '"test:unit"' package.json 2>/dev/null; then
-        echo "Running npm run test:unit..." >&2
-        npm run test:unit >&2
+        run_cmd "npm run test:unit" npm run test:unit
     elif grep -q '"vitest"' package.json 2>/dev/null; then
-        echo "Running vitest (excluding e2e)..." >&2
-        npx vitest run --exclude '**/e2e/**' --exclude '**/browser/**' --exclude '**/cypress/**' --exclude '**/playwright/**' >&2
+        run_cmd "vitest" npx vitest run --exclude '**/e2e/**' --exclude '**/browser/**' --exclude '**/cypress/**' --exclude '**/playwright/**'
     elif grep -q '"jest"' package.json 2>/dev/null; then
-        echo "Running jest (excluding e2e)..." >&2
-        npx jest --testPathIgnorePatterns='e2e|browser|cypress|playwright' >&2
+        run_cmd "jest" npx jest --testPathIgnorePatterns='e2e|browser|cypress|playwright'
     elif grep -q '"test"' package.json 2>/dev/null; then
         TEST_SCRIPT=$(grep '"test"' package.json | head -1)
         if echo "$TEST_SCRIPT" | grep -qE 'cypress|playwright|puppeteer|e2e'; then
             echo "Skipping npm test (appears to be browser tests)" >&2
             return 0
         fi
-        echo "Running npm test..." >&2
-        npm test >&2
+        run_cmd "npm test" npm test
     fi
 }
 
 run_java_tests() {
     if [[ -f "./gradlew" ]]; then
-        echo "Running Gradle tests..." >&2
-        ./gradlew test >&2
+        run_cmd "gradle test" ./gradlew test
     elif [[ -f "pom.xml" ]] && command -v mvn &>/dev/null; then
-        echo "Running Maven tests..." >&2
-        mvn test >&2
+        run_cmd "maven test" mvn test
     fi
 }
 
 run_deno_tests() {
-    if [[ ! -f "deno.json" ]]; then
-        return 0
-    fi
-    echo "Running Deno tests..." >&2
-    deno test >&2
+    [[ ! -f "deno.json" ]] && return 0
+    run_cmd "deno test" deno test
 }
 
 # Detect what kind of changes we have
