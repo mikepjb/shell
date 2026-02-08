@@ -79,7 +79,13 @@ Do NOT proceed until user says yes.
 
 ### Step 3: Implement
 
-Execute the approved plan with minimal, correct code. Spawn the implement agent with the approved plan and analysis context. Resume by ID with feedback rather than spawning new agents.
+Execute the approved plan with minimal, correct code. Implement directly in the conversation:
+
+1. **Orient**: Read the key files mentioned in the plan
+2. **Implement**: Make exactly the changes specified—no more, no less
+3. **Write tests**: As part of implementation, write or extend tests to verify the changes (see Testing Strategy below)
+
+**Prohibited**: Don't add unplanned features, refactor adjacent code, or introduce new patterns. Keep diffs minimal and focused.
 
 ---
 
@@ -93,7 +99,7 @@ Validate the implementation meets quality standards:
 4. **Patterns**: Match existing conventions?
 5. **Security**: Obvious vulnerabilities?
 
-If issues found, iterate with the implement agent until resolved.
+If issues found, iterate in the conversation to resolve them.
 
 **Hard rule**: Tests mandatory. No exceptions (except trivial scripts).
 
