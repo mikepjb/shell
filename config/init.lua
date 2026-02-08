@@ -176,7 +176,7 @@ local autocmds = {
     {"BufWritePre", "*.templ", fmt("templ", "fmt")},
     {"BufWritePre", "*.js,*.jsx,", fmt("prettier", "--write")},
     {"BufWritePre", "*.ts,*.tsx,*.css,*.json,*.svg", fmt("deno", "fmt")},
-    {"BufWritePre", "*.sql", fmt("sql-formatter", "--fix", "-l", "postgresql")},
+    {"BufWritePre", "*.sql", fmt("sql-formatter", "--fix", "-l", "sqlite")},
     {'TermOpen', '*', apply_opts({nu = false})},
     {'BufWritePre', '*', function()
         local dir = vim.fn.expand('<afile>:p:h')
