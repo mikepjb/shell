@@ -1,8 +1,6 @@
 #!/bin/bash
 # verify - Lightweight verification script for tests and code quality
 # Blocks Claude from stopping if tests fail or code quality issues exist
-#
-# Usage: verify (called as hook or CLI)
 
 set -euo pipefail
 
@@ -18,72 +16,59 @@ if ! [[ -t 0 ]]; then
     fi
 fi
 
-# Prevent infinite loops
 if [[ "$STOP_HOOK_ACTIVE" == "true" ]]; then
     [[ "$IS_HOOK" == "true" ]] && echo '{"decision": "approve"}'
     exit 0
 fi
 
-# === OUTPUT HELPERS ===
-output() { echo "$@" >&2; }
-
+# === OUTPUT RESULT ===
 output_result() {
     local reason="$1"
     if [[ "$IS_HOOK" == "true" ]]; then
-        if [[ -n "$reason" ]]; then
-            echo "{\"decision\": \"block\", \"reason\": \"$reason\"}"
-        else
-            echo '{"decision": "approve"}'
-        fi
+        [[ -n "$reason" ]] && echo "{\"decision\": \"block\", \"reason\": \"$reason\"}" || echo '{"decision": "approve"}'
     else
         if [[ -n "$reason" ]]; then
-            output "❌ $reason"
+            echo "❌ $reason" >&2
             return 1
         else
-            output "✅ All checks passed."
+            echo "✅ All checks passed." >&2
             return 0
         fi
     fi
 }
 
 # === CHECK: Code project? ===
-is_code_project() {
-    [[ -f "Makefile" || -f "package.json" || -f "go.mod" || -f "deno.json" || \
-       -f "pom.xml" || -f "build.gradle" || -f "./gradlew" ]]
-}
-
-if ! is_code_project; then
+if ! [[ -f "Makefile" || -f "package.json" || -f "go.mod" || -f "deno.json" || \
+         -f "pom.xml" || -f "build.gradle" || -f "./gradlew" ]]; then
     output_result ""
     exit 0
 fi
 
 # === FIND BASE BRANCH & SHOW DIFF ===
 find_base_branch() {
-    local main_date="" master_date=""
-    git rev-parse --verify main >/dev/null 2>&1 && \
-        main_date=$(git log -1 --format=%at main 2>/dev/null || echo "0")
-    git rev-parse --verify master >/dev/null 2>&1 && \
-        master_date=$(git log -1 --format=%at master 2>/dev/null || echo "0")
-    [[ "${main_date:-0}" -gt "${master_date:-0}" ]] && echo "main" || echo "master"
+    local main_date=0 master_date=0 develop_date=0
+    git rev-parse --verify main >/dev/null 2>&1 && main_date=$(git log -1 --format=%at main 2>/dev/null || echo "0")
+    git rev-parse --verify master >/dev/null 2>&1 && master_date=$(git log -1 --format=%at master 2>/dev/null || echo "0")
+    git rev-parse --verify develop >/dev/null 2>&1 && develop_date=$(git log -1 --format=%at develop 2>/dev/null || echo "0")
+
+    if [[ $main_date -gt $master_date && $main_date -gt $develop_date ]]; then
+        echo "main"
+    elif [[ $develop_date -gt $master_date ]]; then
+        echo "develop"
+    else
+        echo "master"
+    fi
 }
 
 BASE_BRANCH=$(find_base_branch)
 git rev-parse --verify "$BASE_BRANCH" >/dev/null 2>&1 || BASE_BRANCH="HEAD~1"
 
-# Parse diff stats
-parse_diff_stats() {
-    local summary="$1"
-    local added=$(echo "$summary" | grep -oE '[0-9]+ insertions?\(' | grep -oE '^[0-9]+' || echo "0")
-    local removed=$(echo "$summary" | grep -oE '[0-9]+ deletions?\(' | grep -oE '^[0-9]+' || echo "0")
-    echo "$added $removed"
-}
-
+# Get diff stats
 BRANCH_STATS=$(git diff --stat "$BASE_BRANCH..HEAD" 2>/dev/null | tail -1 || echo "")
-BRANCH_PARSED=$(parse_diff_stats "$BRANCH_STATS")
-BRANCH_ADDED=$(echo "$BRANCH_PARSED" | cut -d' ' -f1)
-BRANCH_REMOVED=$(echo "$BRANCH_PARSED" | cut -d' ' -f2)
+BRANCH_ADDED=$(echo "$BRANCH_STATS" | grep -oE '[0-9]+ insertions?\(' | grep -oE '^[0-9]+' || echo "0")
+BRANCH_REMOVED=$(echo "$BRANCH_STATS" | grep -oE '[0-9]+ deletions?\(' | grep -oE '^[0-9]+' || echo "0")
 
-[[ "$BRANCH_ADDED" != "0" ]] && output "vs $BASE_BRANCH: +$BRANCH_ADDED, -$BRANCH_REMOVED"
+[[ "$BRANCH_ADDED" != "0" ]] && echo "vs $BASE_BRANCH: +$BRANCH_ADDED, -$BRANCH_REMOVED" >&2
 
 # === CHECK: Net line count ===
 NET_LINES=$((BRANCH_ADDED - BRANCH_REMOVED))
@@ -92,7 +77,7 @@ if [[ $NET_LINES -gt 300 ]]; then
     exit 0
 fi
 
-# === GET CHANGED FILES (staged, unstaged, untracked) ===
+# === GET CHANGED FILES ===
 CHANGED_FILES=$(
     (git diff --cached --name-only 2>/dev/null || true
      git diff --name-only 2>/dev/null || true
@@ -101,33 +86,17 @@ CHANGED_FILES=$(
 
 # === RUN TESTS ===
 TEST_FAILED=0
+run_test() {
+    local name="$1" cmd="$2"
+    echo "Running $name..." >&2
+    ! $cmd >&2 && TEST_FAILED=1
+}
 
-if [[ -f "package.json" ]]; then
-    output "Running npm test..."
-    if ! npm test >&2; then
-        TEST_FAILED=1
-    fi
-elif [[ -f "go.mod" ]] || [[ -f "Makefile" ]]; then
-    output "Running make test..."
-    if ! make test >&2; then
-        TEST_FAILED=1
-    fi
-elif [[ -f "deno.json" ]]; then
-    output "Running deno test..."
-    if ! deno test >&2; then
-        TEST_FAILED=1
-    fi
-elif [[ -f "./gradlew" ]]; then
-    output "Running gradle test..."
-    if ! ./gradlew test >&2; then
-        TEST_FAILED=1
-    fi
-elif [[ -f "pom.xml" ]] && command -v mvn &>/dev/null; then
-    output "Running mvn test..."
-    if ! mvn test >&2; then
-        TEST_FAILED=1
-    fi
-fi
+[[ -f "package.json" ]] && run_test "npm test" "npm test"
+[[ -f "go.mod" || -f "Makefile" ]] && run_test "make test" "make test"
+[[ -f "deno.json" ]] && run_test "deno test" "deno test"
+[[ -f "./gradlew" ]] && run_test "gradle test" "./gradlew test"
+[[ -f "pom.xml" ]] && command -v mvn &>/dev/null && run_test "mvn test" "mvn test"
 
 [[ $TEST_FAILED -eq 1 ]] && {
     output_result "Tests failed"
@@ -136,7 +105,7 @@ fi
 
 # === RUN CODESCENE ===
 if command -v cs &>/dev/null; then
-    output "Running CodeScene review..."
+    echo "Running CodeScene review..." >&2
     CS_FAILED=0
 
     while IFS= read -r file; do
@@ -146,14 +115,12 @@ if command -v cs &>/dev/null; then
         [[ ! -f "$LOCAL_FILE" ]] && continue
 
         OUTPUT=$(cs review "$LOCAL_FILE" 2>/dev/null)
-        SCORE=$(echo "$OUTPUT" | grep -oE 'Overall code health score: ([0-9.]+)' | grep -oE '[0-9.]+' || echo "")
+        SCORE=$(echo "$OUTPUT" | grep -oE '[0-9.]+(?= out of 10)' || echo "")
 
-        if [[ -n "$SCORE" ]]; then
-            if [[ "$SCORE" != "10.0" ]]; then
-                output "❌ $(basename "$file"): $SCORE/10"
-                echo "$OUTPUT" >&2
-                CS_FAILED=1
-            fi
+        if [[ -n "$SCORE" && "$SCORE" != "10.0" ]]; then
+            echo "❌ $(basename "$file"): $SCORE/10" >&2
+            echo "$OUTPUT" >&2
+            CS_FAILED=1
         fi
     done <<< "$CHANGED_FILES"
 
@@ -163,6 +130,5 @@ if command -v cs &>/dev/null; then
     }
 fi
 
-# === SUCCESS ===
 output_result ""
 exit 0
