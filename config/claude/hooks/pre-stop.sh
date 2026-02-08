@@ -1,11 +1,14 @@
 #!/bin/bash
 # Pre-stop hook: review code quality and verify tests pass before Claude finishes
-# Exit 0 = allow stop, Exit 2 = block stop (Claude must continue)
+# Returns JSON decision to block Claude if linting or tests fail
+# Uses stop_hook_active flag to prevent infinite loops
 #
 # Logic:
-# 1. Find changed code files (go, ts, js, templ only) via git diff
-# 2. Run CodeScene review on each changed file (warnings only, non-blocking)
-# 3. Run unit/integration tests (excludes browser/e2e tests)
+# 1. Check if already running (stop_hook_active) to prevent loops
+# 2. Find changed code files (go, ts, js, templ only) via git diff
+# 3. Run CodeScene review if available (blocking if issues found)
+# 4. Run linting (blocking if fails)
+# 5. Run unit/integration tests (blocking if fails, excludes e2e)
 
 set -euo pipefail
 
@@ -17,6 +20,8 @@ if [[ "$STOP_HOOK_ACTIVE" == "true" ]]; then
     echo "Stop hook already ran once, allowing stop to prevent infinite loop." >&2
     exit 0
 fi
+
+BLOCK_REASON=""
 
 # Skip if this doesn't look like a code project
 if [[ ! -f "Makefile" && ! -f "./gradlew" && ! -f "package.json" && ! -f "deno.json" && ! -f "go.mod" ]]; then
@@ -37,7 +42,7 @@ fi
 echo "Changed files:" >&2
 echo "$CHANGED_CODE" | sed 's/^/  /' >&2
 
-# --- CodeScene Review (non-blocking, informational) ---
+# --- CodeScene Review (blocking if available) ---
 if command -v cs &>/dev/null; then
     CS_ISSUES=""
     while IFS= read -r file; do
@@ -50,8 +55,9 @@ if command -v cs &>/dev/null; then
     done <<< "$CHANGED_CODE"
 
     if [[ -n "$CS_ISSUES" ]]; then
-        echo "CodeScene findings (warnings):" >&2
+        echo "CodeScene issues found (must be fixed):" >&2
         echo "$CS_ISSUES" >&2
+        BLOCK_REASON="CodeScene issues found"
     fi
 fi
 
@@ -62,20 +68,20 @@ fi
 if [[ -f "Makefile" ]] && grep -q '^lint:' Makefile 2>/dev/null; then
     echo "Running make lint..." >&2
     if ! make lint >&2; then
-        echo "Linting failed. Please fix before completing." >&2
-        exit 2
+        echo "Linting failed. Claude must fix before completing." >&2
+        BLOCK_REASON="Linting failed"
     fi
 elif [[ -f "package.json" ]] && grep -q '"lint"' package.json 2>/dev/null; then
     echo "Running npm run lint..." >&2
     if ! npm run lint >&2; then
-        echo "Linting failed. Please fix before completing." >&2
-        exit 2
+        echo "Linting failed. Claude must fix before completing." >&2
+        BLOCK_REASON="Linting failed"
     fi
 elif [[ -f "deno.json" ]] && grep -q '"lint"' deno.json 2>/dev/null; then
     echo "Running deno task lint..." >&2
     if ! deno task lint >&2; then
-        echo "Linting failed. Please fix before completing." >&2
-        exit 2
+        echo "Linting failed. Claude must fix before completing." >&2
+        BLOCK_REASON="Linting failed"
     fi
 fi
 
@@ -139,9 +145,15 @@ if [[ -n "$HAS_NODE" ]]; then
 fi
 
 if [[ $FAILED -eq 1 ]]; then
-    echo "Tests failed. Please fix before completing." >&2
-    exit 2
+    echo "Tests failed. Claude must fix before completing." >&2
+    BLOCK_REASON="Tests failed"
 fi
 
-echo "Tests passed." >&2
-exit 0
+# Return proper hook decision JSON
+if [[ -n "$BLOCK_REASON" ]]; then
+    jq -n --arg reason "$BLOCK_REASON" '{decision: "block", reason: $reason}'
+    exit 0
+else
+    echo "All checks passed." >&2
+    exit 0
+fi

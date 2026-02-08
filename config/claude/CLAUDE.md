@@ -97,7 +97,7 @@ If issues found, iterate with the implement agent until resolved.
 
 **Hard rule**: Tests mandatory. No exceptions (except trivial scripts).
 
-**Commits**: Provide a summary suitable for a commit message, but do NOT auto-commit. User writes their own commit message. (Tests run automatically via `pre-stop` hook after Claude finishes responding.)
+**Commits & Tests**: Provide a summary suitable for a commit message, but do NOT auto-commit. User writes their own commit message. Tests run automatically via `pre-stop` hook before Claude stops. If tests fail, the hook blocks Claude from stopping—forcing fixes before completion. The hook uses `stop_hook_active` flag to prevent infinite loops.
 
 ---
 
