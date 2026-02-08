@@ -46,6 +46,20 @@ nvim > vim, why?
 - config is much cleaner in lua. multistrings etc.
 - Alt keybindings!
 
+## Local AI / OpenCode Setup
+
+For offline development or when Claude is down, see [LOCAL_AI_SETUP.md](./LOCAL_AI_SETUP.md) for setting up:
+- **OpenCode**: Open-source AI coding agent (Claude Code alternative)
+- **Ollama**: Local LLM inference runtime
+- **Model selection**: Recommendations for your hardware
+
+Quick start (works on Mac and Linux):
+```bash
+curl -fsSL https://opencode.ai/install | bash  # Install OpenCode
+ollama pull qwen2.5-coder:7b                    # Download a model
+opencode                                       # Start working
+```
+
 ## Java LSP
 
 ```

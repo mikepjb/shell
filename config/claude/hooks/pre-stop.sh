@@ -5,7 +5,7 @@
 #
 # Logic:
 # 1. Check if already running (stop_hook_active) to prevent loops
-# 2. Find changed code files (go, ts, js, templ only) via git diff
+# 2. Find changed code files (go, ts, js, templ, java) via git diff
 # 3. Run CodeScene review if available (blocking if issues found)
 # 4. Run linting (blocking if fails)
 # 5. Run unit/integration tests (blocking if fails, excludes e2e)
@@ -24,12 +24,27 @@ fi
 BLOCK_REASON=""
 
 # Skip if this doesn't look like a code project
-if [[ ! -f "Makefile" && ! -f "./gradlew" && ! -f "package.json" && ! -f "deno.json" && ! -f "go.mod" ]]; then
+if [[ ! -f "Makefile" && ! -f "./gradlew" && ! -f "package.json" && ! -f "deno.json" && ! -f "go.mod" && ! -f "pom.xml" && ! -f "build.gradle" ]]; then
+    # Try monorepo: search first-level subdirectories for config files
+    FOUND_DIRS=()
+    for dir in */; do
+        if [[ -f "${dir}Makefile" || -f "${dir}go.mod" || -f "${dir}package.json" || -f "${dir}deno.json" || -f "${dir}pom.xml" || -f "${dir}build.gradle" || -f "${dir}gradlew" ]]; then
+            FOUND_DIRS+=("$dir")
+        fi
+    done
+
+    if [[ ${#FOUND_DIRS[@]} -gt 0 ]]; then
+        echo "❌ This is a monorepo. Restart Claude from one of these directories:" >&2
+        printf '  - %s\n' "${FOUND_DIRS[@]}" >&2
+        jq -n '{decision: "block", reason: "Monorepo detected. Restart Claude from a sub-project directory."}'
+        exit 0
+    fi
+
     exit 0  # Not a code project, allow stop
 fi
 
 # Only these extensions trigger tests
-TEST_EXTS='\.(go|ts|tsx|js|jsx|templ)$'
+TEST_EXTS='\.(go|ts|tsx|js|jsx|templ|java)$'
 
 # Get changed files that should trigger tests
 CHANGED_CODE=$(git diff --name-only HEAD 2>/dev/null; git diff --cached --name-only HEAD 2>/dev/null)
@@ -48,8 +63,9 @@ if command -v cs &>/dev/null; then
     while IFS= read -r file; do
         if [[ -f "$file" ]]; then
             OUTPUT=$(cs review "$file" 2>&1) || true
-            if [[ -n "$OUTPUT" && "$OUTPUT" != *"No issues"* ]]; then
-                CS_ISSUES+="$file: $OUTPUT"$'\n'
+            # Check if there are actual issues (not just "No issues" or "No scorable code")
+            if [[ -n "$OUTPUT" && "$OUTPUT" != *"No issues"* && "$OUTPUT" != *"No scorable code"* && "$OUTPUT" == *"🚩 Issue"* ]]; then
+                CS_ISSUES+="$file:"$'\n'"$OUTPUT"$'\n'
             fi
         fi
     done <<< "$CHANGED_CODE"
@@ -125,10 +141,22 @@ run_node_tests() {
     fi
 }
 
+run_java_tests() {
+    # Prefer Gradle if available
+    if [[ -f "./gradlew" ]]; then
+        echo "Running Gradle tests..." >&2
+        ./gradlew test >&2
+    elif [[ -f "pom.xml" ]] && command -v mvn &>/dev/null; then
+        echo "Running Maven tests..." >&2
+        mvn test >&2
+    fi
+}
+
 # Detect what kind of changes we have
 HAS_GO=$(echo "$CHANGED_CODE" | grep -E '\.go$' || true)
 HAS_NODE=$(echo "$CHANGED_CODE" | grep -E '\.(ts|tsx|js|jsx)$' || true)
 HAS_TEMPL=$(echo "$CHANGED_CODE" | grep -E '\.templ$' || true)
+HAS_JAVA=$(echo "$CHANGED_CODE" | grep -E '\.java$' || true)
 
 FAILED=0
 
@@ -140,6 +168,12 @@ fi
 
 if [[ -n "$HAS_NODE" ]]; then
     if ! run_node_tests; then
+        FAILED=1
+    fi
+fi
+
+if [[ -n "$HAS_JAVA" ]]; then
+    if ! run_java_tests; then
         FAILED=1
     fi
 fi
