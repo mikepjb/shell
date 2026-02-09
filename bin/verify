@@ -89,11 +89,11 @@ TEST_FAILED=0
 run_test() {
     local name="$1" cmd="$2"
     echo "Running $name..." >&2
-    ! $cmd >&2 && TEST_FAILED=1
+    $cmd >&2 || TEST_FAILED=1
 }
 
 [[ -f "package.json" ]] && run_test "npm test" "npm test"
-[[ -f "go.mod" || -f "Makefile" ]] && run_test "make test" "make test"
+[[ -f "go.mod" || -f "Makefile" ]] && [[ ! -f "./gradlew" ]] && run_test "make test" "make test"
 [[ -f "deno.json" ]] && run_test "deno test" "deno test"
 [[ -f "./gradlew" ]] && run_test "gradle test" "./gradlew test"
 [[ -f "pom.xml" ]] && command -v mvn &>/dev/null && run_test "mvn test" "mvn test"
@@ -114,8 +114,8 @@ if command -v cs &>/dev/null; then
         [[ ! -f "$LOCAL_FILE" ]] && LOCAL_FILE="${file#*/}"
         [[ ! -f "$LOCAL_FILE" ]] && continue
 
-        OUTPUT=$(cs review "$LOCAL_FILE" 2>/dev/null)
-        SCORE=$(echo "$OUTPUT" | grep -oE '[0-9.]+(?= out of 10)' || echo "")
+        OUTPUT=$(cs review "$LOCAL_FILE" 2>/dev/null || true)
+        SCORE=$(echo "$OUTPUT" | grep -oE '[0-9]+\.[0-9]+' | head -1 || echo "")
 
         if [[ -n "$SCORE" && "$SCORE" != "10.0" ]]; then
             echo "❌ $(basename "$file"): $SCORE/10" >&2
