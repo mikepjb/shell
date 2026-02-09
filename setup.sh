@@ -46,7 +46,7 @@ link_files() {
     echo "Setting up Claude Code config"
     mkdir -p ~/.claude/agents
     mkdir -p ~/.claude/hooks
-    ln -sfv $setup_dir/config/claude/CLAUDE.md $HOME/.claude/CLAUDE.md
+    ln -sfv $setup_dir/config/ai/AGENTS.md $HOME/.claude/CLAUDE.md
     ln -sfv $setup_dir/config/claude/settings.json $HOME/.claude/settings.json
     ln -sfv $setup_dir/config/claude/statusline.sh $HOME/.claude/statusline.sh
     chmod +x $HOME/.claude/statusline.sh
@@ -57,6 +57,15 @@ link_files() {
         ln -sfv $f $HOME/.claude/hooks/`basename $f`
         chmod +x $HOME/.claude/hooks/`basename $f`
     done
+
+    # OpenCode plugin for verify hook (optional)
+    echo "Note: For OpenCode, the verify script can be run manually or configured as a plugin"
+    echo "See ~/.local/bin/verify for the verification script used by Claude"
+
+    # OpenCode config
+    echo "Setting up OpenCode config"
+    mkdir -p ~/.config/opencode/agents
+    ln -sfv $setup_dir/config/ai/AGENTS.md $HOME/.config/opencode/AGENTS.md
 
     # Clean up broken symlinks in claude directories
     find -L $HOME/.claude/agents -type l -delete 2>/dev/null
