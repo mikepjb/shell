@@ -7,6 +7,7 @@ local_bin_dir="$HOME/.local/bin"
 
 main() {
     link_files
+    setup_llm_tools
     # npm_deps
 }
 
@@ -83,6 +84,73 @@ link_files() {
         [ -e "$f" ] || continue
         ln -sfv $f $HOME/.claude/agents/`basename $f`
     done
+}
+
+setup_llm_tools() {
+    echo ""
+    echo "Setting up LLM tools (Ollama, OpenCode, Qwen 3.2 8B)"
+
+    # Install Ollama if not present
+    if ! command -v ollama &> /dev/null; then
+        echo "Installing Ollama..."
+        curl -fsSL https://ollama.ai/install.sh | sh
+    else
+        echo "✓ Ollama already installed"
+    fi
+
+    # Install OpenCode if not present
+    if ! command -v opencode &> /dev/null; then
+        echo "Installing OpenCode..."
+        curl -fsSL https://opencode.ai/install | bash
+    else
+        echo "✓ OpenCode already installed"
+    fi
+
+    # Check if Ollama service is running, start if needed
+    if ! pgrep -x ollama > /dev/null; then
+        echo "Starting Ollama service..."
+        nohup ollama serve > /tmp/ollama.log 2>&1 &
+        sleep 3
+    else
+        echo "✓ Ollama service already running"
+    fi
+
+    # Pull Qwen 3.2 8B model
+    echo "Pulling Qwen 3.2 8B model..."
+    ollama pull qwen3:8b
+
+    # Configure context window for OpenCode (32k tokens)
+    echo "Configuring model context window..."
+    (sleep 1; echo "/set parameter num_ctx 32768"; echo "/save qwen3:8b"; sleep 1) | ollama run qwen3:8b > /dev/null 2>&1 &
+
+    # Create OpenCode configuration directory and config file
+    mkdir -p ~/.config/opencode
+    cat > ~/.config/opencode/opencode.json <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "qwen3:8b": {
+          "name": "qwen3:8b"
+        }
+      }
+    }
+  }
+}
+EOF
+
+    echo "✓ LLM setup complete"
+    echo ""
+    echo "Usage:"
+    echo "  Start Ollama:  ollama serve"
+    echo "  Use OpenCode:  opencode"
+    echo "  Chat directly: ollama run qwen3:8b"
 }
 
 # npm_deps() {

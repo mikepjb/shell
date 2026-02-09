@@ -16,7 +16,8 @@ deno_paths="$HOME/.deno/bin/"
 mac_paths="/sbin:/opt/homebrew/bin"
 sys_paths="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin"
 user_paths="$HOME/.local/bin"
-export PATH="$user_paths:$go_paths:$deno_paths:$node_paths:$mac_paths:$sys_paths"
+opencode="/Users/mike.bruce/.opencode/bin"
+export PATH="$user_paths:$go_paths:$deno_paths:$node_paths:$mac_paths:$sys_paths:$opencode"
 
 if [[ -n "${PREFIX+x}" ]]; then # for termux
     export PATH="$PREFIX/bin:$PATH"
@@ -43,6 +44,7 @@ alias scrape='wget -p -k -E -H'
 alias tree='tree -I node_modules'
 alias ks='kill -9 $(lsof -ti:8080)'
 alias cl='claude'
+alias op='opencode'
 alias gp='gh pr create --fill'
 alias gd='gh pr create --draft --fill'
 alias gw='gh pr view --web'
@@ -64,4 +66,4 @@ jobs_signal() { [[ $(jobs) != "" ]] && echo -e "\x01\033[0;36m\x02\$\x01\033[0m\
 PS1='\W($(git branch --show-current 2>/dev/null || echo "!")) $(jobs_signal) '
 
 # opencode
-export PATH=/Users/mike.bruce/.opencode/bin:$PATH
+export PATH=/home/mikepjb/.opencode/bin:$PATH
