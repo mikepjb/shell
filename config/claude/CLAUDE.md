@@ -85,25 +85,28 @@ Execute the approved plan with minimal, correct code. Implement directly in the 
 2. **Implement**: Make exactly the changes specified—no more, no less
 3. **Write tests**: As part of implementation, write or extend tests to verify the changes (see Testing Strategy below)
 
-**Prohibited**: Don't add unplanned features, refactor adjacent code, or introduce new patterns. Keep diffs minimal and focused.
+**Prohibited**:
+- Don't add unplanned features, refactor adjacent code, or introduce new patterns. Keep diffs minimal and focused.
+- **Do NOT manually run tests or build commands** — the pre-stop hook handles this automatically
+- **Do NOT comment out or suppress lint warnings** — fix the code instead
 
 ---
 
 ### Step 4: Review
 
-Validate the implementation meets quality standards:
+Validate the implementation meets quality standards by code inspection (NOT by running tests):
 
-1. **Tests**: Exist? Pass? Clear and useful? (HARD BLOCKER if missing/failing/flaky/unclear)
-2. **Linting**: Code passes linters?
+1. **Tests**: Exist? Clear and useful? (HARD BLOCKER if missing/unclear)
+2. **Linting**: Code looks like it will pass linters? (will be verified by pre-stop hook)
 3. **Complexity**: Reasonably simple? Complexity demons present?
 4. **Patterns**: Match existing conventions?
 5. **Security**: Obvious vulnerabilities?
 
-If issues found, iterate in the conversation to resolve them.
+If issues found, iterate in the conversation to resolve them. **Do not run tests manually** — the pre-stop hook will verify everything automatically.
 
 **Hard rule**: Tests mandatory. No exceptions (except trivial scripts).
 
-**Commits & Tests**: Provide a summary suitable for a commit message, but do NOT auto-commit. User writes their own commit message. Tests run automatically via `pre-stop` hook before Claude stops. If tests fail, the hook blocks Claude from stopping—forcing fixes before completion. The hook uses `stop_hook_active` flag to prevent infinite loops.
+**Commits & Tests**: Provide a summary suitable for a commit message, but do NOT auto-commit. User writes their own commit message. The `verify` pre-stop hook runs automatically before Claude stops—it executes the test suite (which usually includes linting) and CodeScene code quality analysis. If tests fail, CodeScene scores are below 10/10, or net lines exceed 300, the hook blocks Claude from stopping, forcing fixes before completion. The hook uses `stop_hook_active` flag to prevent infinite loops.
 
 ---
 

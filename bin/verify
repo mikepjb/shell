@@ -60,23 +60,6 @@ find_base_branch() {
     fi
 }
 
-BASE_BRANCH=$(find_base_branch)
-git rev-parse --verify "$BASE_BRANCH" >/dev/null 2>&1 || BASE_BRANCH="HEAD~1"
-
-# Get diff stats
-BRANCH_STATS=$(git diff --stat "$BASE_BRANCH..HEAD" 2>/dev/null | tail -1 || echo "")
-BRANCH_ADDED=$(echo "$BRANCH_STATS" | grep -oE '[0-9]+ insertions?\(' | grep -oE '^[0-9]+' || echo "0")
-BRANCH_REMOVED=$(echo "$BRANCH_STATS" | grep -oE '[0-9]+ deletions?\(' | grep -oE '^[0-9]+' || echo "0")
-
-[[ "$BRANCH_ADDED" != "0" ]] && echo "vs $BASE_BRANCH: +$BRANCH_ADDED, -$BRANCH_REMOVED" >&2
-
-# === CHECK: Net line count ===
-NET_LINES=$((BRANCH_ADDED - BRANCH_REMOVED))
-if [[ $NET_LINES -gt 300 ]]; then
-    output_result "Too many lines added (net: $NET_LINES > 300)"
-    exit 0
-fi
-
 # === GET CHANGED FILES ===
 CHANGED_FILES=$(
     (git diff --cached --name-only 2>/dev/null || true
@@ -128,6 +111,44 @@ if command -v cs &>/dev/null; then
         output_result "CodeScene: scores below 10/10"
         exit 0
     }
+fi
+
+BASE_BRANCH=$(find_base_branch)
+git rev-parse --verify "$BASE_BRANCH" >/dev/null 2>&1 || BASE_BRANCH="HEAD~1"
+
+# Get diff stats including uncommitted changes (excluding *_PLAN.md files)
+BRANCH_STATS=$(git diff --stat "$BASE_BRANCH" -- ':(exclude)*_PLAN.md' 2>/dev/null | tail -1 || echo "")
+BRANCH_ADDED=$(echo "$BRANCH_STATS" | grep -oE '[0-9]+ insertions?\(' | grep -oE '^[0-9]+' || echo "0")
+BRANCH_REMOVED=$(echo "$BRANCH_STATS" | grep -oE '[0-9]+ deletions?\(' | grep -oE '^[0-9]+' || echo "0")
+
+# Count untracked files (lines added)
+UNTRACKED_ADDED=0
+while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    [[ "$file" == *_PLAN.md ]] && continue
+    LINES=$(wc -l < "$file" 2>/dev/null || echo "0")
+    UNTRACKED_ADDED=$((UNTRACKED_ADDED + LINES))
+done < <(git ls-files --others --exclude-standard 2>/dev/null)
+
+TOTAL_ADDED=$((BRANCH_ADDED + UNTRACKED_ADDED))
+TOTAL_REMOVED=$BRANCH_REMOVED
+
+[[ "$TOTAL_ADDED" != "0" || "$TOTAL_REMOVED" != "0" ]] && echo "vs $BASE_BRANCH: +$TOTAL_ADDED, -$TOTAL_REMOVED" >&2
+
+# === CHECK: Total lines changed (smarter calculation) ===
+# For edited lines, count as 1 change, not 2 (avoid double-counting +1 -1)
+TOTAL_CHANGED=$((TOTAL_ADDED + TOTAL_REMOVED))
+
+# Smart calculation: estimate "real" changes by assuming half of min(added,removed) are edits
+# This avoids double-counting line replacements
+if [[ $TOTAL_ADDED -gt 0 && $TOTAL_REMOVED -gt 0 ]]; then
+    MIN_EDIT_LINES=$((TOTAL_ADDED < TOTAL_REMOVED ? TOTAL_ADDED : TOTAL_REMOVED))
+    TOTAL_CHANGED=$((TOTAL_ADDED + TOTAL_REMOVED - MIN_EDIT_LINES))
+fi
+
+if [[ $TOTAL_CHANGED -gt 300 ]]; then
+    output_result "Too many total lines changed ($TOTAL_CHANGED > 300). Split into smaller PRs."
+    exit 0
 fi
 
 output_result ""
