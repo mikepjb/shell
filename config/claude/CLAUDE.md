@@ -324,6 +324,14 @@ public class TransferService {
 }
 ```
 
+**Modern Java Patterns (Java 16+):**
+- Use records instead of data classes: `public record Request(BigDecimal amount, String fromAccount, String toAccount) {}`
+- Prefer inner classes for data structures local to one service
+- Use sealed interfaces for fixed type hierarchies: `sealed interface Result permits Success, Failure {}`
+- Static factory methods over constructors: `PaymentMethod.card("visa")` instead of `new PaymentMethod(...)`
+- Local records for temporary data structures within methods
+- Avoid excessive abstraction - 3 similar lines beat a complex pattern
+
 Split only when multiple unrelated consumers and semantic boundaries are clear.
 
 ### CSS
