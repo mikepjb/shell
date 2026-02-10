@@ -345,3 +345,9 @@ Split only when multiple unrelated consumers and semantic boundaries are clear.
 <div class="alert">Alert</div>
 <!-- styles.css: .alert { color: blue; margin: 16px; } -->
 ```
+
+## Creating commits
+
+When commiting credit yourself as a co-author:
+
+`Co-authored-by: Qwen <noreply@qwen.ai>`
