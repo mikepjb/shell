@@ -11,6 +11,11 @@ main() {
     # npm_deps
 }
 
+ensure_dir_and_link() {
+    mkdir -p "$(dirname "$2")"
+    ln -sfv "$1" "$2"
+}
+
 link_files() {
     echo '. ~/.bashrc' > $HOME/.bash_profile
 
@@ -18,6 +23,18 @@ link_files() {
     mkdir -p ~/.config/tmux
     mkdir -p ~/.config/alacritty
 
+    # Use pattern matching to handle files without extensions (go directly to $HOME)
+    # This includes files like: bashrc, gitconfig, gitmessage, gitignore, npmrc, vimrc, gitconfig_loveholidays
+    for config_file in "$setup_dir/config/"*; do
+        filename=$(basename "$config_file")
+        # Skip directories and files with extensions (containing a dot in the basename)
+        if [ -d "$config_file" ] || [[ "$filename" == *.* ]]; then
+            continue
+        fi
+        ln -sfv "$config_file" "$HOME/.$filename"
+    done
+
+    # needs to use ensure_dir_and_link fn
     ln -sfv $setup_dir/config/init.lua $HOME/.config/nvim/init.lua
     ln -sfv $setup_dir/config/bashrc $HOME/.bashrc
     ln -sfv $setup_dir/config/npmrc $HOME/.npmrc

@@ -22,5 +22,25 @@
         }
       }
     }
+  },
+  "mode": {
+    "build": {
+      "model": "llama/qwen3-coder",
+      "prompt": "{file:./AGENTS.md}",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "plan": {
+      "model": "llama/qwen3-coder",
+      "prompt": "{file:./AGENTS.md}",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    }
   }
 }

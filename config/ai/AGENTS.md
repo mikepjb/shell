@@ -348,6 +348,6 @@ Split only when multiple unrelated consumers and semantic boundaries are clear.
 
 ## Creating commits
 
-When commiting credit yourself as a co-author:
+When commiting agents are always required to credit themselves as a co-author with:
 
-`Co-authored-by: Qwen <noreply@qwen.ai>`
+`Co-authored-by: Qwen <noreply@qwen.ai>` (for Qwen models only)
