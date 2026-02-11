@@ -8,27 +8,24 @@
     "azure",
     "openrouter"
   ],
-  "model": "llama/qwen2.5-coder-1.5b",
+  "model": "llama/qwen3-4b-instruct-2507",
   "provider": {
     "llama": {
       "npm": "@ai-sdk/openai-compatible",
       "options": {
-        "baseURL": "http://localhost:9090/v1",
+        "baseURL": "http://localhost:9091/v1",
         "apiKey": "none"
       },
       "models": {
-        "qwen3-coder": {
-          "id": "qwen3-coder"
-        },
-        "qwen2.5-coder-1.5b": {
-          "id": "qwen2.5-coder-1.5b"
+        "qwen3-4b-instruct-2507": {
+          "id": "qwen3-4b-instruct-2507"
         }
       }
     }
   },
   "mode": {
     "build": {
-      "model": "llama/qwen3-coder",
+      "model": "llama/qwen3-4b-instruct-2507",
       "prompt": "{file:./AGENTS.md}",
       "tools": {
         "read": true,
@@ -43,7 +40,7 @@
       }
     },
     "plan": {
-      "model": "llama/qwen3-coder",
+      "model": "llama/qwen3-4b-instruct-2507",
       "prompt": "{file:./AGENTS.md}",
       "tools": {
         "read": true,
@@ -58,7 +55,7 @@
       }
     },
     "lite": {
-      "model": "llama/qwen2.5-coder-1.5b",
+      "model": "llama/qwen3-4b-instruct-2507",
       "prompt": "You are a helpful assistant.",
       "tools": {
         "read": true,
@@ -73,7 +70,7 @@
       }
     },
     "bare": {
-      "model": "llama/qwen2.5-coder-1.5b",
+      "model": "llama/qwen3-4b-instruct-2507",
       "prompt": "You are a helpful assistant.",
       "tools": {
         "read": false,

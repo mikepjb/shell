@@ -2,24 +2,23 @@
 
 ## Core Philosophy
 
-### Complexity Very Very Bad
+### Complexity is bad
 
-Complexity is the apex predator of software development. It is a spirit demon that sneaks into codebases through well-intentioned but poorly thought-out decisions. Unlike a visible threat, complexity operates invisibly—changes in one area mysteriously break unrelated systems elsewhere.
+Complexity hurts software development. The more complexity you
+bring to a system, the harder it is to understand and reason
+about in order to make future changes.
 
 Your primary duty is to help the programmer say "no" to complexity:
-- **Say no**: Decline unnecessary features and abstractions. This is your most powerful weapon.
+- **Say no**: Decline unnecessary features and abstractions.
 - **Say ok (with compromise)**: When you can't say no, pursue the 80/20 solution—deliver 80% of desired value with 20% of the code.
 - **Question abstractions**: "Is this solving a problem we have TODAY?"
-- **Respect Chesterton's Fence**: Before removing or refactoring code, understand WHY it exists. The world is ugly and gronky, and systems reflect that reality necessarily.
+- **Understand before making changes**: Before removing or refactoring code, understand WHY it exists. The world is ugly and gronky, and systems reflect that reality necessarily.
 
-**Fear Of Looking Dumb (FOLD)**: Openly admit confusion with complex systems. If you don't understand something, say so clearly. This legitimizes the programmer's confusion and reduces the complexity demon's psychological hold.
-
-**Admitting confusion is strength, not weakness.**
+Openly admit confusion with complex systems. If you don't understand something, say so clearly. This legitimizes the programmer's confusion and allows open discussion to solve the problem at hand.
 
 ---
 
 ## Workflow
-
 For non-trivial tasks (more than a one-line fix), follow this sequence:
 
 ```
@@ -29,19 +28,18 @@ ANALYZE → PLAN → [user approval] → IMPLEMENT → REVIEW
 Do not skip steps. Do not implement without explicit approval.
 
 ### Step 1: Analyze
-
 Search the repository for relevant code, patterns, and conventions. Trace data flow, understand interactions. Identify gotchas and edge cases. Respect existing code.
 
 ---
 
 ### Step 2: Plan
-
 Design the simplest implementation that works and get user approval.
 
 - Present the 80/20 solution: 80% value with 20% code
 - Say "no" to unnecessary complexity—push back on feature creep
 - Specify exact files and line ranges to modify
 - Identify risks, database migrations, API changes, breaking changes
+- Include test strategy (prefer integration tests)
 - Write a plan file: `<task-name>_PLAN.md` in the current directory
 
 **Format**:
@@ -63,6 +61,7 @@ One-sentence description of what will be done.
 ### API Impact
 - New/modified endpoints
 - Breaking changes
+- Include test strategy (prefer integration tests)
 
 ### Test Strategy
 - How changes will be verified (prefer integration tests)
@@ -78,35 +77,34 @@ Do NOT proceed until user says yes.
 ---
 
 ### Step 3: Implement
+Execute the approved plan with minimal, correct code.
 
-Execute the approved plan with minimal, correct code. Implement directly in the conversation:
+Key Requirements:
+1. Make exactly the changes specified - no more, no less
+2. Write tests as part of implementation (see Testing Strategy)
+3. Follow the 80/20 solution approach from planning
 
-1. **Orient**: Read the key files mentioned in the plan
-2. **Implement**: Make exactly the changes specified—no more, no less
-3. **Write tests**: As part of implementation, write or extend tests to verify the changes (see Testing Strategy below)
-
-**Prohibited**:
-- Don't add unplanned features, refactor adjacent code, or introduce new patterns. Keep diffs minimal and focused.
-- **Do NOT manually run tests or build commands** — the pre-stop hook handles this automatically
-- **Do NOT comment out or suppress lint warnings** — fix the code instead
+Prohibited Actions:
+- Don't add unplanned features or refactor adjacent code
+- Don't suppress lint warnings or comment them out
+- Don't manually run tests or build commands (handled automatically)
 
 ---
 
 ### Step 4: Review
+Validate implementation meets quality standards by code inspection.
 
-Validate the implementation meets quality standards by code inspection (NOT by running tests):
+Review Criteria:
+1. Tests are added or extended when a change is made, and are
+   clear and useful (HARD BLOCKER if missing/unclear)
+2. Code looks like it will pass linters (verified by pre-stop hook)
+3. Implementation is reasonably simple (no complexity demons present)
+4. Patterns match existing conventions
+5. No obvious vulnerabilities
 
-1. **Tests**: Exist? Clear and useful? (HARD BLOCKER if missing/unclear)
-2. **Linting**: Code looks like it will pass linters? (will be verified by pre-stop hook)
-3. **Complexity**: Reasonably simple? Complexity demons present?
-4. **Patterns**: Match existing conventions?
-5. **Security**: Obvious vulnerabilities?
-
-If issues found, iterate in the conversation to resolve them. **Do not run tests manually** — the pre-stop hook will verify everything automatically.
-
-**Hard rule**: Tests mandatory. No exceptions (except trivial scripts).
-
-**Commits & Tests**: Provide a summary suitable for a commit message, but do NOT auto-commit. User writes their own commit message. The `verify` pre-stop hook runs automatically before the agent stops—it executes the test suite (which usually includes linting) and CodeScene code quality analysis. If tests fail, CodeScene scores are below 10/10, or net lines exceed 300, the hook blocks the agent from stopping, forcing fixes before completion. The hook uses `stop_hook_active` flag to prevent infinite loops.
+If issues found, iterate to resolve them. Do not run tests
+manually - the pre-stop hook handles verification automatically
+when you are finished.
 
 ---
 
@@ -115,19 +113,19 @@ If issues found, iterate in the conversation to resolve them. **Do not run tests
 ### Function Size: Important Things Should Be Big
 
 Three tiers:
-- **Crux functions** (200-300+ LOC): Core logic, kept big and cohesive for clarity
+- **Crux functions** (70 LOC): Core logic, kept big and cohesive for clarity
 - **Support functions** (10-20 LOC): Moderate helpers
 - **Utility functions** (5-10 LOC): Small, reusable pieces
 
-Important things should be big. Examples: SQLite, Chrome, Redis, IntelliJ all contain substantial functions.
-
 ### Abstraction: Wait for Natural Cut Points
 
-**Don't abstract early.** Early in projects, systems resemble "water"—shapeless and difficult to factor properly. Wait for patterns to emerge naturally before creating abstractions.
+**Don't abstract early.** Wait for patterns to emerge naturally
+before creating abstractions. It's okay to copy 2-3 times before
+generalising with an abstraction.
 
 Good factoring:
 - Creates narrow interfaces
-- Traps complexity internally (like "complexity demon trapped in crystal")
+- Traps complexity internally
 - Emerges from actual use patterns, not anticipated needs
 
 Bad factoring:
@@ -136,15 +134,9 @@ Bad factoring:
 - Helper functions called only once
 - "Extensibility" for hypothetical futures
 
-### DRY Has Limits
-
-Don't Repeat Yourself is a guideline, not a law. Three similar lines beat a complex abstraction.
-- **2 occurrences**: Leave it (coincidence)
-- **3+ occurrences**: Abstract only if the abstraction is simple
-
 ### Locality of Behavior
 
-Put code on the thing that does it. Scattered functionality (the "separation of concerns" anti-pattern) is hard to understand and modify. Example: Active Record combines database mapping, domain logic, and view helpers in one class—eliminating unnecessary layers.
+Put code in the thing that does it. Scattered functionality (the "separation of concerns" anti-pattern) is hard to understand and modify. Example: Active Record combines database mapping, domain logic, and view helpers in one class—eliminating unnecessary layers.
 
 ### Expression Complexity
 
@@ -160,121 +152,98 @@ Avoid excessive abstraction and fear of "God objects." Unified classes handling 
 
 ### Code Health
 
-**Health Thresholds** (treat as diagnostic guides, not rules):
-
 - **Function parameters**: 4 max. More? Group as object if they represent the same conceptual thing, or reconsider the abstraction
-- **Function length**: 70 LOC max. Larger functions should justify themselves (crux logic only)
 - **Nesting depth**: 2 levels max. Use guard clauses and early returns to flatten
 - **Cyclomatic complexity**: 9 max. Each `if`, `else`, `case`, `loop` adds 1. More than 9 = too many decision paths to test/maintain
-
-**Example** - Guard clauses flatten complexity:
-
-```
-// Bad: deep nesting
-if (a) {
-  if (b) {
-    if (c && d) { /* ... */ }
-  }
-}
-
-// Better: guard clauses
-if (!a) return
-if (!b) return
-if (!(c && d)) return
-```
 
 ---
 
 ## Web Service Development
 
 ### API Design
+
 - Consistent URL structure: `/api/v1/resources/:id`
-- Correct HTTP methods and status codes (201 for create, 204 for delete, etc.)
+- Use correct HTTP methods and status codes (e.g., 201 for create, 204 for delete)
 - Clear error responses with error codes
 - Pagination from the start for list endpoints
-- **Design for simple use cases first**, complex capabilities secondarily
+- Design for simple use cases first — add complex capabilities secondarily
 - Put operations on the objects they affect
 
 ### Database
-- Parameterized queries only (never string concatenation)
-- Transactions for multi-step operations
+- Use parameterized queries only (never string concatenation)
+- Use transactions for multi-step operations
 - Check for N+1 queries
 - Reversible migrations
-- **Profile before optimizing**: Network costs typically dwarf CPU concerns
 
 ### Security
 - Validate inputs at API boundary
 - Escape outputs (HTML, SQL, shell commands)
-- Use existing auth/permission patterns
-- Don't leak internal details in error responses
+- Do not leak internal details in error responses
 - Log errors with context but redact sensitive data (passwords, tokens, PII)
 
 ### Debugging
-When investigating issues:
-1. **Reproduce first** - understand how to trigger it
-2. **Gather evidence** - logs, errors, stack traces
-3. **Trace the flow** - follow the request path
-4. **Check the obvious** - config, connectivity, permissions
-5. **Look at recent changes** - prime suspects
+1. **Reproduce first** — understand how to trigger it  
+2. **Gather evidence** — logs, errors, stack traces  
+3. **Trace the flow** — follow the request path  
+4. **Check the obvious** — config, connectivity, permissions  
+5. **Look at recent changes** — prime suspects
 
 ---
 
 ## UI Development
 
 ### Core Principles
-- **Function over form**: Every element earns its place by doing something useful
-- **Obvious affordances**: Users should never guess what's clickable or how things work
-- **Information density**: Show what matters, hide what doesn't, waste no space
-- **Locality of behavior**: Put code on the thing that do the thing (HTML with behavior attributes)
-- **Consistency**: Same patterns everywhere, no surprises
-- **Speed**: Fast to load, fast to understand, fast to use
+
+- **Function over form**: Every element earns its place by doing something useful  
+- **Obvious affordances**: Users should never guess what's clickable or how things work  
+- **Information density**: Show what matters, hide what doesn’t, waste no space  
+- **Locality of behavior**: Put code on the thing that does it (HTML with behavior attributes)  
+- **Consistency**: Same patterns everywhere, no surprises  
+- **Speed**: Fast to load, fast to understand, fast to use  
 
 ### Technology Stack
-- **Semantic HTML** first - use correct elements (`<nav>`, `<main>`, `<aside>`, `<form>`, `<article>`)
-- **HTMX** for server-driven UI updates - keeps behavior with elements
-- **Alpine.js** for reactive components when needed (minimal client state)
-- **Vanilla JS** for simple interactions
-- **Plain CSS** - no frameworks, no utility classes (unless project already uses them)
-
-### CSS Guidelines
-- System font stack: `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`
-- High contrast text (near-black on white, or white on near-black)
-- Minimal palette: 1-2 colors maximum (Blue=links, Red=errors, Green=success, Yellow=warnings)
-- Simple grid or flexbox layouts
-- Standard HTML form controls (style minimally)
-- Visible focus states for keyboard navigation
+- **Semantic HTML** first — use correct elements (`<nav>`, `<main>`, `<aside>`, `<form>`, `<article>`)  
+- **HTMX** for server-driven UI updates — keeps behavior with elements  
+- **Alpine.js** for reactive components when needed (minimal client state)  
+- **Vanilla JS** for simple interactions  
+- **Plain CSS** — no frameworks, no utility classes (unless project already uses them)  
 
 ### Anti-Patterns to Avoid
-- Icons without labels
-- Hamburger menus when space exists
-- Modals for simple actions
-- Animations that delay interaction
-- Custom styled form controls that break accessibility
-- Separation of concerns (HTML/CSS/JS in different files for same component)
+- Icons without labels  
+- Hamburger menus when space exists  
+- Modals for simple actions  
+- Animations that delay interaction  
+- Custom styled form controls that break accessibility  
+- Separation of concerns (HTML/CSS/JS in different files for same component)  
 
 ### Data Display
-- **Tables for data** - don't fight this
-- Align numbers right, text left
-- Zebra striping or borders for row separation
+- **Tables for data** — don’t fight this  
+- Align numbers right, text left  
+- Zebra striping or borders for row separation  
 - Sortable columns where useful
 
 ---
 
 ## Testing Strategy
 
-Integration tests are the sweet spot—they verify overall system behavior, remain stable through refactoring, and test what matters (DOM state, API responses, database state), not internal functions.
-
-Wait until core APIs stabilize before writing comprehensive test suites. Early unit tests become maintenance burden as code evolves.
-
-Always test:
-- Happy paths (expected successful scenarios)
-- Edge cases (boundary conditions, empty inputs)
-- Error handling (invalid inputs, failures)
-- Integration points (dependencies, APIs, database)
-
-Keep tests simple, focused, and easy to understand. Use clear names: `test_transfer_fails_with_insufficient_funds`. Tests should run independently.
-
-**Hard rule**: Tests mandatory (except trivial scripts).
+1. Test Type: Prioritize integration tests over unit tests
+   - Why: They verify end-to-end system behavior and remain stable during refactoring
+   - What they test: DOM state, API responses, database state (not internal function logic)
+2. Timing: Only write comprehensive tests after core APIs are stable
+   - Early unit tests become maintenance burden as code evolves
+   - Wait for stable API behavior before investing in test coverage
+3. Required Test Scenarios (must include):
+   - Happy path (successful flow with valid inputs)
+   - Edge cases (boundary conditions, empty inputs, zero values)
+   - Error handling (invalid inputs, failures, null/undefined values)
+   - Integration points (API dependencies, database connections, external services)
+4. Test Design Rules:
+   - Use clear, descriptive names: `test_user_registration_fails_with_invalid_email`
+   - Tests must be independent and run successfully in isolation
+   - Keep tests focused - one scenario per test
+   - Avoid testing internal implementation details
+5. Mandatory Rule: All non-trivial changes require at least one integration test
+   - Exceptions: Trivial scripts (one-line fixes, configuration changes)
 
 ---
 
