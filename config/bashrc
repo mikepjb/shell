@@ -9,6 +9,7 @@ export EDITOR='nvim'
 export PAGER='less -S' # instead of wrapping long/wide output, explore with less
 export NPM_CONFIG_PREFIX=$HOME/.npm
 export N_PREFIX=$HOME/.config/n
+export OPENCODE_DISABLE_CLAUDE_CODE=1 # do not load CLAUDE.md in opencode
 
 go_paths="/usr/local/go/bin:$HOME/go/bin"
 node_paths="$HOME/.config/n/bin:$HOME/.npm/bin"

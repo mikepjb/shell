@@ -81,7 +81,7 @@ link_files() {
 
     # OpenCode config
     echo "Setting up OpenCode config"
-    mkdir -p ~/.config/opencode/agents
+    # mkdir -p ~/.config/opencode/agents
     ln -sfv $setup_dir/config/ai/AGENTS.md $HOME/.config/opencode/AGENTS.md
 
     # Clean up broken symlinks in claude directories

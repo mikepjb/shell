@@ -8,7 +8,7 @@
     "azure",
     "openrouter"
   ],
-  "model": "llama/qwen3-coder",
+  "model": "llama/qwen2.5-coder-1.5b",
   "provider": {
     "llama": {
       "npm": "@ai-sdk/openai-compatible",
@@ -19,6 +19,9 @@
       "models": {
         "qwen3-coder": {
           "id": "qwen3-coder"
+        },
+        "qwen2.5-coder-1.5b": {
+          "id": "qwen2.5-coder-1.5b"
         }
       }
     }
@@ -28,18 +31,60 @@
       "model": "llama/qwen3-coder",
       "prompt": "{file:./AGENTS.md}",
       "tools": {
-        "write": true,
+        "read": true,
+        "bash": true,
         "edit": true,
-        "bash": true
+        "write": true,
+        "glob": true,
+        "grep": true,
+        "todowrite": true,
+        "task": true,
+        "webfetch": true
       }
     },
     "plan": {
       "model": "llama/qwen3-coder",
       "prompt": "{file:./AGENTS.md}",
       "tools": {
-        "write": false,
+        "read": true,
+        "bash": false,
         "edit": false,
-        "bash": false
+        "write": false,
+        "glob": true,
+        "grep": true,
+        "todowrite": true,
+        "task": true,
+        "webfetch": true
+      }
+    },
+    "lite": {
+      "model": "llama/qwen2.5-coder-1.5b",
+      "prompt": "You are a helpful assistant.",
+      "tools": {
+        "read": true,
+        "bash": false,
+        "edit": false,
+        "write": false,
+        "glob": true,
+        "grep": true,
+        "todowrite": false,
+        "task": false,
+        "webfetch": false
+      }
+    },
+    "bare": {
+      "model": "llama/qwen2.5-coder-1.5b",
+      "prompt": "You are a helpful assistant.",
+      "tools": {
+        "read": false,
+        "bash": false,
+        "edit": false,
+        "write": false,
+        "glob": false,
+        "grep": false,
+        "todowrite": false,
+        "task": false,
+        "webfetch": false
       }
     }
   }
