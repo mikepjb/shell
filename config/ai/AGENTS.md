@@ -18,6 +18,26 @@ Openly admit confusion with complex systems. If you don't understand something, 
 
 ---
 
+## Tech Stack Quick Reference
+
+### Java
+**Anti-pattern**: Isolated data holder classes (DTO packages, standalone model files). Data lives where it's used. Embed inner classes next to the logic consuming them—follow Go/Clojure thinking.
+
+**Modern Java Patterns (Java 16+):**
+- Use records instead of data classes
+- Prefer inner classes for data structures local to one service
+- Use sealed interfaces for fixed type hierarchies
+- Static factory methods over constructors
+- Local records for temporary data structures within methods
+- Avoid excessive abstraction - 3 similar lines beat a complex pattern
+
+Split only when multiple unrelated consumers and semantic boundaries are clear.
+
+### CSS
+**Rule**: Never inline styles. All styling lives in separate CSS files. Styles are the source of truth; keep them organized and discoverable, not hidden in markup.
+
+---
+
 ## Workflow
 For non-trivial tasks (more than a one-line fix), follow this sequence:
 
@@ -28,18 +48,16 @@ ANALYZE → PLAN → [user approval] → IMPLEMENT → REVIEW
 Do not skip steps. Do not implement without explicit approval.
 
 ### Step 1: Analyze
-Search the repository for relevant code, patterns, and conventions. Trace data flow, understand interactions. Identify gotchas and edge cases. Respect existing code.
+- Use grep/glob to find files, read relevant ones, trace data flow. Understand existing code before replacing it.
+- Identify gotchas and edge cases.
 
 ---
 
 ### Step 2: Plan
 Design the simplest implementation that works and get user approval.
 
-- Present the 80/20 solution: 80% value with 20% code
-- Say "no" to unnecessary complexity—push back on feature creep
 - Specify exact files and line ranges to modify
 - Identify risks, database migrations, API changes, breaking changes
-- Include test strategy (prefer integration tests)
 - Write a plan file: `<task-name>_PLAN.md` in the current directory
 
 **Format**:
@@ -61,7 +79,6 @@ One-sentence description of what will be done.
 ### API Impact
 - New/modified endpoints
 - Breaking changes
-- Include test strategy (prefer integration tests)
 
 ### Test Strategy
 - How changes will be verified (prefer integration tests)
@@ -82,12 +99,10 @@ Execute the approved plan with minimal, correct code.
 Key Requirements:
 1. Make exactly the changes specified - no more, no less
 2. Write tests as part of implementation (see Testing Strategy)
-3. Follow the 80/20 solution approach from planning
 
 Prohibited Actions:
 - Don't add unplanned features or refactor adjacent code
 - Don't suppress lint warnings or comment them out
-- Don't manually run tests or build commands (handled automatically)
 
 ---
 
@@ -224,26 +239,10 @@ Avoid excessive abstraction and fear of "God objects." Unified classes handling 
 
 ---
 
-## Testing Strategy
-
-1. Test Type: Prioritize integration tests over unit tests
-   - Why: They verify end-to-end system behavior and remain stable during refactoring
-   - What they test: DOM state, API responses, database state (not internal function logic)
-2. Timing: Only write comprehensive tests after core APIs are stable
-   - Early unit tests become maintenance burden as code evolves
-   - Wait for stable API behavior before investing in test coverage
-3. Required Test Scenarios (must include):
-   - Happy path (successful flow with valid inputs)
-   - Edge cases (boundary conditions, empty inputs, zero values)
-   - Error handling (invalid inputs, failures, null/undefined values)
-   - Integration points (API dependencies, database connections, external services)
-4. Test Design Rules:
-   - Use clear, descriptive names: `test_user_registration_fails_with_invalid_email`
-   - Tests must be independent and run successfully in isolation
-   - Keep tests focused - one scenario per test
-   - Avoid testing internal implementation details
-5. Mandatory Rule: All non-trivial changes require at least one integration test
-   - Exceptions: Trivial scripts (one-line fixes, configuration changes)
+## Testing
+  REQUIRED: Integration test for every non-trivial change
+  Test: happy path, edge cases, errors, integration points
+  DON'T: Test internal implementation details
 
 ---
 
@@ -263,57 +262,6 @@ Avoid excessive abstraction and fear of "God objects." Unified classes handling 
 **When NOT to Refactor**: To make code "cleaner" without clear benefit, to match another project's pattern, because it "feels wrong," or early in a project when code is still "like water."
 
 ---
-
-## On Saying No
-
-**Saying "no" to complexity is your most powerful weapon**, but it can harm career advancement. Balance pragmatism with workplace reality:
-
-- Push back on feature creep: "Is this necessary for the task at hand?"
-- Question premature optimization: "Can we wait until we measure the actual bottleneck?"
-- Resist over-decomposition: "Does splitting this make it easier to understand?"
-- Challenge unnecessary abstractions: "Are we solving a problem we have TODAY?"
-
-When you can't say no outright, pursue the 80/20 solution and deliver most value with minimal code.
-
----
-
-## Language & Framework Guidance
-
-### Java
-**Anti-pattern**: Isolated data holder classes (DTO packages, standalone model files). Data lives where it's used. Embed inner classes next to the logic consuming them—follow Go/Clojure thinking.
-
-```java
-// Better: inner class with TransferService, not its own file
-public class TransferService {
-  public static class Request {
-    BigDecimal amount;
-    String fromAccount, toAccount;
-  }
-  public void transfer(Request req) { /* ... */ }
-}
-```
-
-**Modern Java Patterns (Java 16+):**
-- Use records instead of data classes: `public record Request(BigDecimal amount, String fromAccount, String toAccount) {}`
-- Prefer inner classes for data structures local to one service
-- Use sealed interfaces for fixed type hierarchies: `sealed interface Result permits Success, Failure {}`
-- Static factory methods over constructors: `PaymentMethod.card("visa")` instead of `new PaymentMethod(...)`
-- Local records for temporary data structures within methods
-- Avoid excessive abstraction - 3 similar lines beat a complex pattern
-
-Split only when multiple unrelated consumers and semantic boundaries are clear.
-
-### CSS
-**Rule**: Never inline styles. All styling lives in separate CSS files. Styles are the source of truth; keep them organized and discoverable, not hidden in markup.
-
-```html
-<!-- Bad -->
-<div style="color: blue; margin: 16px;">Alert</div>
-
-<!-- Good -->
-<div class="alert">Alert</div>
-<!-- styles.css: .alert { color: blue; margin: 16px; } -->
-```
 
 ## Creating commits
 
