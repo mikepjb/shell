@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set +e
 
@@ -6,6 +6,7 @@ setup_dir=`dirname $(realpath $0)`
 local_bin_dir="$HOME/.local/bin"
 
 main() {
+    install_tools
     link_files
     setup_llm_tools
     # npm_deps
@@ -14,6 +15,54 @@ main() {
 ensure_dir_and_link() {
     mkdir -p "$(dirname "$2")"
     ln -sfv "$1" "$2"
+}
+
+check() {
+    local cli="$1"
+    local pacman_pkg="${2:-$1}"
+    local brew_pkg="${3:-${2:-$1}}"
+
+    if ! command -v "$cli" &> /dev/null; then
+        if [ -f /etc/arch-release ]; then
+            to_install="$to_install $pacman_pkg"
+        else
+            to_install="$to_install $brew_pkg"
+        fi
+    fi
+}
+
+install_tools() {
+    echo ""
+    echo "Setting up CLI tools"
+
+    to_install=""
+
+    check git
+    check nvim neovim
+    check tmux
+    check make
+    check rg ripgrep
+    check jq
+    check curl
+    check wget
+    check htop
+
+    if [ -z "$to_install" ]; then
+        echo "✓ All tools already installed"
+        return 0
+    fi
+
+    echo "Installing:$to_install"
+    if [ -f /etc/arch-release ]; then
+        sudo pacman -S --noconfirm $to_install
+    elif command -v brew &> /dev/null; then
+        brew install $to_install
+    else
+        echo "Warning: No package manager found (pacman or brew)"
+        return 1
+    fi
+
+    echo "✓ Tools installation complete"
 }
 
 link_files() {
