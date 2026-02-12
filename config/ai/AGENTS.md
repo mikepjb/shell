@@ -4,17 +4,11 @@
 
 ### Complexity is bad
 
-Complexity hurts software development. The more complexity you
-bring to a system, the harder it is to understand and reason
-about in order to make future changes.
-
 Your primary duty is to help the programmer say "no" to complexity:
 - **Say no**: Decline unnecessary features and abstractions.
 - **Say ok (with compromise)**: When you can't say no, pursue the 80/20 solution—deliver 80% of desired value with 20% of the code.
 - **Question abstractions**: "Is this solving a problem we have TODAY?"
-- **Understand before making changes**: Before removing or refactoring code, understand WHY it exists. The world is ugly and gronky, and systems reflect that reality necessarily.
-
-Openly admit confusion with complex systems. If you don't understand something, say so clearly. This legitimizes the programmer's confusion and allows open discussion to solve the problem at hand.
+- **Understand before making changes**: Before removing or refactoring code, understand WHY it exists.
 
 ---
 
@@ -125,45 +119,24 @@ when you are finished.
 
 ## Code Principles
 
-### Function Size: Important Things Should Be Big
+### Function Size Limits
 
-Three tiers:
-- **Crux functions** (70 LOC): Core logic, kept big and cohesive for clarity
-- **Support functions** (10-20 LOC): Moderate helpers
-- **Utility functions** (5-10 LOC): Small, reusable pieces
+- **Core logic**: 70 LOC max (keep cohesive, don't over-split)
+- **Helper functions**: 10-20 LOC
+- **Utilities**: 5-10 LOC
 
-### Abstraction: Wait for Natural Cut Points
-
-**Don't abstract early.** Wait for patterns to emerge naturally
-before creating abstractions. It's okay to copy 2-3 times before
-generalising with an abstraction.
-
-Good factoring:
-- Creates narrow interfaces
-- Traps complexity internally
-- Emerges from actual use patterns, not anticipated needs
-
-Bad factoring:
-- Premature abstraction before patterns emerge
-- Interfaces with single implementations
-- Helper functions called only once
-- "Extensibility" for hypothetical futures
+### Abstraction
+- Wait for 3+ copies before abstracting
+- Good: Narrow interfaces, internal complexity
+- Bad: Single-use helpers, "extensibility" for hypotheticals
 
 ### Locality of Behavior
-
-Put code in the thing that does it. Scattered functionality (the "separation of concerns" anti-pattern) is hard to understand and modify. Example: Active Record combines database mapping, domain logic, and view helpers in one class—eliminating unnecessary layers.
+Put code in the thing that does it. Don't scatter functionality across files.
 
 ### Expression Complexity
-
-Favor readable, debuggable code over minimal line counts:
-- Named intermediate variables clarify logic
-- Avoid nested conditionals and ternaries
-- Use guard clauses and early returns over deep nesting
+- Use named intermediate variables
+- Guard clauses over nesting (max 2 levels)
 - If you can't explain it simply, it's too complex
-
-### Minimize Classes and Concepts
-
-Avoid excessive abstraction and fear of "God objects." Unified classes handling related concerns eliminate unnecessary indirection and make systems easier to understand.
 
 ### Code Health
 
@@ -181,7 +154,6 @@ Avoid excessive abstraction and fear of "God objects." Unified classes handling 
 - Use correct HTTP methods and status codes (e.g., 201 for create, 204 for delete)
 - Clear error responses with error codes
 - Pagination from the start for list endpoints
-- Design for simple use cases first — add complex capabilities secondarily
 - Put operations on the objects they affect
 
 ### Database
@@ -197,11 +169,11 @@ Avoid excessive abstraction and fear of "God objects." Unified classes handling 
 - Log errors with context but redact sensitive data (passwords, tokens, PII)
 
 ### Debugging
-1. **Reproduce first** — understand how to trigger it  
-2. **Gather evidence** — logs, errors, stack traces  
-3. **Trace the flow** — follow the request path  
-4. **Check the obvious** — config, connectivity, permissions  
-5. **Look at recent changes** — prime suspects
+- **Reproduce first**: understand how to trigger it
+- **Gather evidence**: logs, errors, stack traces
+- **Trace the flow**: follow the request path
+- **Check the obvious**: config, connectivity, permissions
+- **Look at recent changes**: prime suspects
 
 ---
 
@@ -209,12 +181,10 @@ Avoid excessive abstraction and fear of "God objects." Unified classes handling 
 
 ### Core Principles
 
-- **Function over form**: Every element earns its place by doing something useful  
-- **Obvious affordances**: Users should never guess what's clickable or how things work  
-- **Information density**: Show what matters, hide what doesn’t, waste no space  
-- **Locality of behavior**: Put code on the thing that does it (HTML with behavior attributes)  
-- **Consistency**: Same patterns everywhere, no surprises  
-- **Speed**: Fast to load, fast to understand, fast to use  
+- **Obvious affordances**: Users should never guess what's clickable or how things work
+- **Information density**: Show what matters, hide what doesn't, waste no space
+- **Consistency**: Same patterns everywhere, no surprises
+- **Speed**: Fast to load, fast to understand, fast to use
 
 ### Technology Stack
 - **Semantic HTML** first — use correct elements (`<nav>`, `<main>`, `<aside>`, `<form>`, `<article>`)  
@@ -250,16 +220,11 @@ Avoid excessive abstraction and fear of "God objects." Unified classes handling 
 
 **Large refactors frequently fail. Keep changes small.** Before removing code, understand WHY it exists (Chesterton's Fence). Code that looks stupid might be handling an ugly edge case.
 
-**Rules**:
 - Refactor in tiny, working increments
 - Keep the system working after each step
 - Don't add abstraction during refactoring unless it emerges naturally
 - If refactoring reveals complexity demons, simplify first, then refactor
 - Wait for natural "cut points" to become obvious
-
-**When to Refactor**: When you understand the code deeply, see the natural cut point clearly, and the benefit is concrete and immediate.
-
-**When NOT to Refactor**: To make code "cleaner" without clear benefit, to match another project's pattern, because it "feels wrong," or early in a project when code is still "like water."
 
 ---
 
