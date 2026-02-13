@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 
-set +e
+set -e
 
-setup_dir=`dirname $(realpath $0)`
+setup_dir=$(dirname "$(realpath "$0")")
 local_bin_dir="$HOME/.local/bin"
 
 main() {
     install_tools
     link_files
-    setup_llm_tools
-    # npm_deps
 }
 
 ensure_dir_and_link() {
@@ -46,104 +44,95 @@ install_tools() {
     check curl
     check wget
     check htop
+    check huggingface-cli python-huggingface-hub
 
     if [ -z "$to_install" ]; then
         echo "✓ All tools already installed"
-        return 0
+    else
+        echo "Installing:$to_install"
+        if [ -f /etc/arch-release ]; then
+            sudo pacman -S --noconfirm $to_install
+        elif command -v brew &> /dev/null; then
+            brew install $to_install
+        else
+            echo "Warning: No package manager found (pacman or brew)"
+            return 1
+        fi
     fi
 
-    echo "Installing:$to_install"
-    if [ -f /etc/arch-release ]; then
-        sudo pacman -S --noconfirm $to_install
-    elif command -v brew &> /dev/null; then
-        brew install $to_install
-    else
-        echo "Warning: No package manager found (pacman or brew)"
-        return 1
+    # AI tools (AUR on Arch, brew elsewhere)
+    missing=""
+    command -v opencode &> /dev/null    || missing="$missing\n  paru -S opencode-bin"
+    command -v llama-server &> /dev/null || missing="$missing\n  paru -S llama.cpp"
+
+    if [ -n "$missing" ]; then
+        if [ -f /etc/arch-release ]; then
+            echo -e "\nMissing AI tools (install with paru):$missing"
+        elif command -v brew &> /dev/null; then
+            brew install opencode llama.cpp
+        fi
     fi
 
     echo "✓ Tools installation complete"
 }
 
 link_files() {
-    echo '. ~/.bashrc' > $HOME/.bash_profile
+    echo '. ~/.bashrc' > "$HOME/.bash_profile"
 
-    mkdir -p ~/.config/nvim
-    mkdir -p ~/.config/tmux
-    mkdir -p ~/.config/alacritty
-
-    # Use pattern matching to handle files without extensions (go directly to $HOME)
-    # This includes files like: bashrc, gitconfig, gitmessage, gitignore, npmrc, vimrc, gitconfig_loveholidays
+    # Extensionless config files go to $HOME/.$filename
     for config_file in "$setup_dir/config/"*; do
         filename=$(basename "$config_file")
-        # Skip directories and files with extensions (containing a dot in the basename)
         if [ -d "$config_file" ] || [[ "$filename" == *.* ]]; then
             continue
         fi
         ln -sfv "$config_file" "$HOME/.$filename"
     done
 
-    # needs to use ensure_dir_and_link fn
-    ln -sfv $setup_dir/config/init.lua $HOME/.config/nvim/init.lua
-    ln -sfv $setup_dir/config/bashrc $HOME/.bashrc
-    ln -sfv $setup_dir/config/npmrc $HOME/.npmrc
-    ln -sfv $setup_dir/config/vimrc $HOME/.vimrc
-    ln -sfv $setup_dir/config/alacritty.toml $HOME/.config/alacritty/alacritty.toml
-    ln -sfv $setup_dir/config/tmux.conf $HOME/.config/tmux/tmux.conf
-    ln -sfv $setup_dir/config/gitconfig $HOME/.gitconfig
-    ln -sfv $setup_dir/config/gitmessage $HOME/.gitmessage
-    ln -sfv $setup_dir/config/gitconfig_loveholidays $HOME/.gitconfig_loveholidays
-    ln -sfv $setup_dir/config/gitignore $HOME/.gitignore
+    # Config files with extensions go to specific locations
+    ensure_dir_and_link "$setup_dir/config/init.lua" "$HOME/.config/nvim/init.lua"
+    ensure_dir_and_link "$setup_dir/config/spartan.lua" "$HOME/.config/nvim/colors/spartan.lua"
+    ensure_dir_and_link "$setup_dir/config/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
+    ensure_dir_and_link "$setup_dir/config/tmux.conf" "$HOME/.config/tmux/tmux.conf"
+    ensure_dir_and_link "$setup_dir/config/deps.edn" "$HOME/.clojure/deps.edn"
 
-    mkdir -p ~/.clojure
-    ln -sfv $setup_dir/config/deps.edn $HOME/.clojure/deps.edn
-
-    mkdir -p ~/.local/bin
-    for f in $setup_dir/bin/*; do
-        ln -sfv $f $local_bin_dir/`basename $f`
+    # Bin scripts
+    mkdir -p "$local_bin_dir"
+    for f in "$setup_dir/bin/"*; do
+        ln -sfv "$f" "$local_bin_dir/$(basename "$f")"
     done
-
-    mkdir -p ~/.config/nvim/colors
-    ln -sfv $setup_dir/config/spartan.lua $HOME/.config/nvim/colors/spartan.lua
 
     # Claude Code config
     echo "Setting up Claude Code config"
-    mkdir -p ~/.claude/agents
-    mkdir -p ~/.claude/hooks
-    ln -sfv $setup_dir/config/ai/AGENTS.md $HOME/.claude/CLAUDE.md
-    ln -sfv $setup_dir/config/claude/settings.json $HOME/.claude/settings.json
-    ln -sfv $setup_dir/config/claude/statusline.sh $HOME/.claude/statusline.sh
-    chmod +x $HOME/.claude/statusline.sh
+    mkdir -p "$HOME/.claude/agents"
+    mkdir -p "$HOME/.claude/hooks"
+    ln -sfv "$setup_dir/config/ai/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+    ln -sfv "$setup_dir/config/claude/settings.json" "$HOME/.claude/settings.json"
+    ln -sfv "$setup_dir/config/claude/statusline.sh" "$HOME/.claude/statusline.sh"
+    chmod +x "$HOME/.claude/statusline.sh"
 
-    # Link hooks
-    for f in $setup_dir/config/claude/hooks/*; do
+    for f in "$setup_dir/config/claude/hooks/"*; do
         [ -e "$f" ] || continue
-        ln -sfv $f $HOME/.claude/hooks/`basename $f`
-        chmod +x $HOME/.claude/hooks/`basename $f`
+        ln -sfv "$f" "$HOME/.claude/hooks/$(basename "$f")"
+        chmod +x "$HOME/.claude/hooks/$(basename "$f")"
     done
-
-    # OpenCode plugin for verify hook (optional)
-    echo "Note: For OpenCode, the verify script can be run manually or configured as a plugin"
-    echo "See ~/.local/bin/verify for the verification script used by Claude"
 
     # OpenCode config
     echo "Setting up OpenCode config"
-    # mkdir -p ~/.config/opencode/agents
-    ln -sfv $setup_dir/config/ai/AGENTS.md $HOME/.config/opencode/AGENTS.md
+    ensure_dir_and_link "$setup_dir/config/ai/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+    ensure_dir_and_link "$setup_dir/config/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
 
     # Clean up broken symlinks in claude directories
-    find -L $HOME/.claude/agents -type l -delete 2>/dev/null
-    find -L $HOME/.claude/hooks -type l -delete 2>/dev/null
+    find -L "$HOME/.claude/agents" -type l -delete 2>/dev/null
+    find -L "$HOME/.claude/hooks" -type l -delete 2>/dev/null
 
-    # Build list of expected agents from repo
+    # Sync agents: remove stale, link current
     expected_agents=""
-    for f in $setup_dir/config/claude/agents/*.md; do
+    for f in "$setup_dir/config/claude/agents/"*.md; do
         [ -e "$f" ] || continue
-        expected_agents="$expected_agents $(basename $f)"
+        expected_agents="$expected_agents $(basename "$f")"
     done
 
-    # Clean up agents not in repo
-    for f in $HOME/.claude/agents/*.md; do
+    for f in "$HOME/.claude/agents/"*.md; do
         [ -e "$f" ] || continue
         agent=$(basename "$f")
         if ! echo "$expected_agents" | grep -qw "$agent"; then
@@ -152,65 +141,10 @@ link_files() {
         fi
     done
 
-    # Link agents from repo
-    for f in $setup_dir/config/claude/agents/*.md; do
+    for f in "$setup_dir/config/claude/agents/"*.md; do
         [ -e "$f" ] || continue
-        ln -sfv $f $HOME/.claude/agents/`basename $f`
+        ln -sfv "$f" "$HOME/.claude/agents/$(basename "$f")"
     done
 }
-
-setup_llm_tools() {
-    echo ""
-    echo "Setting up LLM tools (Ollama, OpenCode, Qwen 3.2 8B)"
-
-    # Install Ollama if not present
-    if ! command -v ollama &> /dev/null; then
-        echo "Installing Ollama..."
-        curl -fsSL https://ollama.ai/install.sh | sh
-    else
-        echo "✓ Ollama already installed"
-    fi
-
-    # Install OpenCode if not present
-    if ! command -v opencode &> /dev/null; then
-        echo "Installing OpenCode..."
-        curl -fsSL https://opencode.ai/install | bash
-    else
-        echo "✓ OpenCode already installed"
-    fi
-
-    # Check if Ollama service is running, start if needed
-    if ! pgrep -x ollama > /dev/null; then
-        echo "Starting Ollama service..."
-        nohup ollama serve > /tmp/ollama.log 2>&1 &
-        sleep 3
-    else
-        echo "✓ Ollama service already running"
-    fi
-
-    # Pull Qwen 3.2 8B model
-    echo "Pulling Qwen 3.2 8B model..."
-    ollama pull qwen3:8b
-
-    # Configure context window for OpenCode (32k tokens)
-    echo "Configuring model context window..."
-    (sleep 1; echo "/set parameter num_ctx 32768"; echo "/save qwen3:8b"; sleep 1) | ollama run qwen3:8b > /dev/null 2>&1 &
-
-    # Create OpenCode configuration directory and symlink config
-    mkdir -p ~/.config/opencode
-    ln -sfv $setup_dir/config/opencode/opencode.json $HOME/.config/opencode/opencode.json
-
-    echo "✓ LLM setup complete"
-    echo ""
-    echo "Usage:"
-    echo "  Start Ollama:  ollama serve"
-    echo "  Use OpenCode:  opencode"
-    echo "  Chat directly: ollama run qwen3:8b"
-}
-
-# npm_deps() {
-#     # if not installed..
-#     # sql-formatter
-# }
 
 main
