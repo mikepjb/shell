@@ -33,7 +33,7 @@ install_tools() {
     echo ""
     echo "Setting up CLI tools"
 
-    to_install=""
+    local to_install=""
 
     check git
     check nvim neovim
@@ -61,7 +61,7 @@ install_tools() {
     fi
 
     # AI tools (AUR on Arch, brew elsewhere)
-    missing=""
+    local missing=""
     command -v opencode &> /dev/null    || missing="$missing\n  paru -S opencode-bin"
     command -v llama-server &> /dev/null || missing="$missing\n  paru -S llama.cpp"
 
