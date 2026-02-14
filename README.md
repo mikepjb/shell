@@ -61,3 +61,7 @@ qwen3-coder (best so far, using unsloth)
   2. Download lombok: curl -L https://projectlombok.org/downloads/lombok.jar -o ~/.config/nvim/lombok.jar
   3. Add to your init.lua: vim.api.nvim_create_autocmd('FileType', {pattern = 'java', callback = function() dofile(os.getenv('HOME') .. '/src/shell/jdtls.lua') end})
 ```
+
+## Gnome Setup
+
+`gsettings set org.gnome.desktop.input-sources xkb-options "['ctrl:nocaps']"`

@@ -41,10 +41,11 @@ install_tools() {
     check make
     check rg ripgrep
     check jq
+    check yq go-yq
     check curl
     check wget
     check htop
-    check huggingface-cli python-huggingface-hub
+    check hf huggingface-cli python-huggingface-hub
 
     if [ -z "$to_install" ]; then
         echo "✓ All tools already installed"
@@ -63,7 +64,7 @@ install_tools() {
     # AI tools (AUR on Arch, brew elsewhere)
     local missing=""
     command -v opencode &> /dev/null    || missing="$missing\n  paru -S opencode-bin"
-    command -v llama-server &> /dev/null || missing="$missing\n  paru -S llama.cpp"
+    command -v llama-server &> /dev/null || missing="$missing\n  paru -S llama.cpp-vulkan" # -vulkan is optimised
 
     if [ -n "$missing" ]; then
         if [ -f /etc/arch-release ]; then
@@ -105,7 +106,7 @@ link_files() {
     echo "Setting up Claude Code config"
     mkdir -p "$HOME/.claude/agents"
     mkdir -p "$HOME/.claude/hooks"
-    ln -sfv "$setup_dir/config/ai/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+    ln -sfv "$setup_dir/config/AGENTS.md" "$HOME/.claude/CLAUDE.md"
     ln -sfv "$setup_dir/config/claude/settings.json" "$HOME/.claude/settings.json"
     ln -sfv "$setup_dir/config/claude/statusline.sh" "$HOME/.claude/statusline.sh"
     chmod +x "$HOME/.claude/statusline.sh"
@@ -118,7 +119,7 @@ link_files() {
 
     # OpenCode config
     echo "Setting up OpenCode config"
-    ensure_dir_and_link "$setup_dir/config/ai/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+    ensure_dir_and_link "$setup_dir/config/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
     ensure_dir_and_link "$setup_dir/config/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
 
     # Clean up broken symlinks in claude directories

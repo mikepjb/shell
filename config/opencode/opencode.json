@@ -8,7 +8,7 @@
     "azure",
     "openrouter"
   ],
-  "model": "llama/qwen3-4b-instruct-2507",
+  "model": "llama/local",
   "provider": {
     "llama": {
       "npm": "@ai-sdk/openai-compatible",
@@ -17,71 +17,56 @@
         "apiKey": "none"
       },
       "models": {
-        "qwen3-4b-instruct-2507": {
-          "id": "qwen3-4b-instruct-2507"
+        "local": {
+          "id": "local"
         }
       }
     }
   },
-  "mode": {
+  "agent": {
     "build": {
-      "model": "llama/qwen3-4b-instruct-2507",
-      "prompt": "{file:./AGENTS.md}",
-      "tools": {
-        "read": true,
-        "bash": true,
-        "edit": true,
-        "write": true,
-        "glob": true,
-        "grep": true,
-        "todowrite": true,
-        "task": true,
-        "webfetch": true
+      "model": "llama/local",
+      "description": "Build and execute tasks",
+      "permission": {
+        "read": "allow",
+        "bash": "allow",
+        "edit": "allow",
+        "write": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "todowrite": "allow",
+        "task": "allow",
+        "webfetch": "allow"
       }
     },
     "plan": {
-      "model": "llama/qwen3-4b-instruct-2507",
-      "prompt": "{file:./AGENTS.md}",
-      "tools": {
-        "read": true,
-        "bash": false,
-        "edit": false,
-        "write": false,
-        "glob": true,
-        "grep": true,
-        "todowrite": true,
-        "task": true,
-        "webfetch": true
+      "model": "llama/local",
+      "description": "Plan implementations",
+      "permission": {
+        "read": "allow",
+        "bash": "deny",
+        "edit": "deny",
+        "write": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "todowrite": "allow",
+        "task": "allow",
+        "webfetch": "allow"
       }
     },
     "lite": {
-      "model": "llama/qwen3-4b-instruct-2507",
-      "prompt": "You are a helpful assistant.",
-      "tools": {
-        "read": true,
-        "bash": false,
-        "edit": false,
-        "write": false,
-        "glob": true,
-        "grep": true,
-        "todowrite": false,
-        "task": false,
-        "webfetch": false
-      }
-    },
-    "bare": {
-      "model": "llama/qwen3-4b-instruct-2507",
-      "prompt": "You are a helpful assistant.",
-      "tools": {
-        "read": false,
-        "bash": false,
-        "edit": false,
-        "write": false,
-        "glob": false,
-        "grep": false,
-        "todowrite": false,
-        "task": false,
-        "webfetch": false
+      "model": "llama/local",
+      "description": "Quick queries and info lookup",
+      "permission": {
+        "read": "allow",
+        "bash": "deny",
+        "edit": "deny",
+        "write": "deny",
+        "glob": "allow",
+        "grep": "allow",
+        "todowrite": "deny",
+        "task": "deny",
+        "webfetch": "deny"
       }
     }
   }
