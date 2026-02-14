@@ -5,4 +5,7 @@ paru -S \
 
 pacman -Syu \
     amdgpu_top \
-    mitmproxy
+    mitmproxy \
+    dosfstools
+
+# also enable networkmanager + bluetooth services after installing gnome

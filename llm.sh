@@ -1,6 +1,7 @@
 #!/bin/sh
 # LLM server launcher using llama.cpp
 # Usage: ./llm.sh [--model <name>]
+# UMA set to allocate 4GB for iGPU by default
 
 set -e
 
@@ -56,6 +57,7 @@ RP=$(yq eval ".models.${MODEL}.repeat-penalty // 1.05" "$CONFIG")
 PORT=$(yq eval ".models.${MODEL}.port // 9091" "$CONFIG")
 HOST=$(yq eval ".models.${MODEL}.host // \"127.0.0.1\"" "$CONFIG" | tr -d '"')
 MLOCK=$(yq eval ".models.${MODEL}.mlock // false" "$CONFIG")
+NGL=$(yq eval ".models.${MODEL}.gpu-layers // 0" "$CONFIG")
 
 # Download if needed
 if [ ! -f "$MODEL_PATH" ]; then
@@ -69,5 +71,6 @@ fi
 echo "Starting llama-server on port $PORT..."
 llama-server \
   -m "$MODEL_PATH" --jinja --host "$HOST" --port "$PORT" -c "$CTX" --metrics \
+  -ngl "$NGL" \
   ${MLOCK:+--mlock} \
   --temp "$TEMP" --top-p "$TOP_P" --top-k "$TOP_K" --repeat-penalty "$RP"
