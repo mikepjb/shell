@@ -1,6 +1,6 @@
 defaults:
   n-parallel: 1
-  mmap: "false"
+  mmap: "false" # possible that we want this as 'true', slowdown?
   ctx-token-key: q4_0
   ctx-token-val: q4_0
   threads: 10
