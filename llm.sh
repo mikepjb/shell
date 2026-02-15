@@ -54,7 +54,7 @@ TEMP=$(yq eval ".models[\"${MODEL}\"].temp // 0.7" "$CONFIG")
 TOP_P=$(yq eval ".models[\"${MODEL}\"][\"top-p\"] // 0.8" "$CONFIG")
 TOP_K=$(yq eval ".models[\"${MODEL}\"][\"top-k\"] // 20" "$CONFIG")
 RP=$(yq eval ".models[\"${MODEL}\"][\"repeat-penalty\"] // 1.05" "$CONFIG")
-PORT=$(yq eval ".models[\"${MODEL}\"].port // 9091" "$CONFIG")
+PORT=$(yq eval ".models[\"${MODEL}\"].port // 7777" "$CONFIG")
 HOST=$(yq eval ".models[\"${MODEL}\"].host // \"127.0.0.1\"" "$CONFIG" | tr -d '"')
 MLOCK=$(yq eval ".models[\"${MODEL}\"].mlock // false" "$CONFIG")
 NGL=$(yq eval ".models[\"${MODEL}\"][\"gpu-layers\"] // 0" "$CONFIG")
@@ -64,6 +64,9 @@ MMAP=$(yq eval ".defaults.mmap // true" "$CONFIG")
 CTK=$(yq eval ".defaults[\"ctx-token-key\"] // \"q4_0\"" "$CONFIG")
 CTV=$(yq eval ".defaults[\"ctx-token-val\"] // \"q4_0\"" "$CONFIG")
 THREADS=$(yq eval ".defaults.threads // 10" "$CONFIG")
+
+# Debug: show config values
+echo "Config: n-parallel=$NPARALLEL, mmap=$MMAP, threads=$THREADS"
 
 # Download if needed
 if [ ! -f "$MODEL_PATH" ]; then

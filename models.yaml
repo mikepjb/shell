@@ -1,6 +1,6 @@
 defaults:
   n-parallel: 1
-  mmap: false
+  mmap: "false"
   ctx-token-key: q4_0
   ctx-token-val: q4_0
   threads: 10
@@ -10,8 +10,8 @@ models:
     source:
       repo: "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF"
       file: "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf"
-    context: 32768
-    gpu-layers: 60
+    context: 65536
+    gpu-layers: 45 # 60 works but testing lower
     temp: 0.7
     top-p: 0.8
     top-k: 20
