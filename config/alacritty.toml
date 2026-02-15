@@ -63,6 +63,7 @@ mods = "Command"
 opacity = 0.95
 decorations = "Full"
 option_as_alt = "Both" # treat option as alt in mac os
+dimensions = { columns = 100, lines = 50 }
 
 [[keyboard.bindings]]
 key = "1"
