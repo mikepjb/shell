@@ -24,8 +24,8 @@
         "local": {
           "id": "local",
           "limit": {
-            "context": 32768,
-            "output": 4096
+            "context": 65536,
+            "output": 8192
           }
         }
       }

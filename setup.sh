@@ -35,6 +35,7 @@ install_tools() {
 
     local to_install=""
 
+    # wl-clipboard arch only
     check git
     check nvim neovim
     check tmux

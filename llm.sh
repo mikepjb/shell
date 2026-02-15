@@ -58,6 +58,12 @@ PORT=$(yq eval ".models[\"${MODEL}\"].port // 9091" "$CONFIG")
 HOST=$(yq eval ".models[\"${MODEL}\"].host // \"127.0.0.1\"" "$CONFIG" | tr -d '"')
 MLOCK=$(yq eval ".models[\"${MODEL}\"].mlock // false" "$CONFIG")
 NGL=$(yq eval ".models[\"${MODEL}\"][\"gpu-layers\"] // 0" "$CONFIG")
+MIN_P=$(yq eval ".models[\"${MODEL}\"][\"min-p\"] // 0.0" "$CONFIG")
+NPARALLEL=$(yq eval ".defaults[\"n-parallel\"] // 1" "$CONFIG")
+MMAP=$(yq eval ".defaults.mmap // true" "$CONFIG")
+CTK=$(yq eval ".defaults[\"ctx-token-key\"] // \"q4_0\"" "$CONFIG")
+CTV=$(yq eval ".defaults[\"ctx-token-val\"] // \"q4_0\"" "$CONFIG")
+THREADS=$(yq eval ".defaults.threads // 10" "$CONFIG")
 
 # Download if needed
 if [ ! -f "$MODEL_PATH" ]; then
@@ -72,7 +78,9 @@ echo "Starting llama-server on port $PORT..."
 llama-server \
   -m "$MODEL_PATH" --jinja --host "$HOST" --port "$PORT" -c "$CTX" --metrics \
   -ngl "$NGL" \
-  -ctk q4_0 -ctv q4_0 \
-  --threads 10 \
+  -np "$NPARALLEL" \
+  -ctk "$CTK" -ctv "$CTV" \
+  --threads "$THREADS" \
   ${MLOCK:+--mlock} \
-  --temp "$TEMP" --top-p "$TOP_P" --top-k "$TOP_K" --repeat-penalty "$RP"
+  $([ "$MMAP" = "false" ] && echo "--no-mmap") \
+  --temp "$TEMP" --top-p "$TOP_P" --top-k "$TOP_K" --min-p "$MIN_P" --repeat-penalty "$RP"
