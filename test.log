@@ -37,3 +37,119 @@ prompt eval shown).
 prompt eval time =    1330.96 ms /    17 tokens (   78.29 ms per token,    12.77 tokens per second)
        eval time =    8712.82 ms /    62 tokens (  140.53 ms per token,     7.12 tokens per second)
       total time =   10043.77 ms /    79 tokens
+
+gemma-3-4b 99 layers.. ridiculously fast for 4b - response not quite as good as
+qwen 4b codewise but it should be tested for writing separately to play to it's
+strengths
+prompt eval time =    5023.05 ms /  2573 tokens (    1.95 ms per token,   512.24 tokens per second)
+       eval time =   44687.54 ms /   966 tokens (   46.26 ms per token,    21.62 tokens per second)
+      total time =   49710.59 ms /  3539 tokens
+
+phi-4.. fast but dumb AF on subsequent prompting, it's that bad that I want to
+believe this is a config issue LOL
+prompt eval time =    3583.48 ms /  1871 tokens (    1.92 ms per token,   522.12 tokens per second)
+       eval time =   18482.37 ms /   459 tokens (   40.27 ms per token,    24.83 tokens per second)
+      total time =   22065.85 ms /  2330 tokens
+
+devstral.. super slow and the output was really really bad/short.
+prompt eval time =  246576.86 ms / 14286 tokens (   17.26 ms per token,    57.94 tokens per second)
+       eval time =   54613.98 ms /    88 tokens (  620.61 ms per token,     1.61 tokens per second)
+      total time =  301190.84 ms / 14374 tokens
+
+qwen3 0.6b - this one surprised me, better feedback than devstral (aware this
+is a n=1), it clearly had thinking enabled/was not an instruct model.
+prompt eval time =   12351.42 ms / 14007 tokens (    0.88 ms per token,  1134.04 tokens per second)
+       eval time =   18973.94 ms /   601 tokens (   31.57 ms per token,    31.68 tokens per second)
+      total time =   31325.36 ms / 14608 tokens
+
+
+qwen3 coder 30b a3b 40 gpu layers & threads = 10: "Review @setup.sh give a rating and suggest improvements"
+prompt eval time =    1622.06 ms /   106 tokens (   15.30 ms per token,    65.35 tokens per second)
+       eval time =   22576.58 ms /   195 tokens (  115.78 ms per token,     8.64 tokens per second)
+      total time =   24198.64 ms /   301 tokens
+
+qwen3 coder same as above with -fa on:
+prompt eval time =    1617.82 ms /   106 tokens (   15.26 ms per token,    65.52 tokens per second)
+       eval time =   10770.94 ms /    95 tokens (  113.38 ms per token,     8.82 tokens per second)
+      total time =   12388.76 ms /   201 tokens
+
+qwen3 code no -fa but still threads = 10 & gpu layers 47 with ctk/ctv q4_0
+cycled twice (gave answer twice after running cmd in middle), unsure if 47 gpu
+is possible without quantisation.
+prompt eval time =     782.94 ms /    24 tokens (   32.62 ms per token,    30.65 tokens per second)
+       eval time =   12534.03 ms /   197 tokens (   63.62 ms per token,    15.72 tokens per second)
+      total time =   13316.97 ms /   221 tokens
+
+also an aside but noticed this in llama.cpp logs:
+warning: failed to mlock 436264960-byte buffer (after previously locking 0 bytes): Cannot allocate memory
+Try increasing RLIMIT_MEMLOCK ('ulimit -l' as root).
+
+47 gpu not possible without quantisation of KV
+41 is max without quantisation
+
+testing without quantisation with gpu 41:
+prompt eval time =    7861.68 ms /   550 tokens (   14.29 ms per token,    69.96 tokens per second)
+       eval time =   26964.36 ms /   185 tokens (  145.75 ms per token,     6.86 tokens per second)
+      total time =   34826.05 ms /   735 tokens
+
+qwen2.5 coder 1.5b.. actually very good, printed twice tho:
+prompt eval time =     280.30 ms /   123 tokens (    2.28 ms per token,   438.82 tokens per second)
+       eval time =   34507.60 ms /  1423 tokens (   24.25 ms per token,    41.24 tokens per second)
+      total time =   34787.90 ms /  1546 tokens
+
+qwen3 30b a3b latest config + gpu layers 60! more repeating output tho..
+prompt eval time =    1138.32 ms /   128 tokens (    8.89 ms per token,   112.45 tokens per second)
+       eval time =    1806.19 ms /    47 tokens (   38.43 ms per token,    26.02 tokens per second)
+      total time =    2944.52 ms /   175 tokens
+
+
+in 70 gpu non-coder 30b a3b
+prompt eval time =  101000.93 ms / 14007 tokens (    7.21 ms per token,   138.68 tokens per second)
+       eval time =   26141.19 ms /   179 tokens (  146.04 ms per token,     6.85 tokens per second)
+      total time =  127142.12 ms / 14186 tokens
+
+in 70 gpu coder 30b a3b
+prompt eval time =  108988.51 ms / 14007 tokens (    7.78 ms per token,   128.52 tokens per second)
+       eval time =   14937.76 ms /    96 tokens (  155.60 ms per token,     6.43 tokens per second)
+      total time =  123926.27 ms / 14103 tokens
+
+gpu 60 qwen3 coder
+prompt eval time =     814.88 ms /    55 tokens (   14.82 ms per token,    67.49 tokens per second)
+       eval time =    1994.32 ms /    50 tokens (   39.89 ms per token,    25.07 tokens per second)
+      total time =    2809.20 ms /   105 tokens
+
+non coder seems to take more memory
+
+  prompt eval time =   91707.53 ms / 14007 tokens (    6.55 ms per token,   152.74 tokens per second)
+         eval time =   16363.48 ms /   188 tokens (   87.04 ms per token,    11.49 tokens per second)
+        total time =  108071.00 ms / 14195 tokens
+
+
+  max i found was 45 gpu layers
+
+  regression with override-tensors flag
+
+================================================================================
+ROUND 2 TESTING (with UMA @ 6GB):
+================================================================================
+
+OPTIMIZED CONFIG FOR qwen3-coder-30b-a3b (carry forward from round 1):
+✓ -fa (flash attention): enabled
+✓ -ctk q4_0 -ctv q4_0 (KV cache quantization): enabled
+✓ --threads 10: set to 10
+✓ gpu-layers 47: baseline from round 1
+
+NEW TESTS WITH 6GB UMA:
+- [ ] qwen3-coder-30b-a3b at gpu-layers 50, 55, 60 with KV cache quant (find stable max)
+- [ ] qwen2.5-coder-3b (new model, test quality/speed tradeoff between 1.5b and 7b)
+- [ ] qwen3-30b-a3b-instruct (base, non-coder variant, compare on writing task vs coder)
+
+COMPARISON TASKS:
+- Code review: use same prompt as round 1 across all models
+- Writing task: test qwen3-30b-a3b-instruct vs qwen3-coder-30b-a3b on prose (which is better for non-coding work?)
+
+METRIC TRACKING:
+- prompt eval time (t/s)
+- token gen time (t/s)
+- output quality/length
+- any crashes/instability at higher gpu-layers
