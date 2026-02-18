@@ -149,7 +149,7 @@ local keymaps = {
     {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
     {"n", "gn", ":e ~/.notes/index.md<CR>"},
     {"n", "gj", ":e ~/.notes/cookie-jar.md<CR>"},
-    {"n", "<M-t>", ":terminal test-run<CR>"},
+    {"n", "<M-t>", ":terminal verify<CR>"},
     {"n", "gl", function()
         local qf_winid = vim.fn.getqflist({winid = 0}).winid
         vim.cmd(qf_winid ~= 0 and 'cclose' or 'copen')

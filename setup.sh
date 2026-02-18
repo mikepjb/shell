@@ -46,6 +46,7 @@ install_tools() {
     check curl
     check wget
     check htop
+    check shellcheck
     check hf huggingface-cli python-huggingface-hub
 
     if [ -z "$to_install" ]; then

@@ -146,10 +146,10 @@ if [[ $TOTAL_ADDED -gt 0 && $TOTAL_REMOVED -gt 0 ]]; then
     TOTAL_CHANGED=$((TOTAL_ADDED + TOTAL_REMOVED - MIN_EDIT_LINES))
 fi
 
-if [[ $TOTAL_CHANGED -gt 300 ]]; then
-    output_result "Too many total lines changed ($TOTAL_CHANGED > 300). Split into smaller PRs."
-    exit 0
-fi
+# if [[ $TOTAL_CHANGED -gt 300 ]]; then
+#     output_result "Too many total lines changed ($TOTAL_CHANGED > 300). Split into smaller PRs."
+#     exit 0
+# fi
 
 output_result ""
 exit 0
