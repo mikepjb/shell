@@ -91,23 +91,21 @@ local function tmux_send_prompt()
 end
 
 vim.api.nvim_create_user_command('FindFiles', function(opts)
-  if opts.args ~= '' then
-    local cmd = string.format('rg --files | rg -S "%s"', opts.args)
-    local output = vim.fn.system(cmd)
-    local files = vim.split(output, '\n', { trimempty = true })
-    
-    if #files > 0 then
-        vim.fn.setqflist(vim.tbl_map(function(file)
-            return { filename = file }
-        end, files))
-        if #files > 1 then
-            vim.cmd('copen')
-        else
-            vim.cmd('cclose')
-        end
-        vim.cmd('cfirst')
-    else vim.notify("No matches found") end
-  end
+  local cmd = opts.args ~= '' and string.format('rg --files | rg -S "%s"', opts.args) or 'rg --files'
+  local output = vim.fn.system(cmd)
+  local files = vim.split(output, '\n', { trimempty = true })
+
+  if #files > 0 then
+      vim.fn.setqflist(vim.tbl_map(function(file)
+          return { filename = file }
+      end, files))
+      if #files > 1 then
+          vim.cmd('copen')
+      else
+          vim.cmd('cclose')
+      end
+      vim.cmd('cfirst')
+  else vim.notify("No matches found") end
 end, { nargs = '?' })
 
 vim.api.nvim_create_user_command('Grep', function(opts)
@@ -155,7 +153,7 @@ local keymaps = {
         vim.cmd(qf_winid ~= 0 and 'cclose' or 'copen')
     end},
     {'n', 'ge', edit_relative},
-    {'n', 'gL', ":Lexplore<CR>"},
+    {'n', '<C-t>', ":Lexplore<CR>"},
 } for _, km in ipairs(keymaps) do vim.keymap.set(km[1], km[2], km[3]) end
 
 -- Autocmds
