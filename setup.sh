@@ -48,6 +48,9 @@ install_tools() {
     check htop
     check shellcheck
     check hf huggingface-cli python-huggingface-hub
+    check python
+    check pip python-pip
+    check gopls
 
     if [ -z "$to_install" ]; then
         echo "✓ All tools already installed"

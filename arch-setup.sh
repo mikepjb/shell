@@ -3,13 +3,18 @@
 paru -S \
     minecraft-launcher \
     asusctl \
-    slack-desktop
+    slack-desktop \
+    protonmail-bridge \
+    notmuch-mailmover
 
 pacman -Syu \
     amdgpu_top \
     mitmproxy \
     dosfstools \
-    wl-clipboard
+    wl-clipboard \
+    offlineimap \
+    notmuch \
+    jdk17-openjdk
 
 # also enable networkmanager + bluetooth services after installing gnome
 #
