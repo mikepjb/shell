@@ -16,9 +16,10 @@ node_paths="$HOME/.config/n/bin:$HOME/.npm/bin"
 deno_paths="$HOME/.deno/bin/"
 mac_paths="/sbin:/opt/homebrew/bin"
 sys_paths="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin"
+rust_paths="$HOME/.cargo/bin"
 user_paths="$HOME/.local/bin"
 opencode="/Users/mike.bruce/.opencode/bin"
-export PATH="$user_paths:$go_paths:$deno_paths:$node_paths:$mac_paths:$sys_paths:$opencode"
+export PATH="$user_paths:$go_paths:$rust_paths:$deno_paths:$node_paths:$mac_paths:$sys_paths:$opencode"
 
 if [[ -n "${PREFIX+x}" ]]; then # for termux
     export PATH="$PREFIX/bin:$PATH"
@@ -68,3 +69,4 @@ PS1='\W($(git branch --show-current 2>/dev/null || echo "!")) $(jobs_signal) '
 
 # opencode
 export PATH=/home/mikepjb/.opencode/bin:$PATH
+. "$HOME/.cargo/env"

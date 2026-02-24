@@ -16,6 +16,9 @@ pacman -Syu \
     notmuch \
     jdk17-openjdk
 
+# rustup component add rust-src
+# rustup component add rust-analyzer
+
 # also enable networkmanager + bluetooth services after installing gnome
 #
 # we set a slower (originally 1000) battery check time to help resolve phantom

@@ -251,6 +251,18 @@ vim.api.nvim_create_autocmd('FileType', {
     end,
 })
 
+vim.api.nvim_create_autocmd('FileType', {
+    pattern = {'rust'},
+    callback = function()
+        local rust_root = find_root({'Cargo.lock'})
+        vim.lsp.start({
+            name = 'rust-analyzer',
+            cmd = {'rust-analyzer'},
+            root_dir = rust_root,
+        })
+    end,
+})
+
 -- Basic LSP keymaps
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(ev)
