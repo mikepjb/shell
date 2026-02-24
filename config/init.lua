@@ -33,7 +33,7 @@ local global_config = {
     netrw_list_hide = '^\\.git/$,^\\..*$,\\.swp$,\\.tmp$,node_modules',
 
     -- Language Options
-    markdown_fenced_languages = { 'css', 'javascript', 'bash', 'go', 'sql' },
+    markdown_fenced_languages = { 'css', 'javascript', 'bash', 'go', 'sql', 'yaml' },
     omni_sql_no_default_maps = 1, -- don't use C-c for autocompletion in SQL.
 } for k, v in pairs(global_config) do vim.g[k] = v end
 
