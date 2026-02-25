@@ -45,7 +45,7 @@ install_tools() {
     check make
     check rg ripgrep
     check jq
-    check yq go-yq
+    check yq go-yq yq
     check curl
     check wget
     check htop
