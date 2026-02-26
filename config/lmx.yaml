@@ -1,0 +1,39 @@
+config:
+  models-directory: "~/models"
+  tools:
+    auto-install: true
+    opencode:
+      version: "1.2.3"
+    llama.cpp:
+      version: "05fa625e"
+
+
+model-defaults:
+  n-parallel: 1
+  mmap: true
+  ctx-token-key: q4_0
+  ctx-token-val: q4_0
+  threads: 10
+
+models:
+  qwen3.5-35b-a3b:
+    source:
+      repo: "bartowski/Qwen_Qwen3.5-35B-A3B-GGUF"
+      file: "Qwen_Qwen3.5-35B-A3B-Q4_K_M.gguf"
+    context: 65536
+    gpu-layers: 30
+    temp: 0.7
+    top-p: 0.8
+    top-k: 20
+    min-p: 0.0
+    repeat-penalty: 1.05
+  llama-3.2-1b:
+    source:
+      repo: "bartowski/Llama-3.2-1B-Instruct-GGUF"
+      file: "Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+    context: 32768
+    gpu-layers: 99
+    temp: 0.6
+    top-p: 0.85
+    top-k: 30
+    repeat-penalty: 1.15

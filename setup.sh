@@ -100,6 +100,7 @@ link_files() {
     ensure_dir_and_link "$setup_dir/config/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
     ensure_dir_and_link "$setup_dir/config/tmux.conf" "$HOME/.config/tmux/tmux.conf"
     ensure_dir_and_link "$setup_dir/config/deps.edn" "$HOME/.clojure/deps.edn"
+    ensure_dir_and_link "$setup_dir/config/lmx.yaml" "$HOME/.config/lmx/lmx.yaml"
 
     # Bin scripts
     mkdir -p "$local_bin_dir"
