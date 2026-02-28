@@ -2,6 +2,9 @@
 
 set -e
 
+# need to add rustup.. rust tools
+# cargo-llvm-cov for coverage (via cargo install)
+
 setup_dir=$(dirname "$(realpath "$0")")
 local_bin_dir="$HOME/.local/bin"
 
@@ -100,7 +103,8 @@ link_files() {
     ensure_dir_and_link "$setup_dir/config/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
     ensure_dir_and_link "$setup_dir/config/tmux.conf" "$HOME/.config/tmux/tmux.conf"
     ensure_dir_and_link "$setup_dir/config/deps.edn" "$HOME/.clojure/deps.edn"
-    ensure_dir_and_link "$setup_dir/config/lmx.yaml" "$HOME/.config/lmx/lmx.yaml"
+    ensure_dir_and_link "$setup_dir/config/spellbook.yaml" "$HOME/.config/spellbook/spellbook.yaml"
+    ensure_dir_and_link "$setup_dir/config/pact.yaml" "$HOME/.config/pact/pact.yaml"
 
     # Bin scripts
     mkdir -p "$local_bin_dir"
@@ -126,6 +130,7 @@ link_files() {
     # OpenCode config
     echo "Setting up OpenCode config"
     ensure_dir_and_link "$setup_dir/config/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+    ensure_dir_and_link "$setup_dir/config/AGENTS.md" "$HOME/.config/pact/AGENTS.md"
     ensure_dir_and_link "$setup_dir/config/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
 
     # Clean up broken symlinks in claude directories
