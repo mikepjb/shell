@@ -5,9 +5,10 @@
 
 # ^^ Body: Explain *what* and *why* (not *how*). Include task ID (Clickup issue).
 # Wrap at 72 chars. ################################## which is here:  #
-# 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 # At the end: Include Co-authored-by for all contributors. 
+# Co-Authored-By: Qwen <noreply@qwen.ai>
+# Co-Authored-By: Kimi K2.5 <noreply@moonshot.ai>
 # Co-Authored-By: Claude <noreply@anthropic.com>
 #
 # How to Write a Git Commit Message:

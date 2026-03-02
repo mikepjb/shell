@@ -136,8 +136,10 @@ install_llamacpp() {
         git submodule update --init --recursive
     else
         mkdir -p "$(dirname "$LLAMACPP_SRC")"
-        git clone --depth 100 --branch "$LLAMACPP_VERSION" "$repo" "$LLAMACPP_SRC"
+        git clone "$repo" "$LLAMACPP_SRC"
         cd "$LLAMACPP_SRC"
+        git fetch origin autoparser --tags --force
+        git checkout "$LLAMACPP_VERSION"
         git submodule update --init --recursive
     fi
 
