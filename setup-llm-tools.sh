@@ -21,7 +21,7 @@ set -euo pipefail
 # =============================================================================
 
 # ── Versions ─────────────────────────────────────────────────────────────────
-LLAMACPP_VERSION="b8077"
+LLAMACPP_VERSION="autoparser"
 OPENCODE_VERSION="1.2.3"
 
 # ── Config ───────────────────────────────────────────────────────────────────
@@ -126,12 +126,12 @@ install_llamacpp() {
     log "Installing llama.cpp @ ${LLAMACPP_VERSION}"
     preflight_llama
 
-    local repo="https://github.com/ggml-org/llama.cpp.git"
+    local repo="https://github.com/pwilkin/llama.cpp.git"
 
     # Clone or update source
     if [[ -d "$LLAMACPP_SRC" ]]; then
         cd "$LLAMACPP_SRC"
-        git fetch --tags --force
+        git fetch --force
         git checkout "$LLAMACPP_VERSION"
         git submodule update --init --recursive
     else

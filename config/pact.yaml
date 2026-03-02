@@ -1,0 +1,31 @@
+debug: true
+
+providers:
+  - name: fireworks
+    endpoint: https://api.fireworks.ai/inference/v1
+    default_model: accounts/fireworks/models/kimi-k2p5
+    models:
+      - accounts/fireworks/models/kimi-k2p5
+      - accounts/fireworks/models/llama-v3p1-8b-instruct
+      - accounts/fireworks/models/llama-v3p1-70b-instruct
+      - accounts/fireworks/models/llama-v3p1-405b-instruct
+      - accounts/fireworks/models/qwen2p5-72b-instruct
+      - accounts/fireworks/models/mixtral-8x22b-instruct
+      - accounts/fireworks/models/deepseek-v3
+      - accounts/fireworks/models/deepseek-r1
+
+ui:
+  default_mode: "build"
+  modes:
+    chat:
+      system_prompt: "Have a helpful conversation..."
+      temperature: 0.9
+      color: "magenta"
+    build:
+      system_prompt: "You are a helpful coding assistant..."
+      temperature: null
+      color: "cyan"
+    plan:
+      system_prompt: "You are an expert at planning implementations..."
+      temperature: 0.5
+      color: "green"

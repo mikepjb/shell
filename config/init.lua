@@ -171,6 +171,7 @@ local autocmds = {
         vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { buffer = true })
     end},
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
+    {"BufWritePre", "*.rs", fmt("rustfmt")},
     {"BufWritePre", "*.templ", fmt("templ", "fmt")},
     {"BufWritePre", "*.js,*.jsx,", fmt("prettier", "--write")},
     {"BufWritePre", "*.ts,*.tsx,*.css,*.json,*.svg", fmt("deno", "fmt")},
