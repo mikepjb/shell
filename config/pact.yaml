@@ -15,17 +15,12 @@ providers:
       - accounts/fireworks/models/deepseek-r1
 
 ui:
-  default_mode: "build"
+  default_mode: "plan"
   modes:
-    chat:
-      system_prompt: "Have a helpful conversation..."
-      temperature: 0.9
-      color: "magenta"
-    build:
-      system_prompt: "You are a helpful coding assistant..."
-      temperature: null
-      color: "cyan"
     plan:
       system_prompt: "You are an expert at planning implementations..."
       temperature: 0.5
       color: "green"
+    build:
+      temperature: null
+      color: "cyan"
