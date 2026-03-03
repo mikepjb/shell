@@ -48,6 +48,7 @@ alias ks='kill -9 $(lsof -ti:8080)'
 alias cl='claude'
 alias op='opencode'
 alias p='pact'
+alias sb='spellbook'
 alias gp='gh pr create --fill'
 alias gd='gh pr create --draft --fill'
 alias gw='gh pr view --web'
@@ -58,6 +59,10 @@ vc() {
     sed 's/,,/, ,/g; s/,,/, ,/g; s/,,/, ,/g' "$1" | column -s, -t | less -S
 }
 viw() { nvim $(which "$1"); }
+
+encrypt() {
+  tar czf - "$1" | openssl enc -aes-256-cbc -salt -out "${1}.tar.gz.enc"
+}
 
 [[ -f $HOME/.bashrc.local ]] && . $HOME/.bashrc.local
 
