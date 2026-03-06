@@ -2,7 +2,7 @@ debug: true
 
 providers:
   - name: fireworks
-    endpoint: https://api.fireworks.ai/inference/v1
+    endpoint: https://api.fireworks.ai/inference
     default_model: accounts/fireworks/models/kimi-k2p5
     models:
       - accounts/fireworks/models/kimi-k2p5
@@ -13,6 +13,8 @@ providers:
       - accounts/fireworks/models/mixtral-8x22b-instruct
       - accounts/fireworks/models/deepseek-v3
       - accounts/fireworks/models/deepseek-r1
+      - accounts/fireworks/models/glm-4p7
+      - accounts/fireworks/models/glm-5
 
 ui:
   default_mode: "plan"

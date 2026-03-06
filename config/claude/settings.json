@@ -1,4 +1,5 @@
 {
+  "permissionMode": "auto",
   "permissions": {
     "allow": [
       "Glob",
