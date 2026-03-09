@@ -16,44 +16,32 @@ providers:
       - accounts/fireworks/models/glm-4p7
       - accounts/fireworks/models/glm-5
 
-ui:
-  default_mode: "plan"
-  modes:
-    plan:
-      system_prompt: "You are an expert at planning implementations..."
-      temperature: 0.5
-      color: "green"
-    build:
-      temperature: null
-      color: "cyan"
-
-profiles:
-  think:
-    temperature: 1.0
-    top_p: 0.95
-    top_k: 20
-    min_p: 0.0
-    prescence_penalty: 1.5
-    chat_template_kwargs:
-      enable_thinking: true
-  code:
-    temperature: 0.6
-    top_p: 0.95
-    top_k: 20
-    min_p: 0.0
-    chat_template_kwargs:
-      enable_thinking: true
-  general:
-    temperature: 0.7
-    top_p: 0.8
-    top_k: 20
-    min_p: 0.0
-    prescence_penalty: 1.5
-  reason:
-    temperature: 1.0
-    top_p: 0.95
-    top_k: 20
-    min_p: 0.0
-    prescence_penalty: 1.5
-    
-default_profile: think
+modes:
+  plan:
+    color: "green"
+    temperature: 0.5
+    top_p: 0.9
+    presence_penalty: null
+    file_permission: markdown
+    default: true
+    local_extensions:
+      chat_template_kwargs:
+        enable_thinking: true
+  build:
+    color: "cyan"
+    temperature: 0.3
+    top_p: 0.9
+    presence_penalty: null
+    file_permission: full
+    local_extensions:
+      chat_template_kwargs:
+        enable_thinking: false
+  research:
+    color: "yellow"
+    temperature: 0.75
+    top_p: 0.92
+    presence_penalty: 0.4
+    file_permission: markdown
+    local_extensions:
+      chat_template_kwargs:
+        enable_thinking: true
