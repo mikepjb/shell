@@ -114,3 +114,8 @@ chars = "\u001bo"  # Alt+O
 key = "K"
 mods = "Command"
 chars = "\u001bk"  # Alt+K
+
+[[keyboard.bindings]]
+key = "R"
+mods = "Command"
+chars = "\u001br"  # Alt+R
