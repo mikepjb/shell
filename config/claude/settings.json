@@ -1,12 +1,12 @@
 {
-  "permissionMode": "auto",
   "permissions": {
     "allow": [
       "Glob",
       "Grep",
-      "Read(~/src/**)",
-      "Read(~/.claude/**)",
-      "Read(~/Downloads/**)",
+      "Read",
+      "Write",
+      "Edit",
+      "Bash(cd:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -51,6 +51,7 @@
     "gopls-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true
   },
+  "permissionMode": "auto",
   "defaultModel": "haiku",
   "read": {
     "maxTokens": 48000
