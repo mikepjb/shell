@@ -21,7 +21,7 @@ set -euo pipefail
 # =============================================================================
 
 # ── Versions ─────────────────────────────────────────────────────────────────
-LLAMACPP_VERSION="autoparser"
+LLAMACPP_VERSION="master"
 OPENCODE_VERSION="1.2.3"
 
 # ── Config ───────────────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ install_llamacpp() {
     log "Installing llama.cpp @ ${LLAMACPP_VERSION}"
     preflight_llama
 
-    local repo="https://github.com/pwilkin/llama.cpp.git"
+    local repo="https://github.com/ggml-org/llama.cpp.git"
 
     # Clone or update source
     if [[ -d "$LLAMACPP_SRC" ]]; then
@@ -138,7 +138,7 @@ install_llamacpp() {
         mkdir -p "$(dirname "$LLAMACPP_SRC")"
         git clone "$repo" "$LLAMACPP_SRC"
         cd "$LLAMACPP_SRC"
-        git fetch origin autoparser --tags --force
+        git fetch origin master --tags --force
         git checkout "$LLAMACPP_VERSION"
         git submodule update --init --recursive
     fi
@@ -147,13 +147,18 @@ install_llamacpp() {
     rm -rf build
 
     # CMake flags per platform (following official build docs)
-    #   macOS: Metal on by default, Accelerate on by default — no extra flags
+    #   macOS: Explicit Metal + Accelerate + native ARM optimizations
     #   Linux: -DGGML_VULKAN=ON
     local -a flags=(-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF)
 
     case "$(uname -s)" in
         Linux)  flags+=(-DGGML_VULKAN=ON) ;;
-        Darwin) ;; # Metal + Accelerate enabled by default
+        Darwin)
+            flags+=(-DGGML_METAL=ON)              # GPU compute via Metal
+            flags+=(-DGGML_METAL_EMBED_LIBRARY=ON) # Embed Metal library in binary
+            flags+=(-DGGML_ACCELERATE=ON)         # ARM NEON + Accelerate framework
+            flags+=(-DLLAMA_NATIVE=ON)            # Native M1/M2/M3 optimizations
+            ;;
     esac
 
     cmake -B build "${flags[@]}"
