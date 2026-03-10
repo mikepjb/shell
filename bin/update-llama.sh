@@ -2,14 +2,14 @@
 set -euo pipefail
 
 # =============================================================================
-# setup-llm-tools.sh
+# update-llama.sh
 #
-# Idempotent installer for llama.cpp and OpenCode.
+# Idempotent installer for llama.cpp.
 # Checks if each tool is on PATH at the correct version. If not, installs it.
 #
 # Usage:
-#   ./setup-llm-tools.sh          # Install/update both if needed
-#   ./setup-llm-tools.sh --force  # Reinstall regardless of current version
+#   ./update-llama.sh          # Install/update both if needed
+#   ./update-llama.sh --force  # Reinstall regardless of current version
 #
 # GPU backend:
 #   macOS → Metal (native, on by default — no flags needed)
@@ -17,12 +17,10 @@ set -euo pipefail
 #
 # Refs:
 #   llama.cpp build: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md
-#   OpenCode:        https://github.com/anomalyco/opencode/releases
 # =============================================================================
 
 # ── Versions ─────────────────────────────────────────────────────────────────
 LLAMACPP_VERSION="master"
-OPENCODE_VERSION="1.2.3"
 
 # ── Config ───────────────────────────────────────────────────────────────────
 INSTALL_PREFIX="${HOME}/.local"
@@ -52,15 +50,6 @@ llamacpp_installed_version() {
     fi
 }
 
-opencode_installed_version() {
-    if command -v opencode &>/dev/null; then
-        # opencode --version outputs something like "1.2.2"
-        opencode --version 2>/dev/null || echo ""
-    else
-        echo ""
-    fi
-}
-
 needs_llamacpp() {
     [[ "$FORCE" == "--force" ]] && return 0
 
@@ -76,19 +65,6 @@ needs_llamacpp() {
     fi
 
     [[ "$installed" != "$LLAMACPP_VERSION" ]]
-}
-
-needs_opencode() {
-    [[ "$FORCE" == "--force" ]] && return 0
-
-    local installed
-    installed="$(opencode_installed_version)"
-
-    if [[ -z "$installed" ]]; then
-        return 0  # not installed
-    fi
-
-    [[ "$installed" != "$OPENCODE_VERSION" ]]
 }
 
 # ── Preflight ────────────────────────────────────────────────────────────────
@@ -113,11 +89,6 @@ preflight_llama() {
             warn "  Fedora:        sudo dnf install vulkan-devel"
         fi
     fi
-}
-
-preflight_opencode() {
-    command -v npm &>/dev/null || command -v bun &>/dev/null || \
-        err "Neither npm nor bun found — needed for OpenCode"
 }
 
 # ── Install llama.cpp ────────────────────────────────────────────────────────
@@ -183,33 +154,10 @@ install_llamacpp() {
     ok "llama.cpp ${LLAMACPP_VERSION} — ${count} binaries → ${INSTALL_PREFIX}/bin"
 }
 
-# ── Install OpenCode ─────────────────────────────────────────────────────────
-
-install_opencode() {
-    log "Installing OpenCode @ ${OPENCODE_VERSION}"
-    preflight_opencode
-
-    local pkg="opencode-ai@${OPENCODE_VERSION}"
-
-    if command -v bun &>/dev/null; then
-        bun install -g "$pkg"
-    else
-        npm install -g "$pkg"
-    fi
-
-    if command -v opencode &>/dev/null; then
-        ok "OpenCode ${OPENCODE_VERSION}"
-    else
-        warn "opencode not found on PATH after install"
-        warn "  npm: \$(npm config get prefix)/bin"
-        warn "  bun: ~/.bun/bin"
-    fi
-}
-
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 echo ""
-log "llm-tools setup (llama.cpp ${LLAMACPP_VERSION}, OpenCode ${OPENCODE_VERSION})"
+log "llama.cpp ${LLAMACPP_VERSION}"
 echo ""
 
 if needs_llamacpp; then
@@ -219,12 +167,6 @@ else
 fi
 
 echo ""
-
-if needs_opencode; then
-    install_opencode
-else
-    ok "OpenCode $(opencode_installed_version) — up to date"
-fi
 
 echo ""
 

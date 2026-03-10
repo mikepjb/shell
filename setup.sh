@@ -69,19 +69,6 @@ install_tools() {
         fi
     fi
 
-    # AI tools (AUR on Arch, brew elsewhere)
-    local missing=""
-    command -v opencode &> /dev/null    || missing="$missing\n  paru -S opencode-bin"
-    command -v llama-server &> /dev/null || missing="$missing\n  paru -S llama.cpp-vulkan" # -vulkan is optimised
-
-    if [ -n "$missing" ]; then
-        if [ -f /etc/arch-release ]; then
-            echo -e "\nMissing AI tools (install with paru):$missing"
-        elif command -v brew &> /dev/null; then
-            brew install opencode llama.cpp
-        fi
-    fi
-
     echo "✓ Tools installation complete"
 }
 

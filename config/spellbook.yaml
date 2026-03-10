@@ -18,9 +18,9 @@ model-defaults:
 models:
   qwen3.5-35b-a3b:
     source:
-      repo: "bartowski/Qwen_Qwen3.5-35B-A3B-GGUF"
-      file: "Qwen_Qwen3.5-35B-A3B-Q3_K_XL.gguf"
-    context: 262144 # 131072 # 65536
+      repo: "unsloth/Qwen3.5-35B-A3B-GGUF"
+      file: "Qwen3.5-35B-A3B-UD-Q3_K_XL.gguf"
+    context: 65536 # 131072 # 65536
     gpu-layers: 99 # 30
     temp: 0.7
     top-p: 0.8
