@@ -141,7 +141,7 @@ local keymaps = {
     {"n", "gs", ":Grep "}, {"n", "gS", grep_under_cursor},
     {"n", "<space>", ":FindFiles "},
     {"i", "<C-l>", " => "},
-    {"i", "<C-y>", "- [ ] "},
+    {"i", "<C-y>", " -> "},
     {"n", "<M-n>", ":cnext<CR>"},   {"n", "<M-p>", ":cprev<CR>"},
     {"n", "<C-g>", ":noh<CR><C-g>"}, {"i", "<C-d>", "<Del>"},
     {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
@@ -171,7 +171,7 @@ local autocmds = {
         vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { buffer = true })
     end},
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
-    {"BufWritePre", "*.rs", fmt("rustfmt")},
+    {"BufWritePre", "*.rs", fmt("rustfmt", "--edition", "2024")},
     {"BufWritePre", "*.templ", fmt("templ", "fmt")},
     {"BufWritePre", "*.js,*.jsx,", fmt("prettier", "--write")},
     {"BufWritePre", "*.ts,*.tsx,*.css,*.json,*.svg", fmt("deno", "fmt")},
@@ -255,7 +255,7 @@ vim.api.nvim_create_autocmd('FileType', {
 vim.api.nvim_create_autocmd('FileType', {
     pattern = {'rust'},
     callback = function()
-        local rust_root = find_root({'Cargo.lock'})
+        local rust_root = find_root({'Cargo.toml'})
         vim.lsp.start({
             name = 'rust-analyzer',
             cmd = {'rust-analyzer'},
