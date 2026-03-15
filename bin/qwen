@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+llama-server \
+    -m "/home/mikepjb/models/Qwen3.5-4B-UD-Q3_K_XL.gguf" \
+    --jinja \
+    --host 127.0.0.1 \
+    --port 7777 \
+    -c 65536 \
+    --metrics \
+    -ngl -1 \
+    -np 1 \
+    -ctk q8_0 \
+    -ctv q8_0 \
+    --threads 6 \
+    --repeat-penalty 1.05
+
+    # -m "/home/mikepjb/models/Qwen3.5-9B-UD-Q3_K_XL.gguf" \
