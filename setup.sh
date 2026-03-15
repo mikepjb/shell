@@ -4,6 +4,9 @@ set -e
 
 # need to add rustup.. rust tools
 # cargo-llvm-cov for coverage (via cargo install)
+#rustup component add rust-analyzer
+
+# rocm-smi-lib
 
 setup_dir=$(dirname "$(realpath "$0")")
 local_bin_dir="$HOME/.local/bin"

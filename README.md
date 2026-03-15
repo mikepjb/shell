@@ -65,3 +65,6 @@ qwen3-coder (best so far, using unsloth)
 ## Gnome Setup
 
 `gsettings set org.gnome.desktop.input-sources xkb-options "['ctrl:nocaps']"`
+
+## Raise the dynamic max allocation of memory to the GPU.
+options ttm.pages_limit=31457280 ttm.page_pool_size=31457280

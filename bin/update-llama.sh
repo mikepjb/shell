@@ -8,12 +8,15 @@ set -euo pipefail
 # Checks if each tool is on PATH at the correct version. If not, installs it.
 #
 # Usage:
-#   ./update-llama.sh          # Install/update both if needed
-#   ./update-llama.sh --force  # Reinstall regardless of current version
+#   ./update-llama.sh                              # Install/update both if needed
+#   ./update-llama.sh --force                      # Reinstall regardless of current version
+#   GPU_TARGETS=gfx1030 ./update-llama.sh         # Build for specific GPU (Radeon 780M)
 #
 # GPU backend:
 #   macOS → Metal (native, on by default — no flags needed)
-#   Linux → Vulkan (-DGGML_VULKAN=ON)
+#   Linux → Vulkan (default) or HIP/ROCm (fallback via LLAMACPP_GPU_BACKEND=hip)
+#
+# AMD GPU targets (gfx1030, gfx1100, etc. - check `rocminfo` or AMD docs)
 #
 # Refs:
 #   llama.cpp build: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md
@@ -26,6 +29,8 @@ LLAMACPP_VERSION="master"
 INSTALL_PREFIX="${HOME}/.local"
 LLAMACPP_SRC="${HOME}/.local/src/llama.cpp"
 FORCE="${1:-}"
+LLAMACPP_GPU_BACKEND="${LLAMACPP_GPU_BACKEND:-vulkan}"
+GPU_TARGETS="${GPU_TARGETS:-gfx1103}"  # Radeon 780M (override with GPU_TARGETS=gfxXXXX if different)
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 log()  { printf '\033[1;34m==>\033[0m \033[1m%s\033[0m\n' "$1"; }
@@ -77,16 +82,37 @@ preflight_llama() {
     command -v gcc &>/dev/null || command -v clang &>/dev/null || err "No C/C++ compiler found"
 
     if [[ "$(uname -s)" == "Linux" ]]; then
-        if ! command -v glslc &>/dev/null; then
-            warn "glslc not found — needed for Vulkan shaders"
-            warn "  Debian/Ubuntu: sudo apt-get install glslc"
-            warn "  Fedora:        sudo dnf install glslc"
-            warn "  Arch:          sudo pacman -S shaderc"
-        fi
-        if ! pkg-config --exists vulkan 2>/dev/null && [[ ! -d "${VULKAN_SDK:-}" ]]; then
-            warn "Vulkan SDK not detected"
-            warn "  Debian/Ubuntu: sudo apt-get install libvulkan-dev"
-            warn "  Fedora:        sudo dnf install vulkan-devel"
+        if [[ "$LLAMACPP_GPU_BACKEND" == "vulkan" ]]; then
+            if ! command -v glslc &>/dev/null; then
+                warn "glslc not found — needed for Vulkan shaders"
+                warn "  Debian/Ubuntu: sudo apt-get install glslc"
+                warn "  Fedora:        sudo dnf install glslc"
+                warn "  Arch:          sudo pacman -S shaderc"
+            fi
+            if ! pkg-config --exists vulkan 2>/dev/null && [[ ! -d "${VULKAN_SDK:-}" ]]; then
+                warn "Vulkan SDK not detected"
+                warn "  Debian/Ubuntu: sudo apt-get install libvulkan-dev"
+                warn "  Fedora:        sudo dnf install vulkan-devel"
+            fi
+        else
+            if ! command -v hipcc &>/dev/null; then
+                warn "hipcc not found — needed for ROCm/HIP"
+                warn "  Debian/Ubuntu: sudo apt-get install hip-runtime-amd"
+                warn "  Fedora:        sudo dnf install hip-runtime-amd"
+                warn "  Arch:          sudo pacman -S hip-runtime-amd"
+                warn "  Or use: LLAMACPP_GPU_BACKEND=vulkan ./update-llama.sh"
+            fi
+
+            if ! command -v hipcc &>/dev/null; then
+                warn "hipblas not found — needed for ROCm/HIP"
+                warn "  Arch:          sudo pacman -S hipblas"
+                warn "  Or use: LLAMACPP_GPU_BACKEND=vulkan ./update-llama.sh"
+            fi
+
+            if ! pkg-config --exists rocwmma 2>/dev/null && [[ ! -f "/opt/rocm/include/rocwmma/internal/accessors.hpp" ]]; then
+                warn "rocwmma not found — optional for matrix operations"
+                warn "  Arch:          sudo pacman -S rocwmma"
+            fi
         fi
     fi
 }
@@ -119,11 +145,19 @@ install_llamacpp() {
 
     # CMake flags per platform (following official build docs)
     #   macOS: Explicit Metal + Accelerate + native ARM optimizations
-    #   Linux: -DGGML_VULKAN=ON
+    #   Linux: Vulkan (default) or HIP/ROCm (fallback)
     local -a flags=(-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF)
 
     case "$(uname -s)" in
-        Linux)  flags+=(-DGGML_VULKAN=ON) ;;
+        Linux)
+            case "$LLAMACPP_GPU_BACKEND" in
+                vulkan) flags+=(-DGGML_VULKAN=ON) ;;
+                hip|*)
+                    flags+=(-DGGML_HIP=ON)
+                    [[ -n "$GPU_TARGETS" ]] && flags+=(-DGPU_TARGETS="$GPU_TARGETS")
+                    ;;
+            esac
+            ;;
         Darwin)
             flags+=(-DGGML_METAL=ON)              # GPU compute via Metal
             flags+=(-DGGML_METAL_EMBED_LIBRARY=ON) # Embed Metal library in binary
@@ -131,6 +165,14 @@ install_llamacpp() {
             flags+=(-DLLAMA_NATIVE=ON)            # Native M1/M2/M3 optimizations
             ;;
     esac
+
+    # Set HIP environment variables for Linux builds
+    if [[ "$(uname -s)" == "Linux" && "$LLAMACPP_GPU_BACKEND" == "hip" ]]; then
+        export HIPCXX="$(hipconfig -l)/clang"
+        export HIP_PATH="$(hipconfig -R)"
+        # hurts non-integrated GPU performance but enables use of unified memory
+        export GGML_CUDA_ENABLE_UNIFIED_MEMORY=1
+    fi
 
     cmake -B build "${flags[@]}"
     cmake --build build --config Release -j "$(job_count)"
