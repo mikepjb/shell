@@ -286,6 +286,9 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
 pcall(vim.cmd, 'colorscheme spartan') -- Try colorscheme, fallback to default
 
+-- Define highlight group for navi window background (brighter black/dark gray)
+vim.api.nvim_set_hl(0, "NaviBackground", { bg = "#1a1a1a", fg = "White" })
+
 vim.fn.setreg('n', [[
   # Facts
 
@@ -321,17 +324,21 @@ local function navi_toggle()
     vim.api.nvim_win_hide(navi_state.win)
     navi_state.win = nil
   else
-    local width = math.floor(vim.o.columns * 0.8)
-    local height = math.floor(vim.o.lines * 0.8)
+    local width = 40
+    local height = vim.o.lines - 2
     navi_state.win = vim.api.nvim_open_win(navi_state.buf, true, {
       relative = "editor",
       width = width,
       height = height,
-      col = math.floor((vim.o.columns - width) / 2),
-      row = math.floor((vim.o.lines - height) / 2),
+      col = vim.o.columns - width,
+      row = 0,
       style = "minimal",
-      border = "rounded",
+      border = "none",
     })
+    vim.api.nvim_set_option_value("winhighlight", "Normal:NaviBackground", { win = navi_state.win })
+    vim.api.nvim_set_option_value("winblend", 15, { win = navi_state.win })
+    -- Return focus to the previous window
+    vim.cmd("wincmd p")
   end
 end
 
@@ -366,22 +373,27 @@ local function navi_query(with_selection)
 
     -- Create new buffer and floating window
     navi_state.buf = vim.api.nvim_create_buf(false, true)
-    local width = math.floor(vim.o.columns * 0.8)
-    local height = math.floor(vim.o.lines * 0.8)
+    local width = 40
+    local height = vim.o.lines - 2
     navi_state.win = vim.api.nvim_open_win(navi_state.buf, true, {
       relative = "editor",
       width = width,
       height = height,
-      col = math.floor((vim.o.columns - width) / 2),
-      row = math.floor((vim.o.lines - height) / 2),
+      col = vim.o.columns - width,
+      row = 0,
       style = "minimal",
-      border = "rounded",
+      border = "none",
     })
+    vim.api.nvim_set_option_value("winhighlight", "Normal:NaviBackground", { win = navi_state.win })
+    vim.api.nvim_set_option_value("winblend", 15, { win = navi_state.win })
 
-    vim.fn.termopen({ "navi", "-e", input })
+    vim.fn.termopen({ "navi", "-e", input, "--wrap", "40" })
 
     -- Add normal mode keymap for toggling
     vim.keymap.set("n", "<M-z>", navi_toggle, { buffer = navi_state.buf, silent = true })
+
+    -- Return focus to the previous window
+    vim.cmd("wincmd p")
   end)
 end
 
