@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 llama-server \
-    -m "/home/mikepjb/models/Qwen3.5-4B-UD-Q3_K_XL.gguf" \
+    -m "$HOME/models/Qwen3.5-9B-UD-Q3_K_XL.gguf" \
     --jinja \
     --host 127.0.0.1 \
     --port 7777 \
