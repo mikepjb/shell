@@ -5,6 +5,7 @@ set -e
 # need to add rustup.. rust tools
 # cargo-llvm-cov for coverage (via cargo install)
 #rustup component add rust-analyzer
+# install react developer tools chrome extension!
 
 # rocm-smi-lib
 
@@ -57,6 +58,12 @@ install_tools() {
     check python
     check pip python-pip
     check gopls
+    check k3d rancher-k3d-bin k3d
+    check kubectl
+    check helm
+    check docker
+    # check 'docker compose?' docker-compose
+    check cwebp libwebp-utils
 
     if [ -z "$to_install" ]; then
         echo "✓ All tools already installed"

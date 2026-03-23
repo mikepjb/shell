@@ -8,7 +8,6 @@ export BASH_SILENCE_DEPRECATION_WARNING=1
 export EDITOR='nvim'
 export PAGER='less -S' # instead of wrapping long/wide output, explore with less
 export NPM_CONFIG_PREFIX=$HOME/.npm
-export N_PREFIX=$HOME/.config/n
 export OPENCODE_DISABLE_CLAUDE_CODE=1 # do not load CLAUDE.md in opencode
 
 go_paths="/usr/local/go/bin:$HOME/go/bin"
@@ -24,6 +23,8 @@ export PATH="$user_paths:$go_paths:$rust_paths:$deno_paths:$node_paths:$mac_path
 if [[ -n "${PREFIX+x}" ]]; then # for termux
     export PATH="$PREFIX/bin:$PATH"
 fi
+
+eval "$(fnm env --use-on-cd --shell bash)"
 
 HISTSIZE=50000
 HISTFILESIZE=50000
@@ -43,9 +44,8 @@ alias dt='deno task'
 alias dr='deno run -A'
 alias cljx='clj -M:repl:dev'
 alias scrape='wget -p -k -E -H'
-alias tree='tree -I node_modules'
+alias tree='tree -I node_modules -I ./target -I ./dist'
 alias ks='kill -9 $(lsof -ti:8080)'
-alias cl='claude'
 alias n='navi'
 alias op='opencode'
 alias p='pact'
