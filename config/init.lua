@@ -349,14 +349,6 @@ vim.api.nvim_create_autocmd('FileType', {
     end,
 })
 
--- Clojure nREPL integration
-vim.api.nvim_create_autocmd('FileType', {
-    pattern = {'clojure'},
-    callback = function()
-        require('clojure').setup()
-    end,
-})
-
 -- Basic LSP keymaps
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(ev)
