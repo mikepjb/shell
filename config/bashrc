@@ -9,6 +9,7 @@ export EDITOR='nvim'
 export PAGER='less -S' # instead of wrapping long/wide output, explore with less
 export NPM_CONFIG_PREFIX=$HOME/.npm
 export OPENCODE_DISABLE_CLAUDE_CODE=1 # do not load CLAUDE.md in opencode
+export XDG_CONFIG_HOME=$HOME/.config
 
 go_paths="/usr/local/go/bin:$HOME/go/bin"
 node_paths="$HOME/.config/n/bin:$HOME/.npm/bin"
@@ -39,6 +40,7 @@ alias x='tmux attach -t x || tmux new -s x'
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 alias gn='cd ~/.notes'
 alias nr='npm run'
+alias pr='pnpm run'
 alias cn='npx shadcn@latest' cnl='npx shadcn@latest list @shadcn | less'
 alias dt='deno task'
 alias dr='deno run -A'

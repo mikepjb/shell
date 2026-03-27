@@ -62,8 +62,10 @@ install_tools() {
     check kubectl
     check helm
     check docker
+    check docker-buildx # docker-buildx is the arch package.. is there a cli?
     # check 'docker compose?' docker-compose
     check cwebp libwebp-utils
+    check clojure
 
     if [ -z "$to_install" ]; then
         echo "✓ All tools already installed"
@@ -102,6 +104,7 @@ link_files() {
     ensure_dir_and_link "$setup_dir/config/deps.edn" "$HOME/.clojure/deps.edn"
     ensure_dir_and_link "$setup_dir/config/spellbook.yaml" "$HOME/.config/spellbook/spellbook.yaml"
     ensure_dir_and_link "$setup_dir/config/pact.yaml" "$HOME/.config/pact/pact.yaml"
+    ensure_dir_and_link "$setup_dir/config/clojure.edn" "$HOME/.config/clojure/deps.edn"
 
     # Bin scripts
     mkdir -p "$local_bin_dir"
@@ -129,6 +132,12 @@ link_files() {
     ensure_dir_and_link "$setup_dir/config/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
     ensure_dir_and_link "$setup_dir/config/AGENTS.md" "$HOME/.config/pact/AGENTS.md"
     ensure_dir_and_link "$setup_dir/config/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+
+    # Void config
+    echo "Setting up void config"
+    mkdir -p "$HOME/.void"
+    ensure_dir_and_link "$setup_dir/config/void.toml" "$HOME/.void/config.toml"
+    # Note: history file moved from ~/.void_history to ~/.void/history
 
     # Clean up broken symlinks in claude directories
     find -L "$HOME/.claude/agents" -type l -delete 2>/dev/null

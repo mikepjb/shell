@@ -27,6 +27,9 @@ local config = {
     grepformat = vim.fn.executable("rg") == 1 and '%f:%l:%c:%m' or '%f:%l:%m',
 } for k, v in pairs(config) do vim.opt[k] = v end
 
+-- Add config directory to runtimepath for lua modules
+vim.opt.runtimepath:prepend(os.getenv("HOME") .. "/src/shell/config")
+
 local global_config = {
     -- Netrw & Navigation
     netrw_banner = 0, netrw_liststyle = 3, netrw_winsize = -25,
@@ -120,6 +123,10 @@ end
 
 vim.api.nvim_create_user_command('TrimWhitespace', ':%s/\\s\\+$//e', {})
 
+vim.api.nvim_create_user_command('LspRestart', function()
+    vim.lsp.stop_client(vim.lsp.get_clients())
+end, {})
+
 local function apply_opts(opts)
     return function()
         for key, value in pairs(opts) do vim.opt_local[key] = value end
@@ -147,6 +154,7 @@ local keymaps = {
     {"n", "gi", ":e ~/.config/nvim/init.lua<CR>"},
     {"n", "gn", ":e ~/.notes/index.md<CR>"},
     {"n", "gj", ":e ~/.notes/cookie-jar.md<CR>"},
+    {"n", "g0", ":LspRestart<CR>:e!<CR>"},
     {"n", "<M-t>", ":terminal verify<CR>"},
     {"n", "gl", function()
         local qf_winid = vim.fn.getqflist({winid = 0}).winid
@@ -261,6 +269,14 @@ vim.api.nvim_create_autocmd('FileType', {
             cmd = {'rust-analyzer'},
             root_dir = rust_root,
         })
+    end,
+})
+
+-- Clojure nREPL integration
+vim.api.nvim_create_autocmd('FileType', {
+    pattern = {'clojure'},
+    callback = function()
+        require('clojure').setup()
     end,
 })
 

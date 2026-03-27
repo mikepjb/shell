@@ -1,0 +1,4 @@
+{:aliases
+ {:#cljs {:extra-deps
+          {org.clojure./clojurescript {:mvn/version "1.12.116"}}
+          :main-opts ["-m" "cljs.main" "-r"]}}}
