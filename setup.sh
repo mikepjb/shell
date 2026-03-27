@@ -136,7 +136,9 @@ link_files() {
     # Void config
     echo "Setting up void config"
     mkdir -p "$HOME/.void"
+    mkdir -p "$HOME/.config/void"
     ensure_dir_and_link "$setup_dir/config/void.toml" "$HOME/.void/config.toml"
+    ensure_dir_and_link "$setup_dir/config/void.AGENTS.md" "$HOME/.config/void/AGENTS.md"
     # Note: history file moved from ~/.void_history to ~/.void/history
 
     # Clean up broken symlinks in claude directories
