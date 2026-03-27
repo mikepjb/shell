@@ -62,7 +62,7 @@ install_tools() {
     check kubectl
     check helm
     check docker
-    check docker-buildx # docker-buildx is the arch package.. is there a cli?
+    # check docker-buildx # docker-buildx is the arch package.. is there a cli?
     # check 'docker compose?' docker-compose
     check cwebp libwebp-utils
     check clojure
