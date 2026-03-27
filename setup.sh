@@ -66,6 +66,7 @@ install_tools() {
     # check 'docker compose?' docker-compose
     check cwebp libwebp-utils
     check clojure
+    check 7z p7zip sevenzip
 
     if [ -z "$to_install" ]; then
         echo "✓ All tools already installed"
