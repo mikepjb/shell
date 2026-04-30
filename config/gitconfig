@@ -24,6 +24,7 @@
   up = pull --rebase
   li = update-index --assume-unchanged
   cc = commit --edit --template=<(echo -e \"\\n\\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\\n\\nCo-Authored-By: Claude <noreply@anthropic.com>\")
+  wipe = clean -fd
 [user]
   name = Mike Bruce
   email = mike@hypalynx.com

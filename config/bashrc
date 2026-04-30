@@ -19,7 +19,7 @@ sys_paths="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin"
 rust_paths="$HOME/.cargo/bin"
 user_paths="$HOME/.local/bin"
 opencode="/Users/mike.bruce/.opencode/bin"
-export PATH="$user_paths:$go_paths:$rust_paths:$deno_paths:$node_paths:$mac_paths:$sys_paths:$opencode"
+export PATH="$user_paths:$mac_paths:$sys_paths:$go_paths:$rust_paths:$deno_paths:$node_paths:$opencode"
 
 if [[ -n "${PREFIX+x}" ]]; then # for termux
     export PATH="$PREFIX/bin:$PATH"

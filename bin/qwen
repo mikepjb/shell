@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
 
+model_file="$HOME/models/Qwen3.5-4B-UD-Q3_K_XL.gguf" 
+
+if [ ! -f $model_file ]; then
+    hf download \
+        unsloth/Qwen3.5-35B-A3B-GGUF \
+        Qwen3.5-35B-A3B-UD-Q3_K_XL.gguf \
+        --local-dir ~/models
+fi
+
 llama-server \
-    -m "$HOME/models/Qwen3.5-9B-UD-Q3_K_XL.gguf" \
+    -m "$model_file" \
     --jinja \
     --host 127.0.0.1 \
     --port 7777 \
-    -c 65536 \
+    -c 16384 \
     --metrics \
     -ngl -1 \
     -np 1 \
-    -ctk q8_0 \
-    -ctv q8_0 \
-    --temp 0.7 \
-    --top-p 0.8 \
+    --temp 0.6 \
+    --top-p 0.95 \
     --top-k 20 \
     --min-p 0.00 \
-    --threads 6 \
-    --repeat-penalty 1.05
+    --presence-penalty 0.0

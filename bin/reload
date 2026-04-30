@@ -1,0 +1,5 @@
+#!/usr/env/bin bash
+
+echo 'Reloading all configurations'
+
+tmux source-file ~/.config/tmux/tmux.conf

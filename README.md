@@ -68,3 +68,8 @@ qwen3-coder (best so far, using unsloth)
 
 ## Raise the dynamic max allocation of memory to the GPU.
 options ttm.pages_limit=31457280 ttm.page_pool_size=31457280
+
+## Less common but handy tasks
+
+(standard zip is EASILY crackable, prefer 7z/AES256)
+`7zz a -p -mem=AES256 MyProtectedFolder.zip ./TargetFolder/`
