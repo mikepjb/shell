@@ -98,6 +98,7 @@ link_files() {
     done
 
     # Config files with extensions go to specific locations
+    ensure_dir_and_link "$setup_dir/config/ghostty.conf" "$HOME/.config/ghostty/config"
     ensure_dir_and_link "$setup_dir/config/init.lua" "$HOME/.config/nvim/init.lua"
     ensure_dir_and_link "$setup_dir/config/spartan.lua" "$HOME/.config/nvim/colors/spartan.lua"
     ensure_dir_and_link "$setup_dir/config/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
@@ -111,60 +112,6 @@ link_files() {
     mkdir -p "$local_bin_dir"
     for f in "$setup_dir/bin/"*; do
         ln -sfv "$f" "$local_bin_dir/$(basename "$f")"
-    done
-
-    # Claude Code config
-    echo "Setting up Claude Code config"
-    mkdir -p "$HOME/.claude/agents"
-    mkdir -p "$HOME/.claude/hooks"
-    ln -sfv "$setup_dir/config/AGENTS.md" "$HOME/.claude/CLAUDE.md"
-    ln -sfv "$setup_dir/config/claude/settings.json" "$HOME/.claude/settings.json"
-    ln -sfv "$setup_dir/config/claude/statusline.sh" "$HOME/.claude/statusline.sh"
-    chmod +x "$HOME/.claude/statusline.sh"
-
-    for f in "$setup_dir/config/claude/hooks/"*; do
-        [ -e "$f" ] || continue
-        ln -sfv "$f" "$HOME/.claude/hooks/$(basename "$f")"
-        chmod +x "$HOME/.claude/hooks/$(basename "$f")"
-    done
-
-    # OpenCode config
-    echo "Setting up OpenCode config"
-    ensure_dir_and_link "$setup_dir/config/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
-    ensure_dir_and_link "$setup_dir/config/AGENTS.md" "$HOME/.config/pact/AGENTS.md"
-    ensure_dir_and_link "$setup_dir/config/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
-
-    # Void config
-    echo "Setting up void config"
-    mkdir -p "$HOME/.void"
-    mkdir -p "$HOME/.config/void"
-    ensure_dir_and_link "$setup_dir/config/void.toml" "$HOME/.void/config.toml"
-    ensure_dir_and_link "$setup_dir/config/void.AGENTS.md" "$HOME/.config/void/AGENTS.md"
-    # Note: history file moved from ~/.void_history to ~/.void/history
-
-    # Clean up broken symlinks in claude directories
-    find -L "$HOME/.claude/agents" -type l -delete 2>/dev/null
-    find -L "$HOME/.claude/hooks" -type l -delete 2>/dev/null
-
-    # Sync agents: remove stale, link current
-    expected_agents=""
-    for f in "$setup_dir/config/claude/agents/"*.md; do
-        [ -e "$f" ] || continue
-        expected_agents="$expected_agents $(basename "$f")"
-    done
-
-    for f in "$HOME/.claude/agents/"*.md; do
-        [ -e "$f" ] || continue
-        agent=$(basename "$f")
-        if ! echo "$expected_agents" | grep -qw "$agent"; then
-            echo "Removing stale agent: $agent"
-            rm -f "$f"
-        fi
-    done
-
-    for f in "$setup_dir/config/claude/agents/"*.md; do
-        [ -e "$f" ] || continue
-        ln -sfv "$f" "$HOME/.claude/agents/$(basename "$f")"
     done
 }
 

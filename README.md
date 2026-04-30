@@ -29,6 +29,12 @@ _A collection of tools I use for development work._
 - Exceeding 300 lines for source code (small enough to reason about).
 - Exceeding 100 lines for config (these have a larger effect).
 
+## Neovim
+
+- vim keybindings make it easier to do things manually, we don't
+  need DWIM style functions (i.e no smart splitting, just
+  `<C-w><C-s/v>` as you wish.
+
 ## On my radar
 
 - Using the `:g/pattern/command` in vim

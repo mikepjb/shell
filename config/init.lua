@@ -1,4 +1,18 @@
 -- Spartan Neovim -------------------------------------------------------------
+--
+-- TODO new spartan theme
+-- TODO ctrl + t for terminal open split
+-- TODO ctags generation (universal ctags.. with deep tags)
+-- TODO figure out how to do plugin loading for neovim.. backup is to use bash
+-- script
+-- TODO instead of vim-fireplace, get inferior-lisp level integration setup
+-- with neovim terminal (not tmux)
+-- TODO vim-fugitive? vim-fireplace? vim-surround? vim.. paredit? vim-repeat?
+-- still want as few plugins as possible to avoid chainsaw of chainsaws effect
+-- TODO telescope plugin
+-- TODO `reload` script also symlinks config
+-- TODO `deps` script pulls down/updates dependencies
+-- TODO `compile` and `test-run` (better names tho) scripts
 
 local config = {
     -- Editing
@@ -65,109 +79,33 @@ local function fmt(fn, ...)
     end
 end
 
-local repl_map = {
-    clojure       = {"clj", "clojure"},
-    clojurescript = {"clj", "shadow-cljs"},
-    python        = {"python", "python3", "ipython"},
-    ruby          = {"irb", "pry"},
-    javascript    = {"node", "bun", "deno"},
-    typescript    = {"node", "bun", "deno"},
-    lua           = {"lua"},
-    sql           = {"sqlite3", "psql", "mysql"},
-}
-
-local repl_state = { pane_id = nil }
-
-local function pane_is_valid(pane_id)
-    vim.fn.system('tmux display-message -t ' .. vim.fn.shellescape(pane_id) .. ' -p "" 2>/dev/null')
-    return vim.v.shell_error == 0
-end
-
-local function find_repl_pane(callback)
-    if repl_state.pane_id and pane_is_valid(repl_state.pane_id) then
-        return callback(repl_state.pane_id)
-    end
-    repl_state.pane_id = nil
-
-    local cwd = vim.fn.getcwd()
-    local current_pane = vim.fn.system('tmux display-message -p "#{pane_id}"'):gsub('\n', '')
-    local candidates = repl_map[vim.bo.filetype] or {}
-    local output = vim.fn.system('tmux lsp -aF "#{pane_id} #{pane_pid} #{pane_current_path} #{pane_current_command}"')
-
-    local matches = {}
-    for line in output:gmatch("[^\n]+") do
-        local id, pid, path, cmd = line:match("(%S+) (%S+) (%S+) (%S+)")
-        if id and pid and path and cmd and path == cwd and id ~= current_pane then
-            local proc_match = false
-            for _, proc in ipairs(candidates) do
-                if cmd == proc then proc_match = true; break end
-            end
-            if not proc_match and #candidates > 0 then
-                -- some REPLs run under a different process (e.g. clojure runs as java)
-                local child_cmds = vim.fn.system('pgrep -P ' .. pid .. ' | xargs -I{} ps -p {} -o args= 2>/dev/null')
-                for _, proc in ipairs(candidates) do
-                    if child_cmds:find(proc, 1, true) then proc_match = true; break end
-                end
-            end
-            table.insert(matches, { id = id, path = path, cmd = cmd, proc = proc_match })
-        end
-    end
-
-    local pool = vim.tbl_filter(function(p) return p.proc end, matches)
-    if #pool == 0 then pool = matches end
-
-    if #pool == 0 then
-        local fallback = vim.fn.system('tmux lsp -aF "#D#T" | sed -n s/repl//p | tr -d "\n"')
-        if fallback ~= '' then
-            repl_state.pane_id = fallback
-            return callback(fallback)
-        end
-        return vim.notify("No REPL pane found — is your REPL running from " .. cwd .. "?")
-    end
-
-    if #pool == 1 then
-        repl_state.pane_id = pool[1].id
-        return callback(pool[1].id)
-    end
-
-    vim.ui.select(
-        vim.tbl_map(function(p) return string.format("[%s] %s", p.cmd, p.path) end, pool),
-        { prompt = "Select REPL pane: " },
-        function(_, idx)
-            if idx then
-                repl_state.pane_id = pool[idx].id
-                callback(pool[idx].id)
-            end
-        end
-    )
-end
-
-local function send_to_repl(text)
-    find_repl_pane(function(pane_id)
-        local escaped = text:gsub('"', '\\"')
-        vim.fn.system(string.format('tmux send -t %s "%s" Enter', pane_id, escaped))
-    end)
-end
-
-local function tmux_send_lines()
-    local lines = vim.api.nvim_buf_get_lines(0, vim.fn.line("v") - 1, vim.fn.line("."), false)
-    send_to_repl(table.concat(lines, '\n'))
-end
-
-local function tmux_send_buffer()
-    local lines = vim.api.nvim_buf_get_lines(0, 1, vim.fn.line("$"), false)
-    send_to_repl(table.concat(lines, '\n'))
-end
-
-local function tmux_send_prompt()
-    local input = vim.fn.input('=> ')
-    if input ~= '' then send_to_repl(input) end
-end
-
-vim.api.nvim_create_user_command('ReplReset', function()
-    repl_state.pane_id = nil
-    vim.notify("REPL pane selection cleared")
-end, {})
+-- TODO to be replaced by libuv terminal
+-- local function send_to_repl(text)
+--     find_repl_pane(function(pane_id)
+--         local escaped = text:gsub('"', '\\"')
+--         vim.fn.system(string.format('tmux send -t %s "%s" Enter', pane_id, escaped))
+--     end)
+-- end
+-- 
+-- local function tmux_send_lines()
+--     local lines = vim.api.nvim_buf_get_lines(0, vim.fn.line("v") - 1, vim.fn.line("."), false)
+--     send_to_repl(table.concat(lines, '\n'))
+-- end
+-- 
+-- local function tmux_send_buffer()
+--     local lines = vim.api.nvim_buf_get_lines(0, 1, vim.fn.line("$"), false)
+--     send_to_repl(table.concat(lines, '\n'))
+-- end
+-- 
+-- local function tmux_send_prompt()
+--     local input = vim.fn.input('=> ')
+--     if input ~= '' then send_to_repl(input) end
+-- end
+-- 
+-- vim.api.nvim_create_user_command('ReplReset', function()
+--     repl_state.pane_id = nil
+--     vim.notify("REPL pane selection cleared")
+-- end, {})
 
 vim.api.nvim_create_user_command('FindFiles', function(opts)
   local cmd = opts.args ~= '' and string.format('rg --files | rg -S "%s"', opts.args) or 'rg --files'
@@ -219,8 +157,8 @@ local keymaps = {
     {"n", "<C-k>", "<C-w><C-k>"}, {"n", "<C-l>", "<C-w><C-l>"},
     {"i", "<C-c>", "<Esc>"}, {"n", "S", "<C-^>"}, {"n", "<C-q>", ":q<CR>"},
     {"v", "t", "<Esc>`<^i<div><Esc>`>a</div><Esc>"}, -- div wrapper
-    {"n", "cqp", tmux_send_prompt},
-    {"v", "gp", tmux_send_lines},   {"n", "gp", tmux_send_buffer},
+    -- {"n", "cqp", tmux_send_prompt},
+    -- {"v", "gp", tmux_send_lines},   {"n", "gp", tmux_send_buffer},
     {"n", "gs", ":Grep "}, {"n", "gS", grep_under_cursor},
     {"n", "<space>", ":FindFiles "},
     {"i", "<C-l>", " => "},
@@ -238,7 +176,8 @@ local keymaps = {
         vim.cmd(qf_winid ~= 0 and 'cclose' or 'copen')
     end},
     {'n', 'ge', edit_relative},
-    {'n', '<C-t>', ":Lexplore<CR>"},
+    {'t', '<C-g>', '<C-\\><C-n>'},
+    {'n', '<C-t>', ':terminal<CR>i'},
 } for _, km in ipairs(keymaps) do vim.keymap.set(km[1], km[2], km[3]) end
 
 -- Autocmds

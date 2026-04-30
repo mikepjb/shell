@@ -34,7 +34,12 @@ shopt -s histappend
 
 CDPATH=.:$HOME/src
 
-alias vi='nvim'
+if [ -n "$NVIM" ]; then
+    alias vi='nvim --server "$NVIM" --remote'
+else
+    alias vi='nvim'
+fi
+
 alias k='kubectl' kc='kubectl config current-context'
 alias x='tmux attach -t x || tmux new -s x'
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
