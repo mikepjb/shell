@@ -14,6 +14,11 @@
 -- TODO `deps` script pulls down/updates dependencies
 -- TODO `compile` and `test-run` (better names tho) scripts
 -- TODO tmux status bar - ai running/responded?, org-clock replacement?
+-- TODO script to compile/install pinned nvim (11.7 or later)
+-- TODO nvim script also installs deps (telescope at least)
+-- TODO db tool? or just sqlite3/sql etc is enough?
+-- TODO also need to make sure lsps are available IF you can't get ctags
+-- working well enough - jdtlsw etc are already really good!
 
 local config = {
     -- Editing
@@ -42,15 +47,7 @@ local config = {
     grepformat = vim.fn.executable("rg") == 1 and '%f:%l:%c:%m' or '%f:%l:%m',
 } for k, v in pairs(config) do vim.opt[k] = v end
 
--- Add config directory to runtimepath for lua modules
-vim.opt.runtimepath:prepend(os.getenv("HOME") .. "/src/shell/config")
-
 local global_config = {
-    -- Netrw & Navigation
-    netrw_banner = 0, netrw_liststyle = 3, netrw_winsize = -25,
-    netrw_list_hide = '^\\.git/$,^\\..*$,\\.swp$,\\.tmp$,node_modules',
-
-    -- Language Options
     markdown_fenced_languages = { 'css', 'javascript', 'bash', 'go', 'sql', 'yaml', 'rust' },
     omni_sql_no_default_maps = 1, -- don't use C-c for autocompletion in SQL.
 } for k, v in pairs(global_config) do vim.g[k] = v end
@@ -178,6 +175,7 @@ local keymaps = {
     end},
     {'n', 'ge', edit_relative},
     {'t', '<C-g>', '<C-\\><C-n>'},
+    {'t', '<C-h>', '<C-\\><C-n><C-w><C-h>'},
     {'t', '<C-k>', '<C-\\><C-n><C-w><C-k>'},
     {'t', '<C-j>', '<C-\\><C-n><C-w><C-j>'},
     {'n', '<C-t>', ':terminal<CR>i'},
@@ -194,9 +192,6 @@ local autocmds = {
     }, apply_opts({shiftwidth = 2, tabstop = 2, softtabstop = 2})},
     {"FileType", {"csv", "json", "xml"}, apply_opts({tw = 0, wrap = false})},
     {"FileType", "markdown", apply_opts({nu = false, wrap = true, lbr = true, tw = 65})},
-    {"FileType", "netrw", function()
-        vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { buffer = true })
-    end},
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
     {"BufWritePre", "*.rs", fmt("rustfmt", "--edition", "2024")},
     {"BufWritePre", "*.templ", fmt("templ", "fmt")},
@@ -312,19 +307,3 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 
 pcall(vim.cmd, 'colorscheme spartan') -- Try colorscheme, fallback to default
-
--- Define highlight group for navi window background (brighter black/dark gray)
-vim.api.nvim_set_hl(0, "NaviBackground", { bg = "#1a1a1a", fg = "White" })
-
-vim.fn.setreg('n', [[
-  # Facts
-
-  # Procedures
-
-  # Concepts
-
-  # Questions
-  ]])
-
--- TODO include typescript + deno LSP without plugins
--- potentially include `test-run` as CR alias.

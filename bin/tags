@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# are we in a git repo?
+# cd/find the root
+
+echo 'Generating tags for X'
+
+# generate for the project
+# generate for deps (separate)
+# generate for language (separate)
+
+# potentially return delimited string with paths for each?
+# or just assume and set this in nvim
