@@ -1,6 +1,5 @@
 # vim: ft=gitconfig
 [core]
-  editor = nvim
   autocrlf = false
   excludesfile = ~/.gitignore
 [alias]
