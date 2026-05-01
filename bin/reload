@@ -1,5 +1,36 @@
-#!/usr/env/bin bash
+#!/usr/bin/env bash
+
+script_dir=$(dirname "$(realpath "$0")")
+shell_repo_root=$(realpath "$script_dir/..")
+local_bin_dir="$HOME/.local/bin"
+
+echo 'Symlinking configurations'
+
+# Extensionless config files go to $HOME/.$filename
+for config_file in "$shell_repo_root/config/"*; do
+    filename=$(basename "$config_file")
+    if [ -d "$config_file" ] || [[ "$filename" == *.* ]]; then
+        continue # skip config with file extensions, done manually below
+    fi
+    ln -sfv "$config_file" "$HOME/.$filename"
+done
+
+mkdir -p "$HOME"/.config/{clojure,nvim,tmux,ghostty}
+mkdir -p "$HOME/.config/nvim/colors"
+
+ln -sfv "$shell_repo_root/config/deps.edn" "$HOME/.config/clojure/deps.edn"
+ln -sfv "$shell_repo_root/config/ghostty.conf" "$HOME/.config/ghostty/config"
+ln -sfv "$shell_repo_root/config/tmux.conf" "$HOME/.config/tmux/tmux.conf"
+ln -sfv "$shell_repo_root/config/init.lua" "$HOME/.config/nvim/init.lua"
+ln -sfv "$shell_repo_root/config/spartan.lua" "$HOME/.config/nvim/colors/spartan.lua"
+
+echo 'Symlinking scripts from ./bin'
+
+for bin_file in "$shell_repo_root/bin/"*; do
+    ln -sfv "$bin_file" "$local_bin_dir"
+done
 
 echo 'Reloading all configurations'
 
 tmux source-file ~/.config/tmux/tmux.conf
+. ~/.bashrc
