@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+declare -A -r PACKAGES=(
+    # ['k3d']='rancher-k3d-bin k3d' # requires AUR
+    ['curl']=''
+    ['git']=''
+    ['gopls']=''
+    ['hf']='huggingface-cli python-huggingface-hub'
+    ['kubectl']=''
+    ['make']=''
+    ['nvim']='neovim'
+    ['pip']=''
+    ['python']=''
+    ['rg']='ripgrep'
+    ['shellcheck']=''
+    ['tmux']=''
+    ['wget']=''
+    ['yq']='go-yq yq'
+    ['docker']=''
+    ['docker-compose']=''
+    ['cwebp']='libwebp-utils'
+    ['clojure']=''
+)
+
+OS="$(uname)"
+to_install=""
+
+for key in "${!PACKAGES[@]}"; do
+    if command -v "$key" >/dev/null 2>&1; then
+        echo "✔  $key is already installed. Skipping..."
+        continue
+    fi
+
+    val="${PACKAGES[$key]}"
+    pkg_to_add=""
+
+    if [[ -z "$val" ]]; then
+        pkg_to_add="$key"
+    else
+        read -r -a parts <<< "$val"
+        if [[ ${#parts[@]} -eq 1 ]]; then
+            pkg_to_add="${parts[0]}"
+        else
+            if [[ "$OS" == "Linux" ]]; then
+                pkg_to_add="${parts[0]}"
+            else
+                pkg_to_add="${parts[1]}"
+            fi
+        fi
+    fi
+
+    echo "+ $key not found. Adding '$pkg_to_add' to install list."
+    to_install="$to_install $pkg_to_add"
+done
+
+# Trim whitespace
+to_install=$(echo "$to_install" | xargs)
+
+echo "--------------------------"
+
+if [[ -z "$to_install" ]]; then
+    echo "All dependencies are already satisfied."
+    exit 0
+fi
+
+echo "Final install list: $to_install"
+
+if [[ "$OS" == "Linux" ]]; then
+    sudo pacman -S --needed $to_install
+else
+    brew install $to_install
+fi

@@ -1,7 +1,7 @@
 -- Spartan Neovim -------------------------------------------------------------
 --
 -- TODO new spartan theme
--- TODO ctrl + t for terminal open split
+-- TODO new terminal/ghostty theme
 -- TODO ctags generation (universal ctags.. with deep tags)
 -- TODO figure out how to do plugin loading for neovim.. backup is to use bash
 -- script
@@ -13,6 +13,7 @@
 -- TODO `reload` script also symlinks config
 -- TODO `deps` script pulls down/updates dependencies
 -- TODO `compile` and `test-run` (better names tho) scripts
+-- TODO tmux status bar - ai running/responded?, org-clock replacement?
 
 local config = {
     -- Editing
@@ -177,6 +178,8 @@ local keymaps = {
     end},
     {'n', 'ge', edit_relative},
     {'t', '<C-g>', '<C-\\><C-n>'},
+    {'t', '<C-k>', '<C-\\><C-n><C-w><C-k>'},
+    {'t', '<C-j>', '<C-\\><C-n><C-w><C-j>'},
     {'n', '<C-t>', ':terminal<CR>i'},
 } for _, km in ipairs(keymaps) do vim.keymap.set(km[1], km[2], km[3]) end
 

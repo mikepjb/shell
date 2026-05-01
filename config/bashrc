@@ -5,7 +5,7 @@
 export BASH_SILENCE_DEPRECATION_WARNING=1
 [ -t 0 ] && stty -ixon # disable C-s C-q slow/regular print keybinds, only when in a terminal
 
-export EDITOR='nvim'
+export EDITOR='vi'
 export PAGER='less -S' # instead of wrapping long/wide output, explore with less
 export NPM_CONFIG_PREFIX=$HOME/.npm
 export OPENCODE_DISABLE_CLAUDE_CODE=1 # do not load CLAUDE.md in opencode
