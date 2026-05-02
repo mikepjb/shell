@@ -1,6 +1,7 @@
 -- Spartan Neovim -------------------------------------------------------------
 --
 -- TODO ctags generation (universal ctags.. with deep tags)
+-- TODO port theme to ghostty and neovim
 
 local config = {
     -- Editing
@@ -30,7 +31,9 @@ local config = {
 } for k, v in pairs(config) do vim.opt[k] = v end
 
 local global_config = {
-    markdown_fenced_languages = { 'css', 'javascript', 'bash', 'go', 'sql', 'yaml', 'rust' },
+    markdown_fenced_languages = {
+        'css', 'javascript', 'bash', 'go', 'sql', 'yaml', 'rust', 'clojure'
+    },
     omni_sql_no_default_maps = 1, -- don't use C-c for autocompletion in SQL.
 } for k, v in pairs(global_config) do vim.g[k] = v end
 
@@ -168,7 +171,7 @@ local keymaps = {
     {"n", "<M-R>", function() repl(true) end},
     {"n", "<M-s>", send_to_repl},
     {"v", "<M-s>", send_to_repl},
-    {"n", "<M-u>", "<C-w><C-w>"}, {"t", "<M-u>", "<C-\\><C-n><C-w><C-w>"},
+    {"n", "<M-o>", "<C-w><C-w>"}, {"t", "<M-o>", "<C-\\><C-n><C-w><C-w>"},
     {"n", "<C-h>", "<C-w><C-h>"}, {"n", "<C-j>", "<C-w><C-j>"},
     {"n", "<C-k>", "<C-w><C-k>"}, {"n", "<C-l>", "<C-w><C-l>"},
     {"i", "<C-c>", "<Esc>"}, {"n", "S", "<C-^>"}, {"n", "<C-q>", ":q<CR>"},
