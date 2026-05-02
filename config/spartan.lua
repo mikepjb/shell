@@ -32,7 +32,7 @@ local function hl(group, opts)
     vim.api.nvim_set_hl(0, group, opts)
 end
 
--- Basic UI elements
+-- Basic UI elements, check with `:h highlight-groups`
 hl('Normal', {})
 hl('CursorLine', { bg = colors.black })
 hl('CursorColumn', {})
@@ -44,6 +44,7 @@ hl('StatusLine', {})
 hl('StatusLineNC', { fg = colors.bright_black })
 hl('User1', { fg = colors.bright_blue })
 hl('VertSplit', { fg = colors.bright_black })
+hl('WinSeparator', { fg = colors.bright_black })
 hl('Visual', { fg = colors.black, bg = colors.bright_green })
 hl('Search', { fg = colors.bright_green })
 hl('IncSearch', { fg = colors.bright_green })

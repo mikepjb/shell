@@ -1,155 +1,58 @@
-#!/bin/bash
-# verify - Lightweight verification script for tests and code quality
-# Blocks Claude from stopping if tests fail or code quality issues exist
+#!/usr/bin/env bash
+# Test runner, identifies the right call
+# Supports single file (1 arg) and whole suite (0 arg) runs)
 
-set -euo pipefail
+filename=$(basename "$1")
+extension="${filename##*.}"
 
-# === HOOK DETECTION ===
-IS_HOOK=false
-STOP_HOOK_ACTIVE=false
-
-if ! [[ -t 0 ]]; then
-    INPUT=$(cat 2>/dev/null || true)
-    if [[ -n "$INPUT" ]]; then
-        IS_HOOK=true
-        STOP_HOOK_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null || echo "false")
-    fi
-fi
-
-if [[ "$STOP_HOOK_ACTIVE" == "true" ]]; then
-    [[ "$IS_HOOK" == "true" ]] && echo '{"decision": "approve"}'
-    exit 0
-fi
-
-# === OUTPUT RESULT ===
-output_result() {
-    local reason="$1"
-    if [[ "$IS_HOOK" == "true" ]]; then
-        [[ -n "$reason" ]] && echo "{\"decision\": \"block\", \"reason\": \"$reason\"}" || echo '{"decision": "approve"}'
-    else
-        if [[ -n "$reason" ]]; then
-            echo "❌ $reason" >&2
-            return 1
+# If extension is missing or same as filename, try to detect via shebang
+if [[ "$filename" == "$extension" ]] || [[ -z "$extension" ]]; then
+    if [[ -f "$1" ]]; then
+        line=$(head -n 1 "$1")
+        if [[ "$line" =~ ^#! ]]; then
+            # 1. Remove the #! prefix
+            clean_line="${line##!}"
+            # 2. Get the last word (this handles both /bin/bash and /env bash)
+            lang=$(echo "$clean_line" | awk '{print $NF}')
+            # 3. Final cleanup: strip path if the last word is a path like /bin/sh
+            lang="${lang##*/}"
         else
-            echo "✅ All checks passed." >&2
-            return 0
+            lang="sh"
         fi
-    fi
-}
-
-# === CHECK: Code project? ===
-if ! [[ -f "Makefile" || -f "package.json" || -f "go.mod" || -f "deno.json" || \
-         -f "pom.xml" || -f "build.gradle" || -f "./gradlew" ]]; then
-    output_result ""
-    exit 0
-fi
-
-# === FIND BASE BRANCH & SHOW DIFF ===
-find_base_branch() {
-    local main_date=0 master_date=0 develop_date=0
-    git rev-parse --verify main >/dev/null 2>&1 && main_date=$(git log -1 --format=%at main 2>/dev/null || echo "0")
-    git rev-parse --verify master >/dev/null 2>&1 && master_date=$(git log -1 --format=%at master 2>/dev/null || echo "0")
-    git rev-parse --verify develop >/dev/null 2>&1 && develop_date=$(git log -1 --format=%at develop 2>/dev/null || echo "0")
-
-    if [[ $main_date -gt $master_date && $main_date -gt $develop_date ]]; then
-        echo "main"
-    elif [[ $develop_date -gt $master_date ]]; then
-        echo "develop"
     else
-        echo "master"
+        lang="sh"
     fi
-}
-
-# === GET CHANGED FILES ===
-CHANGED_FILES=$(
-    (git diff --cached --name-only 2>/dev/null || true
-     git diff --name-only 2>/dev/null || true
-     git ls-files --others --exclude-standard 2>/dev/null || true) | sort -u
-)
-
-# === RUN TESTS ===
-TEST_FAILED=0
-run_test() {
-    local name="$1" cmd="$2"
-    echo "Running $name..." >&2
-    $cmd >&2 || TEST_FAILED=1
-}
-
-[[ -f "package.json" ]] && run_test "npm test" "npm test"
-[[ -f "go.mod" || -f "Makefile" ]] && [[ ! -f "./gradlew" ]] && run_test "make test" "make test"
-[[ -f "deno.json" ]] && run_test "deno test" "deno test"
-[[ -f "./gradlew" ]] && run_test "gradle test" "./gradlew test"
-[[ -f "pom.xml" ]] && command -v mvn &>/dev/null && run_test "mvn test" "mvn test"
-
-[[ $TEST_FAILED -eq 1 ]] && {
-    output_result "Tests failed"
-    exit 0
-}
-
-# === RUN CODESCENE ===
-if command -v cs &>/dev/null; then
-    echo "Running CodeScene review..." >&2
-    CS_FAILED=0
-
-    while IFS= read -r file; do
-        [[ -z "$file" ]] && continue
-        LOCAL_FILE="$file"
-        [[ ! -f "$LOCAL_FILE" ]] && LOCAL_FILE="${file#*/}"
-        [[ ! -f "$LOCAL_FILE" ]] && continue
-
-        OUTPUT=$(cs review "$LOCAL_FILE" 2>/dev/null || true)
-        SCORE=$(echo "$OUTPUT" | grep -oE '[0-9]+\.[0-9]+' | head -1 || echo "")
-
-        if [[ -n "$SCORE" && "$SCORE" != "10.0" ]]; then
-            echo "❌ $(basename "$file"): $SCORE/10" >&2
-            echo "$OUTPUT" >&2
-            CS_FAILED=1
-        fi
-    done <<< "$CHANGED_FILES"
-
-    [[ $CS_FAILED -eq 1 ]] && {
-        output_result "CodeScene: scores below 10/10"
-        exit 0
-    }
+else
+    lang="$extension"
 fi
 
-BASE_BRANCH=$(find_base_branch)
-git rev-parse --verify "$BASE_BRANCH" >/dev/null 2>&1 || BASE_BRANCH="HEAD~1"
+filepath=$1
 
-# Get diff stats including uncommitted changes (excluding *_PLAN.md files)
-BRANCH_STATS=$(git diff --stat "$BASE_BRANCH" -- ':(exclude)*_PLAN.md' 2>/dev/null | tail -1 || echo "")
-BRANCH_ADDED=$(echo "$BRANCH_STATS" | grep -oE '[0-9]+ insertions?\(' | grep -oE '^[0-9]+' || echo "0")
-BRANCH_REMOVED=$(echo "$BRANCH_STATS" | grep -oE '[0-9]+ deletions?\(' | grep -oE '^[0-9]+' || echo "0")
+# Normalize bash/zsh to sh to match your existing test blocks
+[[ "$lang" == "bash" || "$lang" == "zsh" ]] && lang="sh"
 
-# Count untracked files (lines added)
-UNTRACKED_ADDED=0
-while IFS= read -r file; do
-    [[ -z "$file" ]] && continue
-    [[ "$file" == *_PLAN.md ]] && continue
-    LINES=$(wc -l < "$file" 2>/dev/null || echo "0")
-    UNTRACKED_ADDED=$((UNTRACKED_ADDED + LINES))
-done < <(git ls-files --others --exclude-standard 2>/dev/null)
+echo "--- Running $lang tests ---"
 
-TOTAL_ADDED=$((BRANCH_ADDED + UNTRACKED_ADDED))
-TOTAL_REMOVED=$BRANCH_REMOVED
-
-[[ "$TOTAL_ADDED" != "0" || "$TOTAL_REMOVED" != "0" ]] && echo "vs $BASE_BRANCH: +$TOTAL_ADDED, -$TOTAL_REMOVED" >&2
-
-# === CHECK: Total lines changed (smarter calculation) ===
-# For edited lines, count as 1 change, not 2 (avoid double-counting +1 -1)
-TOTAL_CHANGED=$((TOTAL_ADDED + TOTAL_REMOVED))
-
-# Smart calculation: estimate "real" changes by assuming half of min(added,removed) are edits
-# This avoids double-counting line replacements
-if [[ $TOTAL_ADDED -gt 0 && $TOTAL_REMOVED -gt 0 ]]; then
-    MIN_EDIT_LINES=$((TOTAL_ADDED < TOTAL_REMOVED ? TOTAL_ADDED : TOTAL_REMOVED))
-    TOTAL_CHANGED=$((TOTAL_ADDED + TOTAL_REMOVED - MIN_EDIT_LINES))
+if [[ "$lang" == "sh" ]]; then
+    if [[ -f "$filepath" ]]; then
+        shellcheck "$filepath"
+    else
+        echo "No specific shell file provided to shellcheck."
+    fi
 fi
 
-# if [[ $TOTAL_CHANGED -gt 300 ]]; then
-#     output_result "Too many total lines changed ($TOTAL_CHANGED > 300). Split into smaller PRs."
-#     exit 0
-# fi
+if [[ "$lang" =~ ^(js|ts)$ ]]; then
+    if [[ -f "$filepath" ]]; then
+        node --test "$filepath"
+    else
+        cat package.json | jq -r '.scripts.test' | bash
+    fi
+fi
 
-output_result ""
-exit 0
+if [[ "$lang" == "go" ]]; then
+    if [[ -f "$filepath" ]]; then
+        go test "$filepath"
+    else
+        go test ./...
+    fi
+fi

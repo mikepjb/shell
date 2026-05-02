@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# This script just makes sure the deps are available and does not update
+# them. For that use `sudo pacman -Syu` or `brew upgrade`.
 
 declare -A -r PACKAGES=(
     # ['k3d']='rancher-k3d-bin k3d' # requires AUR
@@ -10,8 +12,10 @@ declare -A -r PACKAGES=(
     ['make']=''
     ['nvim']='neovim'
     ['pip']=''
+    ['pipx']=''
     ['python']=''
     ['rg']='ripgrep'
+    ['fd']='fd'
     ['shellcheck']=''
     ['tmux']=''
     ['wget']=''

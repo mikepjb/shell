@@ -1,24 +1,6 @@
 -- Spartan Neovim -------------------------------------------------------------
 --
--- TODO new spartan theme
--- TODO new terminal/ghostty theme
 -- TODO ctags generation (universal ctags.. with deep tags)
--- TODO figure out how to do plugin loading for neovim.. backup is to use bash
--- script
--- TODO instead of vim-fireplace, get inferior-lisp level integration setup
--- with neovim terminal (not tmux)
--- TODO vim-fugitive? vim-fireplace? vim-surround? vim.. paredit? vim-repeat?
--- still want as few plugins as possible to avoid chainsaw of chainsaws effect
--- TODO telescope plugin
--- TODO `reload` script also symlinks config
--- TODO `deps` script pulls down/updates dependencies
--- TODO `compile` and `test-run` (better names tho) scripts
--- TODO tmux status bar - ai running/responded?, org-clock replacement?
--- TODO script to compile/install pinned nvim (11.7 or later)
--- TODO nvim script also installs deps (telescope at least)
--- TODO db tool? or just sqlite3/sql etc is enough?
--- TODO also need to make sure lsps are available IF you can't get ctags
--- working well enough - jdtlsw etc are already really good!
 
 local config = {
     -- Editing
@@ -77,62 +59,6 @@ local function fmt(fn, ...)
     end
 end
 
--- TODO to be replaced by libuv terminal
--- local function send_to_repl(text)
---     find_repl_pane(function(pane_id)
---         local escaped = text:gsub('"', '\\"')
---         vim.fn.system(string.format('tmux send -t %s "%s" Enter', pane_id, escaped))
---     end)
--- end
--- 
--- local function tmux_send_lines()
---     local lines = vim.api.nvim_buf_get_lines(0, vim.fn.line("v") - 1, vim.fn.line("."), false)
---     send_to_repl(table.concat(lines, '\n'))
--- end
--- 
--- local function tmux_send_buffer()
---     local lines = vim.api.nvim_buf_get_lines(0, 1, vim.fn.line("$"), false)
---     send_to_repl(table.concat(lines, '\n'))
--- end
--- 
--- local function tmux_send_prompt()
---     local input = vim.fn.input('=> ')
---     if input ~= '' then send_to_repl(input) end
--- end
--- 
--- vim.api.nvim_create_user_command('ReplReset', function()
---     repl_state.pane_id = nil
---     vim.notify("REPL pane selection cleared")
--- end, {})
-
-vim.api.nvim_create_user_command('FindFiles', function(opts)
-  local cmd = opts.args ~= '' and string.format('rg --files | rg -S "%s"', opts.args) or 'rg --files'
-  local output = vim.fn.system(cmd)
-  local files = vim.split(output, '\n', { trimempty = true })
-
-  if #files > 0 then
-      vim.fn.setqflist(vim.tbl_map(function(file)
-          return { filename = file }
-      end, files))
-      if #files > 1 then
-          vim.cmd('copen')
-      else
-          vim.cmd('cclose')
-      end
-      vim.cmd('cfirst')
-  else vim.notify("No matches found") end
-end, { nargs = '?' })
-
-vim.api.nvim_create_user_command('Grep', function(opts)
-    vim.cmd('silent! grep!' .. opts.args .. ' | redraw!')
-    if #vim.fn.getqflist() > 0 then vim.cmd('copen | cfirst')
-    else vim.notify("No matches found") end
-end, { nargs = '+' })
-
-function grep_under_cursor()
-    vim.cmd(":Grep -w " .. vim.fn.expand("<cword>"))
-end
-
 vim.api.nvim_create_user_command('TrimWhitespace', ':%s/\\s\\+$//e', {})
 
 vim.api.nvim_create_user_command('LspRestart', function()
@@ -149,16 +75,103 @@ local function edit_relative()
     vim.api.nvim_feedkeys(':e ' .. vim.fn.expand('%:p:h') .. '/', 'n', true)
 end
 
+local function dynamic_split(cmd)
+    if cmd == nil then cmd = '' end
+    local win_width = vim.api.nvim_win_get_width(0)
+    local win_height = vim.api.nvim_win_get_height(0)
+    
+    local split_modifier = 'split'
+    if win_width > (win_height * 2.5) or win_width > 120 then
+        split_modifier = 'vsplit'
+    end
+
+    vim.cmd(split_modifier .. ' | terminal ' .. cmd)
+    vim.cmd('startinsert')
+
+    return {
+        buf = vim.api.nvim_get_current_buf(),
+        chan = vim.b.terminal_job_id
+    }
+end
+
+local repl_state = { buf = nil, chan = nil }
+local repl_map = {
+    javascript = 'node',
+    clojure    = 'clj',
+    java       = 'jshell',
+    python     = 'python3',
+    lua        = 'lua',
+    sql        = 'sqlite3',
+}
+
+local function repl(force_manual)
+    local ft = vim.bo.filetype
+    local cmd = repl_map[ft]
+
+    -- Internal helper to finalize the REPL setup
+    local function start(choice)
+        local res = dynamic_split(choice)
+        repl_state.buf = res.buf
+        repl_state.chan = res.chan
+        -- Tag the buffer so we can find it in :ls
+        pcall(vim.api.nvim_buf_set_name, res.buf, "REPL [" .. choice .. "]")
+    end
+
+    if force_manual or not cmd then
+        local options = vim.tbl_values(repl_map)
+        vim.ui.select(options, { prompt = 'Select REPL:' }, function(choice)
+            if choice then start(choice) end
+        end)
+    else
+        start(cmd)
+    end
+end
+
+local function send_to_repl()
+    if not repl_state.chan or not vim.api.nvim_buf_is_valid(repl_state.buf) then
+        vim.notify("No active REPL session found. Use <leader>r or <leader>R first.")
+        return
+    end
+
+    local lines
+    local mode = vim.fn.mode()
+    if mode == 'v' or mode == 'V' or mode == ' ' then
+        -- Exit visual mode to update marks
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), 'x', false)
+        local start_line = vim.fn.line("'<")
+        local end_line = vim.fn.line("'>")
+        lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+    else
+        lines = { vim.api.nvim_get_current_line() }
+    end
+
+    vim.api.nvim_chan_send(repl_state.chan, table.concat(lines, "\n") .. "\n")
+end
+
+local function verify(full_suite) -- dynamically run the right test suite
+    if full_suite == nil then full_suite = false end
+
+    local path = vim.api.nvim_buf_get_name(0)
+    
+    local shell_cmd = "verify"
+    if not full_suite then
+        shell_cmd = shell_cmd .. " " .. path
+    end
+    dynamic_split(shell_cmd)
+end
+
 -- Keybinds -------------------------------------------------------------------
 local keymaps = {
+    {"n", "<M-t>", function() verify(false) end},
+    {"n", "<M-T>", function() verify(true) end},
+    {"n", "<M-r>", repl},
+    {"n", "<M-R>", function() repl(true) end},
+    {"n", "<M-s>", send_to_repl},
+    {"v", "<M-s>", send_to_repl},
+    {"n", "<M-u>", "<C-w><C-w>"}, {"t", "<M-u>", "<C-\\><C-n><C-w><C-w>"},
     {"n", "<C-h>", "<C-w><C-h>"}, {"n", "<C-j>", "<C-w><C-j>"},
     {"n", "<C-k>", "<C-w><C-k>"}, {"n", "<C-l>", "<C-w><C-l>"},
     {"i", "<C-c>", "<Esc>"}, {"n", "S", "<C-^>"}, {"n", "<C-q>", ":q<CR>"},
-    {"v", "t", "<Esc>`<^i<div><Esc>`>a</div><Esc>"}, -- div wrapper
-    -- {"n", "cqp", tmux_send_prompt},
-    -- {"v", "gp", tmux_send_lines},   {"n", "gp", tmux_send_buffer},
-    {"n", "gs", ":Grep "}, {"n", "gS", grep_under_cursor},
-    {"n", "<space>", ":FindFiles "},
     {"i", "<C-l>", " => "},
     {"i", "<C-y>", " -> "},
     {"n", "<M-n>", ":cnext<CR>"},   {"n", "<M-p>", ":cprev<CR>"},
@@ -168,7 +181,6 @@ local keymaps = {
     {"n", "gn", ":e ~/.notes/index.md<CR>"},
     {"n", "gj", ":e ~/.notes/cookie-jar.md<CR>"},
     {"n", "g0", ":LspRestart<CR>:e!<CR>"},
-    {"n", "<M-t>", ":terminal verify<CR>"},
     {"n", "gl", function()
         local qf_winid = vim.fn.getqflist({winid = 0}).winid
         vim.cmd(qf_winid ~= 0 and 'cclose' or 'copen')
@@ -178,7 +190,7 @@ local keymaps = {
     {'t', '<C-h>', '<C-\\><C-n><C-w><C-h>'},
     {'t', '<C-k>', '<C-\\><C-n><C-w><C-k>'},
     {'t', '<C-j>', '<C-\\><C-n><C-w><C-j>'},
-    {'n', '<C-t>', ':terminal<CR>i'},
+    {'n', '<C-t>', dynamic_split},
 } for _, km in ipairs(keymaps) do vim.keymap.set(km[1], km[2], km[3]) end
 
 -- Autocmds
@@ -194,10 +206,8 @@ local autocmds = {
     {"FileType", "markdown", apply_opts({nu = false, wrap = true, lbr = true, tw = 65})},
     {"BufWritePre", "*.go", fmt("goimports", "-w")},
     {"BufWritePre", "*.rs", fmt("rustfmt", "--edition", "2024")},
-    {"BufWritePre", "*.templ", fmt("templ", "fmt")},
     -- {"BufWritePre", "*.js,*.jsx,", fmt("prettier", "--write")},
     -- {"BufWritePre", "*.ts,*.tsx,*.css,*.json,*.svg", fmt("deno", "fmt")},
-    {"BufWritePre", "*.sql", fmt("sql-formatter", "--fix", "-l", "sqlite")},
     {'TermOpen', '*', apply_opts({nu = false})},
     {'BufWritePre', '*', function()
         local dir = vim.fn.expand('<afile>:p:h')
@@ -225,66 +235,27 @@ local function find_root(markers)
     return nil
 end
 
-vim.api.nvim_create_autocmd('FileType', {
-    pattern = {'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'json'},
-    callback = function()
-        local deno_root = find_root({'deno.json', 'deno.jsonc'})
-        if deno_root then
+local function register_lsp(pattern, root, cmd)
+    vim.api.nvim_create_autocmd('FileType', {
+        pattern = pattern,
+        callback = function()
             vim.lsp.start({
-                name = 'denols',
-                cmd = {'deno', 'lsp'},
-                root_dir = deno_root,
+                name = cmd[1],
+                cmd = cmd,
+                root_dir = root,
             })
-        else
-            local ts_root = find_root({'package.json', 'tsconfig.json'})
-            if ts_root then
-                vim.lsp.start({
-                    name = 'tsserver',
-                    cmd = {'typescript-language-server', '--stdio'},
-                    root_dir = ts_root,
-                })
-            end
         end
-    end,
-})
+    })
+end
 
-vim.api.nvim_create_autocmd('FileType',
-    {
-        pattern = 'java', callback = function()
-            local java_root = find_root({'gradlew', 'mvnw', 'pom.xml'})
-            vim.lsp.start({
-                name = 'jdtls',
-                cmd = {'jdtlsw'},
-                root_dir = java_root,
-            })
-        end
-    }
+register_lsp('java', {'gradlew', 'mvnw', 'pom.xml'}, {'jdtlsw'})
+register_lsp('go',   {'go.mod'}, {'gopls'})
+register_lsp('rust', {'Cargo.toml'}, {'rust-analyzer'})
+register_lsp(
+    {'javascript', 'typescript'},
+    {'package.json'},
+    {'typescript-language-server', '--stdio'}
 )
-
-
-vim.api.nvim_create_autocmd('FileType', {
-    pattern = {'go'},
-    callback = function()
-        local go_root = find_root({'go.mod'})
-        vim.lsp.start({
-            name = 'gopls',
-            cmd = {'gopls'},
-            root_dir = go_root,
-        })
-    end,
-})
-
-vim.api.nvim_create_autocmd('FileType', {
-    pattern = {'rust'},
-    callback = function()
-        local rust_root = find_root({'Cargo.toml'})
-        vim.lsp.start({
-            name = 'rust-analyzer',
-            cmd = {'rust-analyzer'},
-            root_dir = rust_root,
-        })
-    end,
-})
 
 -- Basic LSP keymaps
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -307,3 +278,13 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 
 pcall(vim.cmd, 'colorscheme spartan') -- Try colorscheme, fallback to default
+
+local ok, telescope = pcall(require, "telescope")
+
+if ok then
+    vim.keymap.set('n', '<space>', ':Telescope find_files<CR>')
+    vim.keymap.set('n', '<M-i>', ':Telescope live_grep<CR>')
+    vim.keymap.set('n', '<M-b>', ':Telescope buffers<CR>')
+else
+    vim.keymap.set('n', '<space>', ':Findfiles ')
+end

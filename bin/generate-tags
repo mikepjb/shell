@@ -11,3 +11,9 @@ echo 'Generating tags for X'
 
 # potentially return delimited string with paths for each?
 # or just assume and set this in nvim
+
+# alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
+
+project_root=$(git rev-parse --show-toplevel)
+
+echo $project_root
