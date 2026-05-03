@@ -74,3 +74,33 @@ if [[ "$OS" == "Linux" ]]; then
 else
     brew install $to_install
 fi
+
+echo "--------------------------\n"
+
+echo 'Ensuring neovim telescope is available'
+
+pkg_dir="$HOME/.config/nvim/pack/base/start"
+
+mkdir -p $pkg_dir
+
+if [[ -f $pkg_dir/telescope.nvim ]]; then
+    git clone https://github.com/nvim-telescope/telescope.nvim.git \
+        $pkg_dir/telescope.nvim \
+        --depth=1
+fi
+
+if [[ -f $pkg_dir/plenary.nvim ]]; then
+git clone https://github.com/nvim-lua/plenary.nvim.git \
+    $pkg_dir/plenary.nvim \
+    --depth=1
+fi
+
+
+if [[ -f $pkg_dir/telescope-fzf-native.nvim ]]; then
+    git clone https://github.com/nvim-telescope/telescope-fzf-native.nvim.git \
+        $pkg_dir/telescope-fzf-native.nvim \
+        --depth=1
+
+    cd $pkg_dir/telescope-fzf-native.nvim && make && cd -
+fi
+
