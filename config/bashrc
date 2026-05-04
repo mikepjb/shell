@@ -84,6 +84,10 @@ fi
 jobs_signal() { [[ $(jobs) != "" ]] && echo -e "\x01\033[0;36m\x02\$\x01\033[0m\x02" || echo -e "\$"; }
 PS1='\W($(git branch --show-current 2>/dev/null || echo "!")) $(jobs_signal) '
 
+if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+    source "$HOME/.sdkman/bin/sdkman-init.sh"
+fi
+
 # opencode
 export PATH=/home/mikepjb/.opencode/bin:$PATH
 . "$HOME/.cargo/env"

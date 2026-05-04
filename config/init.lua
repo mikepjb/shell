@@ -19,7 +19,7 @@ local config = {
     number = true, guicursor = '', shortmess = 'CTIoltOF',
     fillchars = "stl:─,stlnc:─,vert:│",
     statusline = "── %#User1#%f%*%< (%{&ft})%m%r%h%w %= ( %3l,%3c,%3p%% )",
-    termguicolors = os.getenv("COLORTERM") == 'truecolor',
+    termguicolors = false,
 
     -- Search & Completion
     ignorecase = true, smartcase = true, gdefault = true,

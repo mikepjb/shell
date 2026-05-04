@@ -10,31 +10,31 @@ vim.g.colors_name = 'spartan'
 -- of interest down to the main bulk of the view. This should
 -- also dictate color choice in UI i.e you don't want to draw
 -- the eye with a yellow for truncation symbols in the fringes.
+--
+-- For dark/light, bg = black -> lighter and white -> darker
+--                 fg = white -> darker and black -> lighter
 local colors = {
-    yellow = '#f9e2af',
-    magenta = '#cba6f7',
+    yellow = 3,
+    magenta = 11,
+    cyan = 14,
 
-    lavender = '#b7bdf8',
-    teal = '#94e2d5',
-    sapphire = '#74c7ec',
+    lavender = 5,
+    teal = 6,
+    sapphire = 4,
 
-    fg = '#cdd6f4',
-    fg2 = '#bac2de', -- fg+
-    fg3 = '#a6adc8', -- fg++
+    fg = 'NONE', -- inherit terminal fg text
+    fg2 = 7, -- fg+
+    fg3 = 15, -- fg++
 
-    bg = '#0a0a10',
-    black = '#11111b', -- bg++
-    bright_black = '#313244', -- bg++++
+    bg = 'NONE', -- inherit terminal bg text
+    bg_p = 0, -- bg+ very light for column line
+    bg_pp = 8, -- bg dark enough for line numbers
 
-    red = '#eba0ac',
-    green = '#8fcc9f',
+    red = 1,
+    green = 2,
 
-    magenta = '#cc8fcc',
-    cyan = '#8fcccc',
-    bright_magenta = '#ff00ff',
-
-    diff_red = '#1f0809',
-    diff_green = '#0c1412',
+    diff_red = 9,
+    diff_green = 10,
 }
 
 local function hl(group, opts)
@@ -42,48 +42,52 @@ local function hl(group, opts)
 end
 
 -- Basic UI elements, check with `:h highlight-groups`
-hl('Normal', { fg = colors.fg })
-hl('CursorLine', { bg = colors.black })
+hl('Normal', { ctermfg = colors.fg, ctermbg = 'NONE' })
+hl('NonText', { ctermfg = colors.fg, bg= 'NONE' })
+hl('CursorLine', { ctermbg = colors.bg_p })
 hl('CursorColumn', {})
-hl('ColorColumn', { bg = colors.black })
-hl('NonText', { fg = colors.fg, bg= 'none' })
-hl('LineNr', { fg = colors.bright_black })
-hl('CursorLineNr', { fg = colors.yellow, bg = colors.bright_black })
+hl('ColorColumn', { ctermbg = colors.bg_p })
+hl('LineNr', { ctermfg = colors.bg_pp })
+hl('CursorLineNr', { ctermfg = colors.yellow, ctermbg = colors.bg_pp })
 hl('StatusLine', {})
-hl('StatusLineNC', { fg = colors.bright_black })
-hl('User1', { fg = colors.sapphire })
-hl('VertSplit', { fg = colors.bright_black })
-hl('WinSeparator', { fg = colors.bright_black })
-hl('Visual', { fg = colors.yellow, bg = colors.black })
-hl('Search', { bg = colors.yellow })
-hl('IncSearch', { bg = colors.yellow })
-hl('Pmenu', { fg = colors.sapphire, bg = colors.black })
-hl('PmenuSel', { fg = colors.lavender, bg = colors.bright_black })
-hl('MatchParen', { fg = colors.bright_magenta })
-hl('TelescopeSelection', { fg = colors.yellow })
+hl('StatusLineNC', { ctermfg = colors.bg_pp })
+hl('User1', { ctermfg = colors.sapphire })
+hl('VertSplit', { ctermfg = colors.bg_pp })
+hl('WinSeparator', { ctermfg = colors.bg_pp })
+hl('Visual', { ctermfg = colors.yellow, ctermbg = colors.bg_p })
+hl('Search', { ctermbg = colors.yellow })
+hl('IncSearch', { ctermbg = colors.yellow })
+hl('Pmenu', { ctermfg = colors.sapphire, ctermbg = colors.bg_p })
+hl('PmenuSel', { ctermfg = colors.lavender, ctermbg = colors.bg_p })
+hl('MatchParen', { ctermfg = colors.bright_magenta })
+hl('TelescopeSelection', { ctermfg = colors.yellow })
 
 -- Messages and errors
-hl('ErrorMsg', { fg = colors.bright_magenta })
-hl('WarningMsg', { fg = colors.yellow, bg = colors.black })
-hl('MoreMsg', { fg = colors.teal, bg = colors.black })
-hl('Question', { fg = colors.cyan, bg = colors.black })
+hl('ErrorMsg', { ctermfg = colors.bright_magenta })
+hl('WarningMsg', { ctermfg = colors.yellow, ctermbg = colors.bg_p })
+hl('MoreMsg', { ctermfg = colors.teal, ctermbg = colors.bg_p })
+hl('Question', { ctermfg = colors.cyan, ctermbg = colors.bg_p })
 
 -- Syntax highlighting
-hl('Comment', { fg = colors.fg3 })
-hl('Title', { fg = colors.yellow })
-hl('String', { fg = colors.teal })
-hl('SpecialComment', { fg = colors.bright_magenta })
-hl('Debug', { fg = colors.bright_magenta })
-hl('Underlined', { fg = colors.sapphire, underline = true })
-hl('Todo', { fg = colors.yellow })
-hl('Added', { fg = colors.green, bg = colors.black })
-hl('Removed', { fg = colors.red, bg = colors.black })
-hl('gitcommitBranch', { fg = colors.yellow })
-hl('TabLine', { fg = colors.bright_black, bg = colors.black })
-hl('TabLineFill', { fg = colors.bright_black, bg = colors.black })
-hl('TabLineSel', { fg = colors.white, bg = colors.bright_black })
-hl('WildMenu', { fg = colors.black, bg = colors.yellow })
-hl('Directory', { fg = colors.sapphire })
+hl('Comment', { ctermfg = colors.fg3 })
+hl('Title', { ctermfg = colors.yellow })
+hl('String', { ctermfg = colors.teal })
+hl('Function', { ctermfg = colors.fg2 })
+hl('Delimiter', { ctermfg = colors.sapphire })
+hl('Special', { ctermfg = colors.teal })
+hl('Identifier', { ctermfg = colors.sapphire })
+hl('SpecialComment', { ctermfg = colors.bright_magenta })
+hl('Debug', { ctermfg = colors.bright_magenta })
+hl('Underlined', { ctermfg = colors.sapphire, underline = true })
+hl('Todo', { ctermfg = colors.yellow })
+hl('Added', { ctermfg = colors.green, ctermbg = colors.bg_p })
+hl('Removed', { ctermfg = colors.red, ctermbg = colors.bg_p })
+hl('gitcommitBranch', { ctermfg = colors.yellow })
+hl('TabLine', { ctermfg = colors.bg_pp, ctermbg = colors.bg_p })
+hl('TabLineFill', { ctermfg = colors.bg_p, ctermbg = colors.bg_p })
+hl('TabLineSel', { ctermfg = colors.white, ctermbg = colors.bg_pp })
+hl('WildMenu', { ctermfg = colors.bg_p, ctermbg = colors.yellow })
+hl('Directory', { ctermfg = colors.sapphire })
 
-hl('markdownCode', { fg = colors.cyan })
-hl('markdownCodeBlock', { fg = colors.cyan })
+hl('markdownCode', { ctermfg = colors.cyan })
+hl('markdownCodeBlock', { ctermfg = colors.cyan })
