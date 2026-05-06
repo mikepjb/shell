@@ -238,15 +238,18 @@ local function find_root(markers)
     return nil
 end
 
-local function register_lsp(pattern, root, cmd)
+local function register_lsp(pattern, markers, cmd)
     vim.api.nvim_create_autocmd('FileType', {
         pattern = pattern,
         callback = function()
-            vim.lsp.start({
-                name = cmd[1],
-                cmd = cmd,
-                root_dir = root,
-            })
+            if vim.fn.executable(cmd[1]) == 1 then
+                local root_path = find_root(markers)
+                vim.lsp.start({
+                    name = cmd[1],
+                    cmd = cmd,
+                    root_dir = root_path,
+                })
+            end
         end
     })
 end
