@@ -2,7 +2,6 @@
 --
 -- TODO ctags generation (universal ctags.. with deep tags)
 -- TODO port theme to ghostty and neovim
--- TODO qwen in nvim
 
 local config = {
     -- Editing
@@ -295,3 +294,37 @@ if ok then
 else
     vim.keymap.set('n', '<space>', ':Findfiles ')
 end
+
+local function consult()
+    local mode = vim.api.nvim_get_mode().mode
+    local context = ""
+
+    -- Grab visual selection if it exists
+    if mode:match("[vV\22]") then
+        local s, e = vim.fn.getpos("'<"), vim.fn.getpos("'>")
+        context = table.concat(vim.fn.getregion(s, e, { type = vim.fn.visualmode() }), "\n")
+    end
+
+    vim.ui.input({ prompt = 'consult> ' }, function(input)
+        if not (input and input ~= "") then return end
+
+        vim.system({ "consult", input }, { stdin = context }, function(obj)
+            vim.schedule(function()
+                if obj.code ~= 0 then return vim.notify("Error: " .. obj.stderr, 3) end
+
+                -- Get or create buffer
+                local buf = vim.fn.bufnr("*consult*", true)
+                vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(obj.stdout, "\n"))
+                vim.bo[buf].filetype, vim.bo[buf].buftype = "markdown", "nofile"
+
+                local win = vim.fn.bufwinid(buf)
+                if win == -1 then
+                    local split_cmd = vim.o.columns > (vim.o.lines * 2) and "vsplit" or "split"
+                    vim.cmd(split_cmd .. " | b " .. buf)
+                end
+            end)
+        end)
+    end)
+end
+
+vim.keymap.set({'n', 'v'}, '<M-a>', consult, { desc = "Consult LLM" })

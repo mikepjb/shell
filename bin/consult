@@ -21,7 +21,11 @@ Focus on idiomatic solutions and best practices. Respond directly to
 the code or question presented."
 
 USER_INPUT="$@"
-CONTEXT=$(cat -) # Check if we have context from stdin
+if [ ! -t 0 ]; then
+    CONTEXT=$(cat -)
+else
+    CONTEXT=""
+fi
 
 if [ -n "$CONTEXT" ]; then
     FULL_PROMPT=$(printf "\`\`\`\n%s\n\`\`\`\n\n%s" "$CONTEXT" "$USER_INPUT")
@@ -35,5 +39,10 @@ PAYLOAD=$(jq -n \
     --arg user "$FULL_PROMPT" \
     '{model: $model, messages: [{role: "system", content: $sys}, {role: "user", content: $user}]}')
 
-curl -sS -X POST -H "Content-Type: application/json" \
-     -d "$PAYLOAD" "$ENDPOINT" | jq -r '.choices[0].message.content'
+RESPONSE=$(curl -sS -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$ENDPOINT" | jq -r '.choices[0].message.content')
+
+if [ -t 1 ] && command -v glow &> /dev/null; then
+    echo "$RESPONSE" | glow
+else
+    echo "$RESPONSE"
+fi

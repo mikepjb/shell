@@ -7,6 +7,7 @@ declare -A -r PACKAGES=(
     ['curl']=''
     ['git']=''
     ['gopls']=''
+    ['glow']=''
     ['hf']='huggingface-cli python-huggingface-hub'
     ['kubectl']=''
     ['make']=''
@@ -75,7 +76,7 @@ else
     brew install $to_install
 fi
 
-echo "--------------------------\n"
+echo "--------------------------"
 
 echo 'Ensuring neovim telescope is available'
 

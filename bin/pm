@@ -3,14 +3,14 @@
 # pm (process monitor) is a simple process manager for running multiple
 # processes without the need for tmux, just using bash primitives.
 #
-# Example usage: `pm run server python -m http.server 8080` will start a process
+# Example usage: `pm start server python -m http.server 8080` will start a process
 # named 'server' using python's http server module on port 8080.
 #
 # Commands:
-# - run  - to start a process
-# - stop - to stop a process
-# - list - to list all processes
-# - logs - to tail the logs of a process
+# - start - to start a process
+# - stop  - to stop a process
+# - list  - to list all processes
+# - logs  - to tail the logs of a process
 
 PM_DIR="$HOME/.cache/procs"
 mkdir -p "$PM_DIR"
@@ -111,7 +111,7 @@ clean() {
 
 main() {
     case "$1" in
-        run)
+        start)
             local NAME=$2
             shift 2
             local COMMAND="$@"
@@ -137,7 +137,7 @@ main() {
             tail -n 20 -f "$(get_log_file "$2")"
             ;;
         *)
-            echo "Usage: pm {run|clean|stop|stop-all|list|logs}"
+            echo "Usage: pm {start|clean|stop|stop-all|list|logs}"
             exit 1
             ;;
     esac
