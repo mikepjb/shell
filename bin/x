@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+#
+# X is a simple process manager for running multiple processes without the need
+# for tmux, just using bash primitives.
+#
+# Example usage: `x run server python -m http.server 8080` will start a process
+# named 'server' using python's http server module on port 8080.
+#
+# Commands:
+# - run  - to start a process
+# - stop - to stop a process
+# - list - to list all processes
+# - logs - to tail the logs of a process
+
+X_DIR="$HOME/.cache/procs"
+mkdir -p "$X_DIR"
+
+get_pid_file() { echo "$X_DIR/$1.pid"; }
+get_log_file() { echo "$X_DIR/$1.log"; }
+get_cmd_file() { echo "$X_DIR/$1.cmd"; }
+
+start() {
+    local NAME=$1
+    local CMD=$2
+    local PID_FILE=$(get_pid_file "$NAME")
+    local LOG_FILE=$(get_log_file "$NAME")
+    local CMD_FILE=$(get_cmd_file "$NAME")
+
+    if [ -f "$PID_FILE" ] && kill -0 $(cat "$PID_FILE" 2>/dev/null) 2>/dev/null; then
+        echo "Error: '$NAME' is already running (PID: $(cat "$PID_FILE"))."
+        return 1
+    fi
+
+    echo "Starting '$NAME'..."
+    echo "$CMD" > "$CMD_FILE"
+
+    # Start the process
+    nohup $CMD > "$LOG_FILE" 2>&1 &
+    
+    # FIXED: Use $! instead of $1
+    echo $! > "$PID_FILE"
+    disown
+}
+
+stop() {
+    local NAME=$1
+    local PID_FILE=$(get_pid_file "$NAME")
+
+    if [ -f "$PID_FILE" ]; then
+        local PID=$(cat "$PID_FILE")
+        echo "Stopping '$NAME' (PID: $PID)..."
+        kill "$PID" 2>/dev/null && rm "$PID_FILE" "$(get_cmd_file "$NAME")"
+    else
+        echo "Error: No PID file found for '$NAME'."
+    fi
+}
+
+stop_all() {
+    echo "Shutting down all processes..."
+    for pid_file in "$X_DIR"/*.pid; do
+        [ -e "$pid_file" ] || continue
+        local name=$(basename "$pid_file" .pid)
+        stop "$name"
+    done
+}
+
+list() {
+    (
+        # Header for column to parse
+        printf "NAME PID STATUS COMMAND\n"
+        
+        for pid_file in "$X_DIR"/*.pid; do
+            [ -e "$pid_file" ] || continue
+            
+            local name=$(basename "$pid_file" .pid)
+            local pid=$(cat "$pid_file")
+            local cmd=$(cat "$(get_cmd_file "$name")" 2>/dev/null || echo "unknown")
+            
+            if kill -0 "$pid" 2>/dev/null; then
+                printf "%s %s ALIVE %s\n" "$name" "$pid" "$cmd"
+            else
+                printf "%s %s DEAD %s\n" "$name" "$pid" "$cmd"
+            fi
+        done
+    ) | column -t
+}
+
+clean() {
+    echo "Cleaning up stale process files..."
+    local count=0
+    for pid_file in "$X_DIR"/*.pid; do
+        [ -e "$pid_file" ] || continue
+        local name=$(basename "$pid_file" .pid)
+        local pid=$(cat "$pid_file")
+
+        # If the process is not running
+        if ! kill -0 "$pid" 2>/dev/null; then
+            rm "$pid_file" "$(get_cmd_file "$name")" "$(get_log_file "$name")"
+            echo "Removed stale files for: $name"
+            ((count++))
+        fi
+    done
+    echo "Done. Cleaned $count processes."
+}
+
+main() {
+    case "$1" in
+        run)
+            local NAME=$2
+            shift 2
+            local COMMAND="$@"
+            start "$NAME" "$COMMAND"
+            ;;
+        clean)
+            clean
+            ;;
+        stop)
+            stop "$2"
+            ;;
+        stop-all)
+            stop_all
+            ;;
+        list)
+            list
+            ;;
+        logs)
+            tail -n 20 -f "$(get_log_file "$2")"
+            ;;
+        *)
+            echo "Usage: x {run|clean|stop|stop-all|list|logs}"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
