@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# X is a simple process manager for running multiple processes without the need
-# for tmux, just using bash primitives.
+# pm (process monitor) is a simple process manager for running multiple
+# processes without the need for tmux, just using bash primitives.
 #
-# Example usage: `x run server python -m http.server 8080` will start a process
+# Example usage: `pm run server python -m http.server 8080` will start a process
 # named 'server' using python's http server module on port 8080.
 #
 # Commands:
@@ -12,12 +12,12 @@
 # - list - to list all processes
 # - logs - to tail the logs of a process
 
-X_DIR="$HOME/.cache/procs"
-mkdir -p "$X_DIR"
+PM_DIR="$HOME/.cache/procs"
+mkdir -p "$PM_DIR"
 
-get_pid_file() { echo "$X_DIR/$1.pid"; }
-get_log_file() { echo "$X_DIR/$1.log"; }
-get_cmd_file() { echo "$X_DIR/$1.cmd"; }
+get_pid_file() { echo "$PM_DIR/$1.pid"; }
+get_log_file() { echo "$PM_DIR/$1.log"; }
+get_cmd_file() { echo "$PM_DIR/$1.cmd"; }
 
 start() {
     local NAME=$1
@@ -34,10 +34,8 @@ start() {
     echo "Starting '$NAME'..."
     echo "$CMD" > "$CMD_FILE"
 
-    # Start the process
     nohup $CMD > "$LOG_FILE" 2>&1 &
     
-    # FIXED: Use $! instead of $1
     echo $! > "$PID_FILE"
     disown
 }
@@ -57,7 +55,7 @@ stop() {
 
 stop_all() {
     echo "Shutting down all processes..."
-    for pid_file in "$X_DIR"/*.pid; do
+    for pid_file in "$PM_DIR"/*.pid; do
         [ -e "$pid_file" ] || continue
         local name=$(basename "$pid_file" .pid)
         stop "$name"
@@ -69,7 +67,7 @@ list() {
         # Header for column to parse
         printf "NAME PID STATUS COMMAND\n"
         
-        for pid_file in "$X_DIR"/*.pid; do
+        for pid_file in "$PM_DIR"/*.pid; do
             [ -e "$pid_file" ] || continue
             
             local name=$(basename "$pid_file" .pid)
@@ -88,7 +86,7 @@ list() {
 clean() {
     echo "Cleaning up stale process files..."
     local count=0
-    for pid_file in "$X_DIR"/*.pid; do
+    for pid_file in "$PM_DIR"/*.pid; do
         [ -e "$pid_file" ] || continue
         local name=$(basename "$pid_file" .pid)
         local pid=$(cat "$pid_file")
@@ -127,7 +125,7 @@ main() {
             tail -n 20 -f "$(get_log_file "$2")"
             ;;
         *)
-            echo "Usage: x {run|clean|stop|stop-all|list|logs}"
+            echo "Usage: pm {run|clean|stop|stop-all|list|logs}"
             exit 1
             ;;
     esac
