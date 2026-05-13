@@ -1,5 +1,52 @@
 #!/usr/bin/env bash
 
-echo 'Auditing <project>'
+echo "Auditing $(basename $PWD)"
+echo -e "\n-----------------------------"
+echo 'Line Counts'
+echo -e "-----------------------------\n"
+git ls-files -z | xargs -0 wc -l | awk '
+    # Ignore the "total" lines wc spits out for batches
+    $2 != "total" && $2 != "" {
+        # Extract extension from path
+        n = split($2, a, ".");
+        ext = (n > 1) ? a[n] : "no_extension";
+        
+        # Aggregate line counts
+        sum[ext] += $1
+    }
+    END {
+        for (e in sum) {
+            printf "%-10s %s\n", sum[e], e
+        }
+    }' | \
+sort -rn | \
+head -n 10
 
-# lines of code by filetype
+echo -e "\n-----------------------------"
+echo -e 'Pace of development (commits per month)'
+echo -e "-----------------------------\n"
+
+git log --format='%ad' --date=format:'%Y-%m' | sort | uniq -c \
+    | awk '{ printf "%-10s %s\n", $1, $2 }'
+
+echo -e "\n-----------------------------"
+echo -e 'Frequently Changing Files'
+echo -e "-----------------------------\n"
+git log --format=format: --name-only --since="1 year ago" \
+    | sort | uniq -c | sort -nr | head -20 \
+    | awk '{ printf "%-10s %s\n", $1, $2 }'
+
+echo -e "\n-----------------------------"
+echo -e 'Authors (all time)'
+echo -e "-----------------------------\n"
+git shortlog -sn --no-merges | awk '{ printf "%-10s %s\n", $1, $2 }'
+
+echo -e "\n-----------------------------"
+echo -e 'Authors (last 6 months)'
+echo -e "-----------------------------\n"
+git shortlog -sn --no-merges --since="6 months ago" | awk '{ printf "%-10s %s\n", $1, $2 }'
+
+echo -e "\n-----------------------------"
+echo -e 'Code corrections (locations where we are fixing/finding bugs)'
+echo -e "-----------------------------\n"
+git log -i -E --grep="fix|bug|broken" --name-only --format='' | sort | uniq -c | sort -nr | head -20
