@@ -83,6 +83,14 @@ list() {
     ) | column -t
 }
 
+restart() {
+    local NAME=$1
+    local CMD=$(get_cmd_file "$NAME")
+    echo "Restarting ${NAME}..."
+    stop $NAME
+    start $NAME $CMD
+}
+
 clean() {
     echo "Cleaning up stale process files..."
     local count=0
@@ -117,6 +125,10 @@ main() {
             ;;
         stop-all)
             stop_all
+            ;;
+        restart)
+            local NAME=$2
+            restart "$NAME"
             ;;
         list)
             list
