@@ -1,52 +1,73 @@
 #!/usr/bin/env bash
 
-echo "Auditing $(basename $PWD)"
-echo -e "\n-----------------------------"
-echo 'Line Counts'
-echo -e "-----------------------------\n"
-git ls-files -z | xargs -0 wc -l | awk '
-    # Ignore the "total" lines wc spits out for batches
-    $2 != "total" && $2 != "" {
-        # Extract extension from path
-        n = split($2, a, ".");
-        ext = (n > 1) ? a[n] : "no_extension";
-        
-        # Aggregate line counts
-        sum[ext] += $1
-    }
-    END {
-        for (e in sum) {
-            printf "%-10s %s\n", sum[e], e
+COL_WIDTH=45  # Total width for each column
+TOP_N=15      # How many rows to show per section
+
+get_line_counts() {
+    git ls-files -z | xargs -0 wc -l 2>/dev/null | awk '
+        $2 != "total" && $2 != "" {
+            n = split($2, a, ".");
+            ext = (n > 1) ? a[n] : "no_ext";
+            sum[ext] += $1
         }
-    }' | \
-sort -rn | \
-head -n 10
+        END { for (e in sum) printf "%-8d %s\n", sum[e], e }' | sort -rn | head -n "$TOP_N"
+}
 
-echo -e "\n-----------------------------"
-echo -e 'Pace of development (commits per month)'
-echo -e "-----------------------------\n"
+get_pace() {
+    git log --format='%ad' --date=format:'%Y-%m' | sort | uniq -c | sort -k2 -r | head -n "$TOP_N" | awk '{ printf "%-8s %s\n", $1, $2 }'
+}
 
-git log --format='%ad' --date=format:'%Y-%m' | sort | uniq -c \
-    | awk '{ printf "%-10s %s\n", $1, $2 }'
+condense_path() {
+    awk -v max=30 '{
+        count=$1; path=$2;
+        if (length(path) > max) {
+            # Keep the last X characters and prepend dots
+            path = "..." substr(path, length(path) - (max - 3))
+        }
+        printf "%-8s %s\n", count, path
+    }'
+}
 
-echo -e "\n-----------------------------"
-echo -e 'Frequently Changing Files'
-echo -e "-----------------------------\n"
-git log --format=format: --name-only --since="1 year ago" \
-    | sort | uniq -c | sort -nr | head -20 \
-    | awk '{ printf "%-10s %s\n", $1, $2 }'
+get_file_changes() {
+    git log --format=format: --name-only --since="1 year ago" | grep -v '^$' \
+        | sort | uniq -c | sort -nr | head -n "$TOP_N" \
+        | condense_path
+}
 
-echo -e "\n-----------------------------"
-echo -e 'Authors (all time)'
-echo -e "-----------------------------\n"
-git shortlog -sn --no-merges | awk '{ printf "%-10s %s\n", $1, $2 }'
+get_hotspots() {
+    git log -i -E --grep="fix|bug|broken" --name-only --format='' | grep -v '^$' \
+        | sort | uniq -c | sort -nr | head -n "$TOP_N" \
+        | condense_path
+}
 
-echo -e "\n-----------------------------"
-echo -e 'Authors (last 6 months)'
-echo -e "-----------------------------\n"
-git shortlog -sn --no-merges --since="6 months ago" | awk '{ printf "%-10s %s\n", $1, $2 }'
+get_authors() {
+    local since=$1
+    git shortlog -sn --no-merges ${since:+--since="$since"} | head -n "$TOP_N" \
+        | awk '{ count=$1; $1=""; printf "%-8s %s\n", count, $0 }'
+}
 
-echo -e "\n-----------------------------"
-echo -e 'Code corrections (locations where we are fixing/finding bugs)'
-echo -e "-----------------------------\n"
-git log -i -E --grep="fix|bug|broken" --name-only --format='' | sort | uniq -c | sort -nr | head -20
+print_section() {
+    local title1=$1
+    local title2=$2
+    local cmd1=$3
+    local cmd2=$4
+
+    # Print Headers
+    printf "%-${COL_WIDTH}s | %s\n" "$title1" "$title2"
+    printf "%-${COL_WIDTH}s | %s\n" "-----------------------" "-----------------------"
+
+    # Paste the results of the two functions side-by-side
+    # The 'pr' command handles the padding and the vertical separator
+    paste <(eval "$cmd1") <(eval "$cmd2") | awk -F'\t' -v w="$COL_WIDTH" '{ printf "%-"w"s | %s\n", $1, $2 }'
+    echo -e "\n"
+}
+
+echo "Auditing: $(basename "$PWD")"
+echo "Project Path: $(pwd)"
+echo -e "--------------------------------------------------------------------------------\n"
+
+print_section "LINE COUNTS" "PACE (COMMITS/MO)" "get_line_counts" "get_pace"
+print_section "CHANGES (1YR)" "HOTSPOTS (BUG FIXES)" "get_file_changes" "get_hotspots"
+print_section "AUTHORS (ALL TIME)" "AUTHORS (6 MONTHS)" "get_authors" "get_authors '6 months ago'"
+
+echo "--------------------------------------------------------------------------------"
