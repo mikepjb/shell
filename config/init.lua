@@ -2,6 +2,7 @@
 --
 -- TODO ctags generation (universal ctags.. with deep tags)
 -- TODO port theme to ghostty and neovim
+-- TODO qwen in nvim
 
 local config = {
     -- Editing
