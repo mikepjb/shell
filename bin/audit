@@ -35,7 +35,8 @@ get_file_changes() {
 }
 
 get_hotspots() {
-    git log -i -E --grep="fix|bug|broken" --name-only --format='' | grep -v '^$' \
+    git log -i -E --grep="revert|hotfix|emergency|rollback|fix|bug|broken" \
+        --name-only --format='' | grep -v '^$' \
         | sort | uniq -c | sort -nr | head -n "$TOP_N" \
         | condense_path
 }

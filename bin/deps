@@ -65,15 +65,14 @@ echo "--------------------------"
 
 if [[ -z "$to_install" ]]; then
     echo "All dependencies are already satisfied."
-    exit 0
-fi
-
-echo "Final install list: $to_install"
-
-if [[ "$OS" == "Linux" ]]; then
-    sudo pacman -S --needed $to_install
 else
-    brew install $to_install
+    echo "Final install list: $to_install"
+
+    if [[ "$OS" == "Linux" ]]; then
+        sudo pacman -S --needed $to_install
+    else
+        brew install $to_install
+    fi
 fi
 
 echo "--------------------------"
@@ -84,20 +83,20 @@ pkg_dir="$HOME/.config/nvim/pack/base/start"
 
 mkdir -p $pkg_dir
 
-if [[ -f $pkg_dir/telescope.nvim ]]; then
+if [[ ! -d $pkg_dir/telescope.nvim ]]; then
     git clone https://github.com/nvim-telescope/telescope.nvim.git \
         $pkg_dir/telescope.nvim \
         --depth=1
 fi
 
-if [[ -f $pkg_dir/plenary.nvim ]]; then
+if [[ ! -d $pkg_dir/plenary.nvim ]]; then
 git clone https://github.com/nvim-lua/plenary.nvim.git \
     $pkg_dir/plenary.nvim \
     --depth=1
 fi
 
 
-if [[ -f $pkg_dir/telescope-fzf-native.nvim ]]; then
+if [[ ! -d $pkg_dir/telescope-fzf-native.nvim ]]; then
     git clone https://github.com/nvim-telescope/telescope-fzf-native.nvim.git \
         $pkg_dir/telescope-fzf-native.nvim \
         --depth=1
@@ -105,3 +104,16 @@ if [[ -f $pkg_dir/telescope-fzf-native.nvim ]]; then
     cd $pkg_dir/telescope-fzf-native.nvim && make && cd -
 fi
 
+echo 'Ensuring other vim plugins are available'
+
+if [[ ! -d $pkg_dir/vim-fireplace ]]; then
+    git clone https://github.com/tpope/vim-fireplace.git \
+        $pkg_dir/vim-fireplace \
+        --depth=1
+fi
+
+if [[ ! -d $pkg_dir/vim-fugitive ]]; then
+    git clone https://github.com/tpope/vim-fugitive.git \
+        $pkg_dir/vim-fugitive \
+        --depth=1
+fi

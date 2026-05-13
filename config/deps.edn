@@ -1,6 +1,14 @@
 ;; User level Clojure config
 {:aliases
- {:repl {:main-opts ["-e" "(require '[clojure.repl :refer [doc source]])" "-r"]}}
- {:#cljs {:extra-deps
-          {org.clojure./clojurescript {:mvn/version "1.12.116"}}
-          :main-opts ["-m" "cljs.main" "-r"]}}}
+ {:dev
+  {:extra-deps {nrepl/nrepl {:mvn/version "1.7.0"}
+                cider/cider-nrepl {:mvn/version "0.59.0"}}
+   :main-opts ["-m" "nrepl.cmdline"
+               "--middleware" "[cider.nrepl/cider-middleware]"]}
+
+  :repl
+  {:main-opts ["-e" "(require '[clojure.repl :refer [doc source]])" "-r"]}
+
+  :cljs
+  {:extra-deps {org.clojure/clojurescript {:mvn/version "1.12.116"}}
+   :main-opts ["-m" "cljs.main" "-r"]}}}
