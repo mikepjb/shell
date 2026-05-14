@@ -1,17 +1,154 @@
 autocmd!
 
-syntax on
 set nocompatible
+syntax on
+filetype plugin indent on
+
+set clipboard=unnamed,unnamedplus
 set mouse=a
+set number " maybe disable and only enable for prog modes?
 set hidden
 set history=10000
 set expandtab
-set tabstop=2
-set shiftwidth=2
-set softtabstop=2
+set tabstop=2 shiftwidth=2 softtabstop=2
+set showmatch
+set incsearch
+set hlsearch
+set ignorecase smartcase
+set cursorline
+set cmdheight=1
+set switchbuf=useopen
+set showtabline=2 " always show the tab bar
+set laststatus=2 " always show the status line
+set winwidth=79
+set scrolloff=3
+set nobackup nowritebackup
+set backupdir=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+set directory=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+set backspace=indent,eol,start
+set showcmd
+set shell=bash
+set wildmode=longest,list
+set wildmenu
+set wildignore=*.class,*.jpg,*.png,*.gif,*.pdf
+set timeout timeoutlen=1000 ttimeoutlen=100
+set foldmethod=manual
+set nofoldenable " disable folding.. we may want this for markdown notes later
+set nojoinspaces " joining lines is smart about whitespace
+set autoread
+" set re=1 " ruby is faster on old regex engine, keep this for reference
+set diffopt=vertical " show diffs side by side not vertically
+set signcolumn=no
+" set termguicolors " probably don't want this tbh.
+set updatetime=200
+set completeopt=menu,preview
+set statusline=%<%f\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+
+set splitbelow splitright " set default new split behaviour
+set visualbell
+set autowrite " auto-save on :make and other commands
+
+" TODO translate old condensed version to the above
+" autocmd! | setglobal nocp enc=UTF-8 tgc path=.,,** clipboard=unnamedplus
+" syntax on | filetype plugin indent on | runtime macros/matchit.vim
+" set sb spr vb aw so=3 wmnu wig=*.class,*.jpg,*.png,*.gif,*.pdf
+" set hid mouse=a bs=indent,eol,start nobk noswapfile gd is hls scs ic
+" set wrap tw=79 cc=80 sw=4 ts=4 sts=4 sta ai " -- indentation/line width settings
+" set spell smd sc history=1000 undodir=~/.vim/backup undofile ur=10000
+" set sm cul nu ls=2 stal=2 statusline=%f\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+" let g:omni_sql_no_default_maps = 1 | let g:sh_noisk = 1 " prevent remaps
+" let g:netrw_banner = 0 | let g:netrw_liststyle = 3 " netrw config
+
+" Use persistent undo history.
+if !isdirectory("/tmp/.vim-undo-dir")
+    call mkdir("/tmp/.vim-undo-dir", "", 0700)
+endif
+set undodir=/tmp/.vim-undo-dir
+set undofile
+
+" prevent remaps
+let g:omni_sql_no_default_maps = 1
+let g:sh_noisk=1
+
+" let mapleader="," " see how well vim can handle alt keys these days first
+
 
 " ctrlp? fzf? selecta? selecta-bash variant?
 " fugitive
 " fireplace
 " ...ale? or hard core ctags that support java + lombok somehow?
 " potentially.. jsx?
+
+augroup base
+  " Compute syntax highlighting from beginning of file. (By default, vim only
+  " looks 200 lines back, which can make it highlight code incorrectly in some
+  " long files.)
+  autocmd BufEnter * :syntax sync fromstart
+	autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
+	autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
+	autocmd QuickFixCmdPost [^l]* nested cwindow
+	autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
+
+  " example of how to prep :make for filetypes
+  " either that or just have a `compile` script that selects on run?
+	autocmd FileType rust setlocal makeprg=cargo\ build
+augroup END
+
+" TODO compilation.. or testing
+" set makeprg => :make? then feeds back into vim
+" TODO generate ctags?
+" TODO open notes in tab with tcd to be able to search for files?
+" nnoremap gn :tabnew ~/.notes/src/SUMMARY.md<CR>
+" nnoremap gp :silent %!prettier --stdin-filepath %<CR>
+
+nnoremap <c-j> <c-w>j
+nnoremap <c-k> <c-w>k
+nnoremap <c-h> <c-w>h
+nnoremap <c-l> <c-w>l
+imap <c-l> <space>=><space>
+inoremap <c-c> <esc>
+nnoremap S <c-^>
+nnoremap <c-t> :tabnew<CR>
+nnoremap <c-q> :q<CR>
+nnoremap <C-g> :noh<CR><C-g>
+inoremap <C-l> <Space>=><Space>
+inoremap <C-u> <Space>-><Space>
+nnoremap <CR> :make<CR>
+nnoremap Q @q
+nnoremap gc :!ctags -R .<space>
+nnoremap gn :tabnew ~/.notes/src/SUMMARY.md<CR>
+nnoremap gp :silent %!prettier --stdin-filepath %<CR>
+
+cnoremap <expr> %% expand('%:h').'/'
+
+colorscheme retrobox
+
+" TODO fill your head
+let s:html =<<EOD
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New Page</title>
+    <meta name="description" content="New page description">
+    <meta property="og:title" content="New Page">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+      <text y='.9em' font-size='90'>⚡</text></svg>">
+  </head>
+  <body>
+  </body>
+</html>
+EOD
+call setreg("h", s:html)
+
+let s:css_reset =<<EOD
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0;}
+body { line-height: 1.5; font-size: 100%; -webkit-font-smoothing: antialiased; }
+img, picture, video, canvas, svg { display: block; max-width: 100%; }
+input, button, textarea, select { font: inherit; }
+p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+html { -moz-text-size-adjust: none; -webkit-text-size-adjust: none; text-size-adjust: none; }
+EOD
+call setreg("r", s:css_reset)
