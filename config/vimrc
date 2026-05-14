@@ -1,0 +1,17 @@
+autocmd!
+
+syntax on
+set nocompatible
+set mouse=a
+set hidden
+set history=10000
+set expandtab
+set tabstop=2
+set shiftwidth=2
+set softtabstop=2
+
+" ctrlp? fzf? selecta? selecta-bash variant?
+" fugitive
+" fireplace
+" ...ale? or hard core ctags that support java + lombok somehow?
+" potentially.. jsx?
