@@ -10,6 +10,7 @@ set number " maybe disable and only enable for prog modes?
 set hidden
 set history=10000
 set expandtab
+set cindent smartindent
 set tabstop=2 shiftwidth=2 softtabstop=2
 set showmatch
 set incsearch
@@ -22,6 +23,10 @@ set showtabline=2 " always show the tab bar
 set laststatus=2 " always show the status line
 set winwidth=79
 set scrolloff=3
+set shortmess=CTIoltOF
+" set fillchars=stl:─,stlnc:─,vert:│
+set fillchars=vert:│
+set notermguicolors
 set nobackup nowritebackup
 set backupdir=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
 set directory=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
@@ -43,6 +48,7 @@ set signcolumn=no
 set updatetime=200
 set completeopt=menu,preview
 set statusline=%<%f\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+" TODO grepprg grepformat
 
 set splitbelow splitright " set default new split behaviour
 set visualbell
@@ -92,6 +98,9 @@ augroup base
   " example of how to prep :make for filetypes
   " either that or just have a `compile` script that selects on run?
 	autocmd FileType rust setlocal makeprg=cargo\ build
+
+  " 'css', 'javascript', 'bash', 'go', 'sql', 'yaml', 'rust', 'clojure'
+  autocmd FileType ruby,haml,eruby,yaml,html,sass,cucumber set ai sw=2 sts=2 et
 augroup END
 
 " TODO compilation.. or testing

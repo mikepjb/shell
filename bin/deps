@@ -12,6 +12,7 @@ declare -A -r PACKAGES=(
     ['kubectl']=''
     ['make']=''
     ['nvim']='neovim'
+    ['vim']='gvim vim'
     ['pip']=''
     ['pipx']=''
     ['python']=''
