@@ -64,7 +64,7 @@ set statusline=%#User1#%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
 " TODO grepprg grepformat
 
 set splitbelow splitright " set default new split behaviour
-set visualbell
+set belloff=all
 set autowrite " auto-save on :make and other commands
 
 " TODO translate old condensed version to the above
