@@ -17,6 +17,7 @@ done
 
 mkdir -p "$HOME"/.config/{clojure,nvim,ghostty}
 mkdir -p "$HOME/.config/nvim/colors"
+mkdir -p "$HOME/.vim/colors"
 mkdir -p "$HOME/.config/ghostty/themes"
 
 ln -sfv "$shell_repo_root/config/deps.edn" "$HOME/.config/clojure/deps.edn"
@@ -24,6 +25,7 @@ ln -sfv "$shell_repo_root/config/ghostty.conf" "$HOME/.config/ghostty/config"
 ln -sfv "$shell_repo_root/config/spartan-dark.conf" "$HOME/.config/ghostty/themes/spartan-dark"
 ln -sfv "$shell_repo_root/config/spartan-light.conf" "$HOME/.config/ghostty/themes/spartan-light"
 ln -sfv "$shell_repo_root/config/vimrc" "$HOME/.vimrc"
+ln -sfv "$shell_repo_root/config/spartan.vim" "$HOME/.vim/colors/spartan.vim"
 ln -sfv "$shell_repo_root/config/init.lua" "$HOME/.config/nvim/init.lua"
 ln -sfv "$shell_repo_root/config/spartan.lua" "$HOME/.config/nvim/colors/spartan.lua"
 

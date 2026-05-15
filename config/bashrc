@@ -33,15 +33,8 @@ shopt -s histappend
 
 CDPATH=.:$HOME/src
 
-if [ -n "$NVIM" ]; then
-    export EDITOR='nvim --server "$NVIM" --remote'
-    alias vi='f() { nvim --server "$NVIM" --remote "$(realpath "$1")"; }; f'
-    # alias vi='nvim --server "$NVIM" --remote'
-    export GIT_EDITOR='nvim' # doesn't support --remote wait
-else
-    export EDITOR='nvim'
-    alias vi='nvim'
-fi
+export EDITOR='vim'
+alias vi='vim'
 
 alias k='kubectl' kc='kubectl config current-context'
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'

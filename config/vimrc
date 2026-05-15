@@ -21,6 +21,7 @@ set history=10000
 set expandtab
 set cindent smartindent
 set tabstop=2 shiftwidth=2 softtabstop=2
+" set colorcolumn
 set showmatch
 set incsearch
 set hlsearch
@@ -57,7 +58,9 @@ set signcolumn=no
 " set termguicolors " probably don't want this tbh.
 set updatetime=200
 set completeopt=menu,preview
-set statusline=%<%f\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+" set statusline=%<%f\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+set statusline=%#User1#%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+" set statusline=%#User1#%f%*%< (%{&ft})%m%r%h%w %= ( %3l,%3c,%3p%% )
 " TODO grepprg grepformat
 
 set splitbelow splitright " set default new split behaviour
@@ -101,6 +104,10 @@ let g:sh_noisk=1
 "     vim.api.nvim_feedkeys(':e ' .. vim.fn.expand('%:p:h') .. '/', 'n', true)
 " end
 
+" Define the command :Hi to show highlight info under cursor
+command! Hi echo "Group: " . synIDattr(synID(line("."), col("."), 1), "name") 
+    \ . " | Links to: " . synIDattr(synIDtrans(synID(line("."), col("."), 1)), "name")
+
 " TODO some kind of.. resumable wrapper around REPLs? probs overkill we have
 " fireplace and I don't really use others...
 " TODO some kinda vim -> sqlite/psql interaction? I know there's DadBod!
@@ -131,6 +138,7 @@ augroup END
 " nnoremap gn :tabnew ~/.notes/src/SUMMARY.md<CR>
 " nnoremap gp :silent %!prettier --stdin-filepath %<CR>
 
+nnoremap Y y$
 nnoremap <c-j> <c-w>j
 nnoremap <c-k> <c-w>k
 nnoremap <c-h> <c-w>h
@@ -148,6 +156,7 @@ nnoremap <M-p> :cprevious<CR>
 nnoremap <CR> :make<CR>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :tabnew ~/.notes/index.md<CR>
+nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap <M-1> 1gt
 nnoremap <M-2> 2gt
 nnoremap <M-3> 3gt
@@ -157,9 +166,7 @@ nnoremap gc :!ctags -R .<space>
 nnoremap gn :tabnew ~/.notes/src/SUMMARY.md<CR>
 nnoremap gp :silent %!prettier --stdin-filepath %<CR>
 
-cnoremap <expr> %% expand('%:h').'/'
-
-colorscheme retrobox
+colorscheme spartan
 
 " TODO fill your head
 let s:html =<<EOD
@@ -216,3 +223,15 @@ function! SelectaFile(path, glob, command)
 endfunction
 
 nnoremap <space> :call SelectaFile(".", "*", ":edit")<cr>
+
+" TODO also needs to remove the old buffer
+function! RenameFile()
+    let old_name = expand('%')
+    let new_name = input('New file name: ', expand('%'), 'file')
+    if new_name != '' && new_name != old_name
+        exec ':saveas ' . new_name
+        exec ':silent !rm ' . old_name
+        redraw!
+    endif
+endfunction
+map <M-r> :call RenameFile()<cr>
