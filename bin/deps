@@ -81,6 +81,7 @@ echo "--------------------------"
 echo 'Ensuring neovim telescope is available'
 
 pkg_dir="$HOME/.config/nvim/pack/base/start"
+local_bin="$HOME/.local/bin"
 
 mkdir -p $pkg_dir
 
@@ -117,4 +118,10 @@ if [[ ! -d $pkg_dir/vim-fugitive ]]; then
     git clone https://github.com/tpope/vim-fugitive.git \
         $pkg_dir/vim-fugitive \
         --depth=1
+fi
+
+if [[ ! -f $local_bin/selecta ]]; then
+  curl -L -o "$local_bin/selecta" \
+    https://github.com/garybernhardt/selecta/raw/refs/heads/master/selecta
+  chmod +x "$local_bin/selecta"
 fi

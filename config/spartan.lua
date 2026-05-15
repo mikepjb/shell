@@ -23,8 +23,8 @@ local colors = {
     sapphire = 4,
 
     fg = 'NONE', -- inherit terminal fg text
-    fg2 = 7, -- fg+
-    fg3 = 15, -- fg++
+    fg_p = 7, -- fg+
+    fg_pp = 15, -- fg++
 
     bg = 'NONE', -- inherit terminal bg text
     bg_p = 0, -- bg+ very light for column line
@@ -49,14 +49,19 @@ hl('CursorColumn', {})
 hl('ColorColumn', { ctermbg = colors.bg_p })
 hl('LineNr', { ctermfg = colors.bg_pp })
 hl('CursorLineNr', { ctermfg = colors.yellow, ctermbg = colors.bg_pp })
-hl('StatusLine', {})
-hl('StatusLineNC', { ctermfg = colors.bg_pp })
+hl('StatusLine', { ctermfg = colors.fg, ctermbg = colors.bg_p })
+hl('StatusLineNC', { ctermfg = colors.fg, ctermbg = colors.bg_p })
+hl('TabLine', { ctermfg = colors.bg_pp, bg = colors.fg_p })
+hl('TabLineFill', { ctermfg = colors.bg_p, ctermbg = colors.bg_p })
+hl('TabLineSel', { ctermfg = colors.white, ctermbg = colors.bg_pp })
+hl('WildMenu', { ctermfg = colors.bg_p, ctermbg = colors.yellow })
+hl('Directory', { ctermfg = colors.sapphire })
 hl('User1', { ctermfg = colors.sapphire })
 hl('VertSplit', { ctermfg = colors.bg_pp })
 hl('WinSeparator', { ctermfg = colors.bg_pp })
 hl('Visual', { ctermfg = colors.yellow, ctermbg = colors.bg_p })
-hl('Search', { ctermbg = colors.yellow })
-hl('IncSearch', { ctermbg = colors.yellow })
+hl('Search', { ctermfg = colors.yellow })
+hl('IncSearch', { ctermfg = colors.cyan })
 hl('Pmenu', { ctermfg = colors.sapphire, ctermbg = colors.bg_p })
 hl('PmenuSel', { ctermfg = colors.lavender, ctermbg = colors.bg_p })
 hl('MatchParen', { ctermfg = colors.bright_magenta })
@@ -69,10 +74,10 @@ hl('MoreMsg', { ctermfg = colors.teal, ctermbg = colors.bg_p })
 hl('Question', { ctermfg = colors.cyan, ctermbg = colors.bg_p })
 
 -- Syntax highlighting
-hl('Comment', { ctermfg = colors.fg3 })
+hl('Comment', { ctermfg = colors.fg_pp })
 hl('Title', { ctermfg = colors.yellow })
 hl('String', { ctermfg = colors.teal })
-hl('Function', { ctermfg = colors.fg2 })
+hl('Function', { ctermfg = colors.fg_p })
 hl('Delimiter', { ctermfg = colors.sapphire })
 hl('Special', { ctermfg = colors.teal })
 hl('Identifier', { ctermfg = colors.sapphire })
@@ -83,11 +88,6 @@ hl('Todo', { ctermfg = colors.yellow })
 hl('Added', { ctermfg = colors.green, ctermbg = colors.bg_p })
 hl('Removed', { ctermfg = colors.red, ctermbg = colors.bg_p })
 hl('gitcommitBranch', { ctermfg = colors.yellow })
-hl('TabLine', { ctermfg = colors.bg_pp, ctermbg = colors.bg_p })
-hl('TabLineFill', { ctermfg = colors.bg_p, ctermbg = colors.bg_p })
-hl('TabLineSel', { ctermfg = colors.white, ctermbg = colors.bg_pp })
-hl('WildMenu', { ctermfg = colors.bg_p, ctermbg = colors.yellow })
-hl('Directory', { ctermfg = colors.sapphire })
 
 hl('markdownCode', { ctermfg = colors.cyan })
 hl('markdownCodeBlock', { ctermfg = colors.cyan })

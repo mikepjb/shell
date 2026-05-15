@@ -4,10 +4,19 @@ set nocompatible
 syntax on
 filetype plugin indent on
 
-set clipboard=unnamed,unnamedplus
+" editing
+
+" UI
 set mouse=a
 set number " maybe disable and only enable for prog modes?
-set hidden
+
+" editor
+set clipboard=unnamed,unnamedplus
+
+" search
+
+" language
+
 set history=10000
 set expandtab
 set cindent smartindent
@@ -24,6 +33,7 @@ set laststatus=2 " always show the status line
 set winwidth=79
 set scrolloff=3
 set shortmess=CTIoltOF
+set equalalways
 " set fillchars=stl:─,stlnc:─,vert:│
 set fillchars=vert:│
 set notermguicolors
@@ -85,6 +95,17 @@ let g:sh_noisk=1
 " ...ale? or hard core ctags that support java + lombok somehow?
 " potentially.. jsx?
 
+" TODO formatter - gopls/prettier etc
+" vim.api.nvim_create_user_command('TrimWhitespace', ':%s/\\s\\+$//e', {})
+" local function edit_relative()
+"     vim.api.nvim_feedkeys(':e ' .. vim.fn.expand('%:p:h') .. '/', 'n', true)
+" end
+
+" TODO some kind of.. resumable wrapper around REPLs? probs overkill we have
+" fireplace and I don't really use others...
+" TODO some kinda vim -> sqlite/psql interaction? I know there's DadBod!
+" TODO verify script (again.. maybe mix with makeprg?)
+
 augroup base
   " Compute syntax highlighting from beginning of file. (By default, vim only
   " looks 200 lines back, which can make it highlight code incorrectly in some
@@ -122,7 +143,15 @@ nnoremap <c-q> :q<CR>
 nnoremap <C-g> :noh<CR><C-g>
 inoremap <C-l> <Space>=><Space>
 inoremap <C-u> <Space>-><Space>
+nnoremap <M-n> :cnext<CR>
+nnoremap <M-p> :cprevious<CR>
 nnoremap <CR> :make<CR>
+nnoremap gi :e ~/.vimrc<CR>
+nnoremap gn :tabnew ~/.notes/index.md<CR>
+nnoremap <M-1> 1gt
+nnoremap <M-2> 2gt
+nnoremap <M-3> 3gt
+" TODO tab titles == :tcd?
 nnoremap Q @q
 nnoremap gc :!ctags -R .<space>
 nnoremap gn :tabnew ~/.notes/src/SUMMARY.md<CR>
@@ -161,3 +190,29 @@ p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
 html { -moz-text-size-adjust: none; -webkit-text-size-adjust: none; text-size-adjust: none; }
 EOD
 call setreg("r", s:css_reset)
+
+function! SelectaCommand(choice_command, selecta_args, vim_command)
+  try
+    exec a:vim_command . " " . SelectaOutput(a:choice_command, a:selecta_args)
+  catch /Vim:Interrupt/
+    " Swallow the ^C so that the redraw below happens; otherwise there will be
+    " leftovers from selecta on the screen
+    redraw!
+    return
+  endtry
+endfunction
+
+function! SelectaOutput(choice_command, selecta_args)
+  let selection = system(a:choice_command . " | selecta " . a:selecta_args)
+  " Escape spaces in the file name. That ensures that it's a single argument
+  " when concatenated with vim_command and run with exec.
+  let selection = substitute(selection, ' ', '\\ ', "g")
+  redraw!
+  return selection
+endfunction
+
+function! SelectaFile(path, glob, command)
+  call SelectaCommand("fd -t f . " . a:path, "", a:command)
+endfunction
+
+nnoremap <space> :call SelectaFile(".", "*", ":edit")<cr>
