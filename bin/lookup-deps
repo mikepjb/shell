@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CACHE_BASE="$HOME/.cache/vim-java-src"
+mkdir -p "$CACHE_BASE"
+
+# Case 1: Fetch and extract the core language source (JDK)
+if [[ "${1:-}" == "--level" && "${2:-}" == "lang" ]]; then
+    LOOKUP_LANG="${4:-java}" # defaults to java for now
+    
+    if [[ "$LOOKUP_LANG" == "java" ]]; then
+        SRC_ZIP="$HOME/.sdkman/candidates/java/current/lib/src.zip"
+        TARGET_DIR="$CACHE_BASE/jdk-src"
+
+        if [[ ! -f "$SRC_ZIP" ]]; then
+            echo "Error: SDKMAN Java source zip not found at $SRC_ZIP" >&2
+            exit 1
+        fi
+
+        if [[ ! -d "$TARGET_DIR" ]]; then
+            mkdir -p "$TARGET_DIR"
+            unzip -q "$SRC_ZIP" -d "$TARGET_DIR"
+            (cd "$TARGET_DIR" && ctags -R .)
+        fi
+        
+        echo "$TARGET_DIR"
+        exit 0
+    elif [[ "$LOOKUP_LANG" == "go" ]]; then
+      echo "/usr/lib/go"
+      exit 0
+    fi
+
+# Case 2: Take a jar chosen by Vim, extract it, and tag it
+elif [[ "${1:-}" == "--extract-jar" ]]; then
+    SELECTED_JAR="${2:-}"
+    
+    if [[ -z "$SELECTED_JAR" || ! -f "$SELECTED_JAR" ]]; then
+        echo "Error: Valid jar path required." >&2
+        exit 1
+    fi
+
+    JAR_BASENAME=$(basename "$SELECTED_JAR" .jar)
+    TARGET_DIR="$CACHE_BASE/deps/$JAR_BASENAME"
+
+    if [[ ! -d "$TARGET_DIR" ]]; then
+        mkdir -p "$TARGET_DIR"
+        unzip -q "$SELECTED_JAR" -d "$TARGET_DIR"
+        (cd "$TARGET_DIR" && ctags -R .)
+    fi
+
+    echo "$TARGET_DIR"
+    exit 0
+else
+    echo "Error: Invalid usage." >&2
+    exit 1
+fi

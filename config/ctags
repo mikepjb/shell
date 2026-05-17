@@ -1,0 +1,41 @@
+# vim: ft=conf
+# Format improvements
+--sort=yes
+--fields=+lKmnSz
+
+# Stop indexing package managers and dependencies
+--exclude=node_modules
+--exclude=bower_components
+--exclude=yarn.lock
+--exclude=package-lock.json
+--exclude=pnpm-lock.yaml
+--exclude=go.mod
+
+# Stop indexing builds, dist, and caches
+--exclude=dist
+--exclude=build
+--exclude=target
+--exclude=.next
+--exclude=.nuxt
+--exclude=.cache
+--exclude=.git
+--exclude=.github
+
+# Stop indexing minified files and source maps
+--exclude=*.min.js
+--exclude=*.js.map
+--exclude=*.css.map
+--exclude=*.json
+
+# Language mapping
+--langmap=JavaScript:+.jsx
+--langmap=TypeScript:+.tsx
+--langmap=TypeScript:+.d.ts
+--langmap=Clojure:+.cljs
+--langmap=Clojure:+.cljc
+# Catch the builder() method generated on the main class
+--regex-java=/^[ \t]*@Builder([ \t]*\(.*\))?[ \t]*\n[ \t]*(public|protected|private)?[ \t]*(class|interface)[ \t]+([A-Za-z0-9_]+)/builder/m,method,methods/
+
+# Catch the fluent setter methods inside the builder based on class fields
+# This looks for fields inside a class marked with @Builder
+--regex-java=/^[ \t]*([A-Za-z0-9_<>@]+)[ \t]+([A-Za-z0-9_]+);/\2/m,method,methods/

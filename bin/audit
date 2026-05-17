@@ -65,6 +65,7 @@ print_section() {
 
 echo "Auditing: $(basename "$PWD")"
 echo "Project Path: $(pwd)"
+echo "Number of TODOs: $(rg TODO | wc -l)"
 echo -e "--------------------------------------------------------------------------------\n"
 
 print_section "LINE COUNTS" "PACE (COMMITS/MO)" "get_line_counts" "get_pace"

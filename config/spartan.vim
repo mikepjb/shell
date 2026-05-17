@@ -58,8 +58,8 @@ call s:hl('CursorLineNr', {'fg': 'yellow'})
 
 call s:hl('StatusLine', {'fg': 'fg', 'bg': 'bg+'})
 call s:hl('StatusLineNC', {'fg': 'fg', 'bg': 'bg+'})
-call s:hl('TabLine', {'fg': 'bg++', 'bg': 'fg+'})
-call s:hl('TabLineFill', {'fg': 'bg+', 'bg': 'bg+'})
+call s:hl('TabLine', {'fg': 'fg', 'bg': 'bg+'})
+call s:hl('TabLineFill', {'fg': 'fg', 'bg': 'bg+'})
 call s:hl('TabLineSel', {'fg': 'fg', 'bg': 'bg++'})
 
 " is this nvim only?

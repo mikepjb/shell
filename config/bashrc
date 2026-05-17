@@ -37,6 +37,7 @@ export EDITOR='vim'
 alias vi='vim'
 
 alias k='kubectl' kc='kubectl config current-context'
+alias gc='ctags -R .' # generate ctags
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 alias gn='cd ~/.notes'
 alias nr='npm run'
