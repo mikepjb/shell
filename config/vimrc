@@ -4,79 +4,69 @@ set nocompatible
 syntax on
 filetype plugin indent on
 
-" editing
-
 " UI
 set mouse=a
-set number " maybe disable and only enable for prog modes?
-
-" editor
-set clipboard=unnamed,unnamedplus
-
-" search
-
-" language
-
-set hidden
-set history=10000
-set expandtab
-set cindent smartindent
-set tabstop=2 shiftwidth=2 softtabstop=2
-" set colorcolumn
-set showmatch
-set incsearch
-set hlsearch
-set ignorecase smartcase
+set number
+set colorcolumn=+1
 set cursorline
 set cmdheight=1
-set switchbuf=useopen
+set shortmess=CTIoltOF
 set showtabline=2 " always show the tab bar
 set laststatus=2 " always show the status line
 set winwidth=79
 set scrolloff=3
-set shortmess=CTIoltOF
-set equalalways
-" set fillchars=stl:─,stlnc:─,vert:│
 set fillchars=vert:│
 set notermguicolors
-set nobackup nowritebackup
-set backupdir=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
-set directory=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
-set backspace=indent,eol,start
-set showcmd
-set shell=bash
 set wildmode=longest,list
 set wildmenu
 set wildignore=*.class,*.jpg,*.png,*.gif,*.pdf
-set timeout timeoutlen=1000 ttimeoutlen=100
+set completeopt=menu,preview
+set showcmd
+set signcolumn=no
+set statusline=%#User1#%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+set belloff=all
+
+" editor
+set hidden
+set history=10000
+set clipboard=unnamed,unnamedplus
+set nobackup nowritebackup
+set backupdir=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+set directory=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+set timeout timeoutlen=1000 ttimeoutlen=100 updatetime=200
+set splitbelow splitright " set default new split behaviour
+set autowrite " auto-save on :make and other commands
+set autoindent
+
+" search
+set showmatch
+set incsearch
+set hlsearch
+set ignorecase smartcase
+
+" text/editing
+set cindent smartindent
+set tabstop=2 shiftwidth=2 softtabstop=2 expandtab
+set autoread
+set gdefault
+set wrap
+
+" language
+
+set switchbuf=useopen
+set equalalways
+set backspace=indent,eol,start
+set shell=bash
 set foldmethod=manual
 set nofoldenable " disable folding.. we may want this for markdown notes later
 set nojoinspaces " joining lines is smart about whitespace
-set autoread
 " set re=1 " ruby is faster on old regex engine, keep this for reference
 set diffopt=vertical " show diffs side by side not vertically
-set signcolumn=no
-" set termguicolors " probably don't want this tbh.
-set updatetime=200
-set completeopt=menu,preview
-" set statusline=%<%f\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
-set statusline=%#User1#%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
-" set statusline=%#User1#%f%*%< (%{&ft})%m%r%h%w %= ( %3l,%3c,%3p%% )
-" TODO grepprg grepformat
-if executable('rg')
-  " Use rg over grep
+
+if executable('rg') " N.B ripgrep searches all files by default
   set grepprg=rg\ --vimgrep\ --smart-case\ --follow
-  
-  " Tell Vim how to parse the rg output (file:line:col:message)
   set grepformat=%f:%l:%c:%m,%f:%l:%m
 endif
-" TODO setup tags for 3 levels, maybe with autocmd for FileType
-"set tags=./tags;,tags;,~/.vim/tags/stdlib
-set gdefault
-
-set splitbelow splitright " set default new split behaviour
-set belloff=all
-set autowrite " auto-save on :make and other commands
 
 " TODO translate old condensed version to the above
 " autocmd! | setglobal nocp enc=UTF-8 tgc path=.,,** clipboard=unnamedplus
@@ -130,12 +120,8 @@ let g:sh_noisk=1
 command! Hi echo "Group: " . synIDattr(synID(line("."), col("."), 1), "name") 
     \ . " | Links to: " . synIDattr(synIDtrans(synID(line("."), col("."), 1)), "name")
 
-" TODO some kind of.. resumable wrapper around REPLs? probs overkill we have
-" fireplace and I don't really use others...
-" TODO some kinda vim -> sqlite/psql interaction? I know there's DadBod!
-" TODO verify script (again.. maybe mix with makeprg?)
-
 augroup base
+  autocmd!
   " Compute syntax highlighting from beginning of file. (By default, vim only
   " looks 200 lines back, which can make it highlight code incorrectly in some
   " long files.)
@@ -144,21 +130,28 @@ augroup base
 	autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
 	autocmd QuickFixCmdPost [^l]* nested cwindow
 	autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
-
-  " example of how to prep :make for filetypes
-  " either that or just have a `compile` script that selects on run?
-	autocmd FileType rust setlocal makeprg=cargo\ build
-
-  " 'css', 'javascript', 'bash', 'go', 'sql', 'yaml', 'rust', 'clojure'
-  autocmd FileType ruby,haml,eruby,yaml,html,sass,cucumber set ai sw=2 sts=2 et
+	autocmd FileType markdown setlocal nonumber
+  autocmd FileType go,rust,sql,yaml,java ts=4 sw=4 sts=4 et
+  autocmd FileType ruby,haml,eruby,yaml,html,sass,cucumber setl ai sw=2 sts=2 et
+  autocmd FileType csv,json,yaml setl nowrap
 augroup END
 
-" TODO compilation.. or testing
-" set makeprg => :make? then feeds back into vim
-" TODO generate ctags?
-" TODO open notes in tab with tcd to be able to search for files?
-" nnoremap gn :tabnew ~/.notes/src/SUMMARY.md<CR>
-" nnoremap gp :silent %!prettier --stdin-filepath %<CR>
+function! TabContent()
+  let s = ''
+  for i in range(tabpagenr('$'))
+    let tabnr = i + 1 " range() starts at 0
+    let s .= '%' . tabnr . 'T' " Setup click target and highlighting
+    let s .= (tabnr == tabpagenr() ? '%#TabLineSel#' : '%#TabLine#')
+    let tab_pwd = gettabvar(tabnr, 'tab_pwd', getcwd())
+    let folder_name = fnamemodify(tab_pwd, ':t')
+    let s .= empty(folder_name) ? ' [/] ' : ' ' . folder_name . ' '
+  endfor
+  
+  return s .. '%#TabLineFill#'
+endfunction
+
+set tabline=%!TabContent()
+" autocmd TabNew,TabEntered,DirChanged * let t:tab_pwd = getcwd()
 
 nnoremap Y y$
 nnoremap <c-j> <c-w>j
@@ -176,12 +169,10 @@ inoremap <C-u> <Space>-><Space>
 nnoremap <M-n> :cnext<CR>
 nnoremap <M-p> :cprevious<CR>
 nnoremap <CR> :call Make()<CR>
-" nnoremap gd <C-]>
+" nnoremap gd <C-]> " conflicts with vim-fireplace
 nnoremap gD g<C-]>
 nnoremap gi :e ~/.vimrc<CR>
-" TODO consider using buffer with :lcd to locally set cd for easier switching?
-" does/can this also work for src code lookup? lang/dep source?
-nnoremap gn :tabnew ~/.notes/index.md<CR>
+nnoremap gn :lcd ~/.notes <bar> e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gc :!ctags -R .<space>
 nnoremap gp :silent %!prettier --stdin-filepath %<CR>
@@ -189,7 +180,6 @@ inoremap <M-o> <C-x><C-]>
 nnoremap <M-1> 1gt
 nnoremap <M-2> 2gt
 nnoremap <M-3> 3gt
-" TODO tab titles == :tcd?
 nnoremap Q @q
 cnoremap        <C-A> <Home>
 cnoremap        <C-B> <Left>
@@ -198,7 +188,6 @@ cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
 
 colorscheme spartan
 
-" TODO fill your head
 let s:html =<<EOD
 <html>
   <head>
@@ -266,15 +255,12 @@ function! RenameFile()
 endfunction
 map <M-r> :call RenameFile()<cr>
 
-" TODO complete Make for chosen langs.. alternative is :make + autocmds
-" for tests.. you can do the same kind of setup
-" autocmd FileType java call SetupJavaBuild()
-" autocmd FileType rust compiler cargo
-" autocmd FileType c compiler gcc
 function! Make() abort " FYI compiler just sets makeprg and errorformat/efm
   if &filetype ==# 'java'
     if filereadable('pom.xml')
       compiler maven
+    else
+      " makeprg?
     end
   else
     echom "No make action defined for " .. &filetype
@@ -284,17 +270,25 @@ function! Make() abort " FYI compiler just sets makeprg and errorformat/efm
   make
 endfunction
 
-" TODO fill these in
-" command! Build setlocal makeprg=npm\ run\ build | make
-" command! Test  setlocal makeprg=npm\ test      | make
-" command! Lint  setlocal makeprg=npm\ run\ lint | make
-" command! Build setlocal makeprg=npm\ run\ build | make
-" command! Test  setlocal makeprg=npm\ test      | make
-" command! Lint  setlocal makeprg=npm\ run\ lint | make
+" TODO needs to be augmented to run whole test suite, by default runs the
+" current file as a test
 function! Test() abort
+  if &filetype ==# 'java'
+    setlocal makeprg='./gradlew test --tests %:t:r --console=plain'
+    setlocal errorformat
+  else
+    echom "No make action defined for " .. &filetype
+    return
+  end
+
+  make
 endfunction
 
 function! Lint() abort
+endfunction
+
+function! Format() abort
+  " nnoremap gp :silent %!prettier --stdin-filepath %<CR>
 endfunction
 
 " TODO to help with source navigation, can we use ctags to list all functions
