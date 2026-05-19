@@ -131,7 +131,7 @@ augroup base
 	autocmd QuickFixCmdPost [^l]* nested cwindow
 	autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
 	autocmd FileType markdown setlocal nonumber
-  autocmd FileType go,rust,sql,yaml,java ts=4 sw=4 sts=4 et
+  autocmd FileType go,rust,sql,yaml,java setl ts=4 sw=4 sts=4 et
   autocmd FileType ruby,haml,eruby,yaml,html,sass,cucumber setl ai sw=2 sts=2 et
   autocmd FileType csv,json,yaml setl nowrap
 augroup END

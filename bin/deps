@@ -99,6 +99,12 @@ if [[ ! -d $pkg_dir/vim-fugitive ]]; then
         --depth=1
 fi
 
+if [[ ! -d $pkg_dir/vim-dadbod ]]; then
+    git clone https://github.com/tpope/vim-dadbod.git \
+        $pkg_dir/vim-dadbod \
+        --depth=1
+fi
+
 if [[ ! -f $local_bin/selecta ]]; then
   curl -L -o "$local_bin/selecta" \
     https://github.com/garybernhardt/selecta/raw/refs/heads/master/selecta
