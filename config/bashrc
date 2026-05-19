@@ -16,8 +16,7 @@ mac_paths="/sbin:/opt/homebrew/bin"
 sys_paths="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin"
 rust_paths="$HOME/.cargo/bin"
 user_paths="$HOME/.local/bin"
-opencode="/Users/mike.bruce/.opencode/bin"
-export PATH="$user_paths:$mac_paths:$sys_paths:$go_paths:$rust_paths:$deno_paths:$node_paths:$opencode"
+export PATH="$user_paths:$mac_paths:$sys_paths:$go_paths:$rust_paths:$deno_paths:$node_paths"
 
 if [[ -n "${PREFIX+x}" ]]; then # for termux
     export PATH="$PREFIX/bin:$PATH"
@@ -37,6 +36,8 @@ alias vi='vim'
 
 alias k='kubectl'
 alias kc='kubectl config current-context'
+alias reload='source ~/.local/bin/reload'
+alias cup='git -C ~/src/shell up && git -C ~/.notes up' # config up
 alias gc='ctags -R .' # generate ctags
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
 alias gn='cd ~/.notes'

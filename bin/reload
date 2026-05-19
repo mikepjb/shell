@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-script_dir=$(dirname "$(realpath "$0")")
+script_dir=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
 shell_repo_root=$(realpath "$script_dir/..")
 sconf="$shell_repo_root/config"
 local_bin_dir="$HOME/.local/bin"
 
 echo 'Symlinking configurations'
+
+mkdir -p "$local_bin_dir"
 
 # Extensionless config files go to $HOME/.$filename
 for config_file in "$sconf/"*; do
@@ -34,7 +36,7 @@ ln -sfv "$sconf/spartan.lua" "$HOME/.config/nvim/colors/spartan.lua"
 echo 'Symlinking scripts from ./bin'
 
 for bin_file in "$shell_repo_root/bin/"*; do
-    ln -sfv "$bin_file" "$local_bin_dir"
+  ln -sfv "$bin_file" "$local_bin_dir/$(basename $bin_file)"
 done
 
 echo 'Reloading all configurations'
