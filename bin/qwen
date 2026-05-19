@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# N.B 2B hallucenates too much (i.e thinks lucene-clojure exists)
+# 4B seems to be a good balance of speed and quality
+# ..having said that, perhaps this is what we want - the subset of more helpful
+# info is going to be around using a core/stable stdlib vs. figuring out
+# individual libraries.
 
 model_file="$HOME/models/Qwen3.5-4B-UD-Q3_K_XL.gguf" 
 

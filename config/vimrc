@@ -60,6 +60,7 @@ set shell=bash
 set foldmethod=manual
 set nofoldenable " disable folding.. we may want this for markdown notes later
 set nojoinspaces " joining lines is smart about whitespace
+set re=2 " typescript essentially hangs and disables syntax on re=1
 " set re=1 " ruby is faster on old regex engine, keep this for reference
 set diffopt=vertical " show diffs side by side not vertically
 
@@ -67,17 +68,6 @@ if executable('rg') " N.B ripgrep searches all files by default
   set grepprg=rg\ --vimgrep\ --smart-case\ --follow
   set grepformat=%f:%l:%c:%m,%f:%l:%m
 endif
-
-" TODO translate old condensed version to the above
-" autocmd! | setglobal nocp enc=UTF-8 tgc path=.,,** clipboard=unnamedplus
-" syntax on | filetype plugin indent on | runtime macros/matchit.vim
-" set sb spr vb aw so=3 wmnu wig=*.class,*.jpg,*.png,*.gif,*.pdf
-" set hid mouse=a bs=indent,eol,start nobk noswapfile gd is hls scs ic
-" set wrap tw=79 cc=80 sw=4 ts=4 sts=4 sta ai " -- indentation/line width settings
-" set spell smd sc history=1000 undodir=~/.vim/backup undofile ur=10000
-" set sm cul nu ls=2 stal=2 statusline=%f\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
-" let g:omni_sql_no_default_maps = 1 | let g:sh_noisk = 1 " prevent remaps
-" let g:netrw_banner = 0 | let g:netrw_liststyle = 3 " netrw config
 
 " Use persistent undo history.
 if !isdirectory("/tmp/.vim-undo-dir")
@@ -101,21 +91,6 @@ endfunction
 let g:omni_sql_no_default_maps = 1
 let g:sh_noisk=1
 
-" let mapleader="," " see how well vim can handle alt keys these days first
-
-
-" ctrlp? fzf? selecta? selecta-bash variant?
-" fugitive
-" fireplace
-" ...ale? or hard core ctags that support java + lombok somehow?
-" potentially.. jsx?
-
-" TODO formatter - gopls/prettier etc
-" vim.api.nvim_create_user_command('TrimWhitespace', ':%s/\\s\\+$//e', {})
-" local function edit_relative()
-"     vim.api.nvim_feedkeys(':e ' .. vim.fn.expand('%:p:h') .. '/', 'n', true)
-" end
-
 " Define the command :Hi to show highlight info under cursor
 command! Hi echo "Group: " . synIDattr(synID(line("."), col("."), 1), "name") 
     \ . " | Links to: " . synIDattr(synIDtrans(synID(line("."), col("."), 1)), "name")
@@ -125,7 +100,7 @@ augroup base
   " Compute syntax highlighting from beginning of file. (By default, vim only
   " looks 200 lines back, which can make it highlight code incorrectly in some
   " long files.)
-  autocmd BufEnter * :syntax sync fromstart
+  " autocmd BufEnter * :syntax sync fromstart
 	autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
 	autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
 	autocmd QuickFixCmdPost [^l]* nested cwindow
@@ -175,7 +150,7 @@ nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :lcd ~/.notes <bar> e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gc :!ctags -R .<space>
-nnoremap gp :silent %!prettier --stdin-filepath %<CR>
+nnoremap gp :Format<CR>
 inoremap <M-o> <C-x><C-]>
 nnoremap <M-1> 1gt
 nnoremap <M-2> 2gt
@@ -287,9 +262,18 @@ endfunction
 function! Lint() abort
 endfunction
 
+" TODO not sure this is the correct format
 function! Format() abort
-  " nnoremap gp :silent %!prettier --stdin-filepath %<CR>
+  if &filetype ==# 'go'
+    silent %!goimports -w %
+  elseif &filetype ==# 'javascript' " need to be for group of js/ts/css
+    silent %!prettier --stdin-filepath %
+  else
+    echom "No make action defined for " .. &filetype
+  end
 endfunction
+
+command! Format call Format()
 
 " TODO to help with source navigation, can we use ctags to list all functions
 " in the buffer? or does vim support this natively like emacs does with imenu?
