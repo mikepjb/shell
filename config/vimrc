@@ -49,7 +49,7 @@ set cindent smartindent
 set tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 set autoread
 set gdefault
-set wrap
+set nowrap
 
 " language
 
@@ -61,7 +61,6 @@ set foldmethod=manual
 set nofoldenable " disable folding.. we may want this for markdown notes later
 set nojoinspaces " joining lines is smart about whitespace
 set re=2 " typescript essentially hangs and disables syntax on re=1
-" set re=1 " ruby is faster on old regex engine, keep this for reference
 set diffopt=vertical " show diffs side by side not vertically
 
 if executable('rg') " N.B ripgrep searches all files by default
@@ -91,10 +90,6 @@ endfunction
 let g:omni_sql_no_default_maps = 1
 let g:sh_noisk=1
 
-" Define the command :Hi to show highlight info under cursor
-command! Hi echo "Group: " . synIDattr(synID(line("."), col("."), 1), "name") 
-    \ . " | Links to: " . synIDattr(synIDtrans(synID(line("."), col("."), 1)), "name")
-
 augroup base
   autocmd!
   " Compute syntax highlighting from beginning of file. (By default, vim only
@@ -108,7 +103,6 @@ augroup base
 	autocmd FileType markdown setlocal nonumber
   autocmd FileType go,rust,sql,yaml,java setl ts=4 sw=4 sts=4 et
   autocmd FileType ruby,haml,eruby,yaml,html,sass,cucumber setl ai sw=2 sts=2 et
-  autocmd FileType csv,json,yaml setl nowrap
 augroup END
 
 function! TabContent()
@@ -144,7 +138,7 @@ inoremap <C-u> <Space>-><Space>
 nnoremap <M-n> :cnext<CR>
 nnoremap <M-p> :cprevious<CR>
 nnoremap <CR> :call Make()<CR>
-" nnoremap gd <C-]> " conflicts with vim-fireplace
+nnoremap gd <C-]> " check if this conflicts with vim-fireplace
 nnoremap gD g<C-]>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :lcd ~/.notes <bar> e ~/.notes/index.md<CR>
@@ -218,17 +212,27 @@ endfunction
 
 nnoremap <space> :call SelectaFile(".", "*", ":edit")<cr>
 
-" TODO also needs to remove the old buffer
-function! RenameFile()
-    let old_name = expand('%')
-    let new_name = input('New file name: ', expand('%'), 'file')
-    if new_name != '' && new_name != old_name
-        exec ':saveas ' . new_name
-        exec ':silent !rm ' . old_name
+" Rename the current file on disk and clean up the old buffer
+function! RenameFile() abort
+    let l:old_name = expand('%')
+    if empty(l:old_name)
+        echoerr "Current buffer has no file name!"
+        return
+    endif
+
+    let l:new_name = input('New file name: ', l:old_name, 'file')
+    
+    if l:new_name !=# '' && l:new_name !=# l:old_name
+        execute 'saveas ' . fnameescape(l:new_name)
+        execute 'silent !rm ' . shellescape(l:old_name)
+        execute 'bdelete #'
         redraw!
+        echom "Renamed " . l:old_name . " to " . l:new_name
     endif
 endfunction
-map <M-r> :call RenameFile()<cr>
+
+" Using nnoremap (remap disabled, normal mode only) is safer for shortcuts
+nnoremap <M-r> :call RenameFile()<CR>
 
 function! Make() abort " FYI compiler just sets makeprg and errorformat/efm
   if &filetype ==# 'java'
@@ -262,15 +266,24 @@ endfunction
 function! Lint() abort
 endfunction
 
-" TODO not sure this is the correct format
 function! Format() abort
+  let l:view = winsaveview()
+
   if &filetype ==# 'go'
-    silent %!goimports -w %
-  elseif &filetype ==# 'javascript' " need to be for group of js/ts/css
-    silent %!prettier --stdin-filepath %
+    silent %!goimports
+  elseif index(['javascript', 'typescript', 'css', 'json', 'javascriptreact', 'typescriptreact'], &filetype) >= 0
+    execute 'silent %!prettier --stdin-filepath ' . shellescape(expand('%'))
   else
-    echom "No make action defined for " .. &filetype
-  end
+    echom "No format action defined for " .. &filetype
+    return
+  endif
+
+  if v:shell_error " If the external command failed, undo the mess
+    undo
+    echoerr "Formatter failed!"
+  endif
+
+  call winrestview(l:view)
 endfunction
 
 command! Format call Format()
@@ -298,22 +311,16 @@ function! LookupSource(level, ...) abort
     let l:script_path = expand('~/.local/bin/lookup-deps')
     let l:result_path = ''
 
-    " LEVEL: LANG (Core JDK)
     if a:level ==# 'lang'
         let l:cmd = printf('%s --level lang --lang %s', shellescape(l:script_path), shellescape(l:lang))
         let l:result_path = trim(system(l:cmd))
 
-    " mvn dependency:sources
-    " LEVEL: DEP (Maven + Gradle Ecosystem)
     elseif a:level ==# 'dep'
         if l:lang ==# 'java'
             let l:m2 = expand('~/.m2/repository')
             let l:gradle = expand('~/.gradle/caches/modules-2/files-2.1')
 
-            " mvn dependency:sources
-            " clojure -Spom && mvn dependency:sources && rm pom.xml
-            " Structure the fd command: fd -g <pattern> <path1> <path2>
-            let l:find_cmd = printf('fd -g "*-sources.jar" %s %s', shellescape(l:m2), shellescape(l:gradle))
+            let l:find_cmd = printf('fd -g "*.jar" %s %s', shellescape(l:m2), shellescape(l:gradle))
             let l:selected_jar = trim(system(l:find_cmd . ' | selecta'))
             redraw!
 
