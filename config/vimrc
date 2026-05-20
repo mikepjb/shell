@@ -52,7 +52,6 @@ set gdefault
 set nowrap
 
 " language
-
 set switchbuf=useopen
 set equalalways
 set backspace=indent,eol,start
@@ -95,7 +94,7 @@ augroup base
   " Compute syntax highlighting from beginning of file. (By default, vim only
   " looks 200 lines back, which can make it highlight code incorrectly in some
   " long files.)
-  " autocmd BufEnter * :syntax sync fromstart
+  autocmd BufEnter * :syntax sync fromstart
 	autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
 	autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
 	autocmd QuickFixCmdPost [^l]* nested cwindow
@@ -127,7 +126,7 @@ nnoremap <c-j> <c-w>j
 nnoremap <c-k> <c-w>k
 nnoremap <c-h> <c-w>h
 nnoremap <c-l> <c-w>l
-imap <c-l> <space>=><space>
+inoremap <c-l> <space>=><space>
 inoremap <c-c> <esc>
 nnoremap S <c-^>
 nnoremap <c-t> :tabnew<CR>
@@ -143,7 +142,7 @@ nnoremap gD g<C-]>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :lcd ~/.notes <bar> e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
-nnoremap gc :!ctags -R .<space>
+nnoremap gc :!ctags -R .<CR>
 nnoremap gp :Format<CR>
 inoremap <M-o> <C-x><C-]>
 nnoremap <M-1> 1gt
@@ -353,3 +352,5 @@ endfunction
 " Bind commands to match your workflow
 command! -nargs=? LookupLang call LookupSource('lang', <f-args>)
 command! -nargs=? LookupDep  call LookupSource('dep', <f-args>)
+
+" TODO consult - fire curl in bg, write to a common file with ---- prepended

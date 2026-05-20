@@ -12,8 +12,8 @@ local cmd = vim.api.nvim_create_user_command
 local map = vim.keymap.set
 
 -- editing
-opt.tabstop = 4
-opt.shiftwidth = 4
+opt.tabstop = 2
+opt.shiftwidth = 2
 opt.expandtab = true
 opt.smartindent = true
 opt.wrap = false
@@ -26,12 +26,13 @@ opt.statusline = " %#User1#%f%*%< (%{&ft})%m%r%h%w %= ( %3l,%3c,%3p%% )"
 opt.number = true
 opt.colorcolumn = '+1'
 opt.termguicolors = false
-opt.showtabline=2
-opt.laststatus=2
+opt.showtabline=  2
+opt.laststatus = 2
 opt.wildmode = 'longest:full,full'
 opt.wildignore = '*.o,*.obj,*.pyc,*.class,*/.git/*,*/node_modules/*'
 opt.completeopt = { 'menu', 'menuone', 'noselect' }
 opt.pumheight = 15
+-- opt.shortmess=CTIoltOF
 
 -- editor
 opt.clipboard = 'unnamedplus'
@@ -47,8 +48,11 @@ opt.hlsearch = true
 opt.ignorecase = true
 opt.smartcase = true
 opt.gdefault = true
-opt.grepprg = vim.fn.executable("rg") == 1 and 'rg --vimgrep' or 'grep -rn $* .'
-opt.grepformat = vim.fn.executable("rg") == 1 and '%f:%l:%c:%m' or '%f:%l:%m'
+
+if vim.fn.executable('rg') then
+  opt.grepprg = 'rg --vimgrep --smart-case --follow'
+  opt.grepformat = '%f:%l:%c:%m'
+end
 
 -- language
 optg.markdown_fenced_languages = { 'css', 'bash', 'sql', 'clojure' }
@@ -80,7 +84,10 @@ end)
 map("n", "ge", function()
     vim.api.nvim_feedkeys(':e ' .. vim.fn.expand('%:p:h') .. '/', 'n', true)
 end)
-map('n', '<space>', ':Telescope find_files<CR>')
+-- map('n', '<space>', ':Telescope find_files<CR>')
+map('n', '<space>', function()
+  require('telescope.builtin').find_files({ previewer = false })
+end, { desc = 'Telescope find files without preview' })
 map('n', 'gb', ':G blame<CR>')
 map('n', '<M-c>', ':Connect<CR>')
 
@@ -129,10 +136,6 @@ end)
 
 cmd('TrimWhitespace', ':%s/\\s\\+$//e', {})
 
--- TODO current AI integration, is there a better way to do this?
--- smaller model?
--- sync response only but streamed?
--- ! type stream command -> buffer to easily copy?
 local function consult()
     local mode = vim.api.nvim_get_mode().mode
     local context = ""
