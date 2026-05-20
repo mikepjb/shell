@@ -78,8 +78,6 @@ fi
 
 echo "--------------------------"
 
-echo 'Ensuring neovim telescope is available'
-
 pkg_dir="$HOME/.vim/pack/base/start"
 local_bin="$HOME/.local/bin"
 
@@ -102,6 +100,12 @@ fi
 if [[ ! -d $pkg_dir/vim-dadbod ]]; then
     git clone https://github.com/tpope/vim-dadbod.git \
         $pkg_dir/vim-dadbod \
+        --depth=1
+fi
+
+if [[ ! -d $pkg_dir/tabular ]]; then
+    git clone https://github.com/godlygeek/tabular.git \
+        $pkg_dir/tabular \
         --depth=1
 fi
 

@@ -1,0 +1,356 @@
+autocmd!
+
+set nocompatible
+syntax on
+filetype plugin indent on
+
+" UI
+set mouse=a
+set number
+set colorcolumn=+1
+set cursorline
+set cmdheight=1
+set shortmess=CTIoltOF
+set showtabline=2 " always show the tab bar
+set laststatus=2 " always show the status line
+set winwidth=79
+set scrolloff=3
+set fillchars=vert:│
+set notermguicolors
+set wildmode=longest,list
+set wildmenu
+set wildignore=*.class,*.jpg,*.png,*.gif,*.pdf
+set completeopt=menu,preview
+set showcmd
+set signcolumn=no
+set statusline=%#User1#%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+set belloff=all
+
+" editor
+set hidden
+set history=10000
+set clipboard=unnamed,unnamedplus
+set nobackup nowritebackup
+set backupdir=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+set directory=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+set timeout timeoutlen=1000 ttimeoutlen=100 updatetime=200
+set splitbelow splitright " set default new split behaviour
+set autowrite " auto-save on :make and other commands
+set autoindent
+
+" search
+set showmatch
+set incsearch
+set hlsearch
+set ignorecase smartcase
+
+" text/editing
+set cindent smartindent
+set tabstop=2 shiftwidth=2 softtabstop=2 expandtab
+set autoread
+set gdefault
+set nowrap
+
+" language
+set switchbuf=useopen
+set equalalways
+set backspace=indent,eol,start
+set shell=bash
+set foldmethod=manual
+set nofoldenable " disable folding.. we may want this for markdown notes later
+set nojoinspaces " joining lines is smart about whitespace
+set re=2 " typescript essentially hangs and disables syntax on re=1
+set diffopt=vertical " show diffs side by side not vertically
+
+if executable('rg') " N.B ripgrep searches all files by default
+  set grepprg=rg\ --vimgrep\ --smart-case\ --follow
+  set grepformat=%f:%l:%c:%m,%f:%l:%m
+endif
+
+" Use persistent undo history.
+if !isdirectory("/tmp/.vim-undo-dir")
+    call mkdir("/tmp/.vim-undo-dir", "", 0700)
+endif
+set undodir=/tmp/.vim-undo-dir
+set undofile
+
+nnoremap <silent> gl :call ToggleQuickfix()<CR>
+
+function! ToggleQuickfix() abort
+    let l:qf_winid = getqflist({'winid': 0}).winid
+    if l:qf_winid != 0
+        cclose
+    else
+        copen
+    endif
+endfunction
+
+" prevent remaps
+let g:omni_sql_no_default_maps = 1
+let g:sh_noisk=1
+
+augroup base
+  autocmd!
+  " Compute syntax highlighting from beginning of file. (By default, vim only
+  " looks 200 lines back, which can make it highlight code incorrectly in some
+  " long files.)
+  autocmd BufEnter * :syntax sync fromstart
+	autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
+	autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
+	autocmd QuickFixCmdPost [^l]* nested cwindow
+	autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
+	autocmd FileType markdown setlocal nonumber
+  autocmd FileType go,rust,sql,yaml,java setl ts=4 sw=4 sts=4 et
+  autocmd FileType ruby,haml,eruby,yaml,html,sass,cucumber setl ai sw=2 sts=2 et
+augroup END
+
+function! TabContent()
+  let s = ''
+  for i in range(tabpagenr('$'))
+    let tabnr = i + 1 " range() starts at 0
+    let s .= '%' . tabnr . 'T' " Setup click target and highlighting
+    let s .= (tabnr == tabpagenr() ? '%#TabLineSel#' : '%#TabLine#')
+    let tab_pwd = gettabvar(tabnr, 'tab_pwd', getcwd())
+    let folder_name = fnamemodify(tab_pwd, ':t')
+    let s .= empty(folder_name) ? ' [/] ' : ' ' . folder_name . ' '
+  endfor
+  
+  return s .. '%#TabLineFill#'
+endfunction
+
+set tabline=%!TabContent()
+" autocmd TabNew,TabEntered,DirChanged * let t:tab_pwd = getcwd()
+
+nnoremap Y y$
+nnoremap <c-j> <c-w>j
+nnoremap <c-k> <c-w>k
+nnoremap <c-h> <c-w>h
+nnoremap <c-l> <c-w>l
+inoremap <c-l> <space>=><space>
+inoremap <c-c> <esc>
+nnoremap S <c-^>
+nnoremap <c-t> :tabnew<CR>
+nnoremap <c-q> :q<CR>
+nnoremap <C-g> :noh<CR><C-g>
+inoremap <C-l> <Space>=><Space>
+inoremap <C-u> <Space>-><Space>
+nnoremap <M-n> :cnext<CR>
+nnoremap <M-p> :cprevious<CR>
+nnoremap <CR> :call Make()<CR>
+nnoremap gd <C-]> " check if this conflicts with vim-fireplace
+nnoremap gD g<C-]>
+nnoremap gi :e ~/.vimrc<CR>
+nnoremap gn :lcd ~/.notes <bar> e ~/.notes/index.md<CR>
+nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
+nnoremap gc :!ctags -R .<CR>
+nnoremap gp :Format<CR>
+inoremap <M-o> <C-x><C-]>
+nnoremap <M-1> 1gt
+nnoremap <M-2> 2gt
+nnoremap <M-3> 3gt
+nnoremap Q @q
+cnoremap        <C-A> <Home>
+cnoremap        <C-B> <Left>
+cnoremap <expr> <C-D> getcmdpos()>strlen(getcmdline())?"\<Lt>C-D>":"\<Lt>Del>"
+cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
+
+colorscheme spartan
+
+let s:html =<<EOD
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New Page</title>
+    <meta name="description" content="New page description">
+    <meta property="og:title" content="New Page">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+      <text y='.9em' font-size='90'>⚡</text></svg>">
+  </head>
+  <body>
+  </body>
+</html>
+EOD
+call setreg("h", s:html)
+
+let s:css_reset =<<EOD
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0;}
+body { line-height: 1.5; font-size: 100%; -webkit-font-smoothing: antialiased; }
+img, picture, video, canvas, svg { display: block; max-width: 100%; }
+input, button, textarea, select { font: inherit; }
+p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+html { -moz-text-size-adjust: none; -webkit-text-size-adjust: none; text-size-adjust: none; }
+EOD
+call setreg("r", s:css_reset)
+
+function! SelectaCommand(choice_command, selecta_args, vim_command)
+  try
+    exec a:vim_command . " " . SelectaOutput(a:choice_command, a:selecta_args)
+  catch /Vim:Interrupt/
+    " Swallow the ^C so that the redraw below happens; otherwise there will be
+    " leftovers from selecta on the screen
+    redraw!
+    return
+  endtry
+endfunction
+
+function! SelectaOutput(choice_command, selecta_args)
+  let selection = system(a:choice_command . " | selecta " . a:selecta_args)
+  " Escape spaces in the file name. That ensures that it's a single argument
+  " when concatenated with vim_command and run with exec.
+  let selection = substitute(selection, ' ', '\\ ', "g")
+  redraw!
+  return selection
+endfunction
+
+function! SelectaFile(path, glob, command)
+  call SelectaCommand("fd -t f . " . a:path, "", a:command)
+endfunction
+
+nnoremap <space> :call SelectaFile(".", "*", ":edit")<cr>
+
+" Rename the current file on disk and clean up the old buffer
+function! RenameFile() abort
+    let l:old_name = expand('%')
+    if empty(l:old_name)
+        echoerr "Current buffer has no file name!"
+        return
+    endif
+
+    let l:new_name = input('New file name: ', l:old_name, 'file')
+    
+    if l:new_name !=# '' && l:new_name !=# l:old_name
+        execute 'saveas ' . fnameescape(l:new_name)
+        execute 'silent !rm ' . shellescape(l:old_name)
+        execute 'bdelete #'
+        redraw!
+        echom "Renamed " . l:old_name . " to " . l:new_name
+    endif
+endfunction
+
+" Using nnoremap (remap disabled, normal mode only) is safer for shortcuts
+nnoremap <M-r> :call RenameFile()<CR>
+
+function! Make() abort " FYI compiler just sets makeprg and errorformat/efm
+  if &filetype ==# 'java'
+    if filereadable('pom.xml')
+      compiler maven
+    else
+      " makeprg?
+    end
+  else
+    echom "No make action defined for " .. &filetype
+    return
+  endif
+
+  make
+endfunction
+
+" TODO needs to be augmented to run whole test suite, by default runs the
+" current file as a test
+function! Test() abort
+  if &filetype ==# 'java'
+    setlocal makeprg='./gradlew test --tests %:t:r --console=plain'
+    setlocal errorformat
+  else
+    echom "No make action defined for " .. &filetype
+    return
+  end
+
+  make
+endfunction
+
+function! Lint() abort
+endfunction
+
+function! Format() abort
+  let l:view = winsaveview()
+
+  if &filetype ==# 'go'
+    silent %!goimports
+  elseif index(['javascript', 'typescript', 'css', 'json', 'javascriptreact', 'typescriptreact'], &filetype) >= 0
+    execute 'silent %!prettier --stdin-filepath ' . shellescape(expand('%'))
+  else
+    echom "No format action defined for " .. &filetype
+    return
+  endif
+
+  if v:shell_error " If the external command failed, undo the mess
+    undo
+    echoerr "Formatter failed!"
+  endif
+
+  call winrestview(l:view)
+endfunction
+
+command! Format call Format()
+
+" TODO to help with source navigation, can we use ctags to list all functions
+" in the buffer? or does vim support this natively like emacs does with imenu?
+
+" TODO problem for java in first time loading, will do the right thing but
+" error (extracts + runs ctags but doesn't put user in file)
+" we should also echo before delegating so the user knows the request was
+" actually fired lol
+function! LookupSource(level, ...) abort
+    " Determine the language/filetype
+    if a:0 > 0 && !empty(a:1)
+        let l:lang = a:1
+    else
+        let l:lang = &filetype
+    endif
+
+    if empty(l:lang)
+        echoerr "No language specified and no filetype detected."
+        return
+    endif
+
+    let l:script_path = expand('~/.local/bin/lookup-deps')
+    let l:result_path = ''
+
+    if a:level ==# 'lang'
+        let l:cmd = printf('%s --level lang --lang %s', shellescape(l:script_path), shellescape(l:lang))
+        let l:result_path = trim(system(l:cmd))
+
+    elseif a:level ==# 'dep'
+        if l:lang ==# 'java'
+            let l:m2 = expand('~/.m2/repository')
+            let l:gradle = expand('~/.gradle/caches/modules-2/files-2.1')
+
+            let l:find_cmd = printf('fd -g "*.jar" %s %s', shellescape(l:m2), shellescape(l:gradle))
+            let l:selected_jar = trim(system(l:find_cmd . ' | selecta'))
+            redraw!
+
+            " Handle user hitting Esc / cancelling selecta
+            if empty(l:selected_jar) || v:shell_error != 0
+                echo "Selection cancelled."
+                return
+            endif
+
+            " Pass the cleanly selected jar file down to the bash worker
+            let l:cmd = printf('%s --extract-jar %s', shellescape(l:script_path), shellescape(l:selected_jar))
+            let l:result_path = trim(system(l:cmd))
+        else
+            echoerr "Dependency lookup for " . l:lang . " is not implemented yet."
+            return
+        endif
+    endif
+
+    " Open the final workspace tab if everything succeeded
+    if v:shell_error == 0 && isdirectory(l:result_path)
+        execute 'tabnew'
+        execute 'lcd ' . fnameescape(l:result_path)
+        execute 'edit .'
+        echo "Opened local documentation for: " . l:lang
+    else
+        echoerr "Lookup failed: " . l:result_path
+    endif
+endfunction
+
+" Bind commands to match your workflow
+command! -nargs=? LookupLang call LookupSource('lang', <f-args>)
+command! -nargs=? LookupDep  call LookupSource('dep', <f-args>)
+
+" TODO consult - fire curl in bg, write to a common file with ---- prepended
