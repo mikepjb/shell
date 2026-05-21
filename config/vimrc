@@ -1,28 +1,32 @@
-" TODO learn to use Tabularise
-" TODO review eddy r
+" -----------------------------------------
+" Spartan config 
+" -----------------------------------------
 
 set nocompatible " Disable VI Compatibility
 syntax on
 filetype plugin indent on
 
-" -----------------------------------------
-"  Vim Options
-" -----------------------------------------
 set autoindent
 set backspace=indent,eol,start
-set formatoptions-=t           " Don't add line-breaks for lines over 'textwidth' chars
+set formatoptions-=t              " Don't add line-breaks for lines over 'textwidth' chars
 set hlsearch
+set smartcase                     " ignore case unless I search specifically for uppercase
 set nonumber
 set nostartofline
 set showmatch
-set showcmd                    " bottom right of screen shows partially-typed commands i.e 'g'
-set tabstop=4                  " Number of spaces <tab> counts for
-set textwidth=80               " 80 columns
+set showcmd                       " bottom right of screen shows partially-typed commands i.e 'g'
+set textwidth=80                  " 80 columns
 set fillchars=vert:│
 set belloff=all
 set clipboard=unnamed,unnamedplus
 set nobackup
 set nowritebackup
+set tabstop=4                     " Number of spaces <tab> counts for
+set softtabstop=4
+set shiftwidth=4
+set expandtab                     " Space > Tabs
+set colorcolumn=+1
+set nowrap
 
 " these affect the status line.. easier to just set the status line?
 set showmode
@@ -31,6 +35,12 @@ set ruler
 " prevent remaps
 let g:omni_sql_no_default_maps = 1
 let g:sh_noisk=1
+
+if executable('rg') " N.B ripgrep searches all files by default
+  set grepprg=rg\ --vimgrep\ --smart-case\ --follow
+  set grepformat=%f:%l:%c:%m,%f:%l:%m
+  command! -nargs=+ Grep execute 'silent grep! <q-args>'
+endif
 
 colorscheme spartan
 
@@ -50,29 +60,24 @@ nnoremap gD g<C-]>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :lcd ~/.notes <bar> e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
+nnoremap gs :Grep<space>
 nnoremap gc :!ctags -R .<CR>
+nnoremap gl :cclose<CR>
 nnoremap Q @q
 cnoremap        <C-A> <Home>
 cnoremap        <C-B> <Left>
 cnoremap <expr> <C-D> getcmdpos()>strlen(getcmdline())?"\<Lt>C-D>":"\<Lt>Del>"
 cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
 
-if has("autocmd")
-endif
-
 augroup base
-		autocmd!
-		" Compute syntax highlighting from beginning of file. (By default, vim only
-		" looks 200 lines back, which can make it highlight code incorrectly in some
-		" long files.)
-		autocmd BufEnter * :syntax sync fromstart
-		autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
-		autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
-		autocmd QuickFixCmdPost [^l]* nested cwindow
-		autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
-		autocmd FileType markdown setlocal nonumber
-		autocmd FileType go,rust,sql,yaml,java setl ts=4 sw=4 sts=4 et
-		autocmd FileType ruby,haml,eruby,yaml,html,sass,cucumber setl ai sw=2 sts=2 et
+    autocmd!
+    autocmd BufEnter * :syntax sync fromstart
+    autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
+    autocmd QuickFixCmdPost cgetexpr cwindow
+    autocmd QuickFixCmdPost lgetexpr lwindow
+    autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
+    autocmd FileType markdown setlocal nonumber
+    autocmd FileType ruby,html,clojure setl ts=2 sw=2 sts=2
 augroup END
 
 function! SelectaCommand(choice_command, selecta_args, vim_command)
