@@ -1,6 +1,19 @@
 " -----------------------------------------
-" Spartan config 
+" Spartan config
 " -----------------------------------------
+"
+"  TODO figure out a good grep approach (good if you use . + copen)
+"  really I don't want to 'follow' to the first match and copen by default would
+"  be nice. We probably also don't want to run grep in the parent shell but a
+"  sub-shell.
+"  TODO also, we want all the docs for plugins to be available pls.
+"  TODO set spell.. but you'll need your own list
+"  TODO also snippets for html/css at least
+"  TODO <M-n> does not appear to work as described
+"  TODO some rando Error hl (not ErrorMsg) is pink bg and unreadable!
+"  TODO lang/dep lookup (and java dep class decompile)
+"  TODO very useful to re-implement persistent undo history.. or hidden? or
+"  both?
 
 set nocompatible " Disable VI Compatibility
 syntax on
@@ -10,7 +23,9 @@ set autoindent
 set backspace=indent,eol,start
 set formatoptions-=t              " Don't add line-breaks for lines over 'textwidth' chars
 set hlsearch
+set incsearch                     " cursor follows matches as you /search
 set smartcase                     " ignore case unless I search specifically for uppercase
+set ignorecase
 set nonumber
 set nostartofline
 set showmatch
@@ -21,30 +36,38 @@ set belloff=all
 set clipboard=unnamed,unnamedplus
 set nobackup
 set nowritebackup
+set noswapfile
 set tabstop=4                     " Number of spaces <tab> counts for
 set softtabstop=4
 set shiftwidth=4
 set expandtab                     " Space > Tabs
 set colorcolumn=+1
 set nowrap
+set path+=** " expands find results in a fuzzy manner
+set gdefault                      " replaces all matches, not just the first
+set re=2                          " re=1 by default, typescript hl is slow without this
+set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+set laststatus=2
 
-" these affect the status line.. easier to just set the status line?
-set showmode
-set ruler
+if !isdirectory("/tmp/.vim-undo-dir")
+    call mkdir("/tmp/.vim-undo-dir", "", 0700)
+endif
+set undodir=/tmp/.vim-undo-dir
+set undofile
 
 " prevent remaps
 let g:omni_sql_no_default_maps = 1
 let g:sh_noisk=1
 
 if executable('rg') " N.B ripgrep searches all files by default
-  set grepprg=rg\ --vimgrep\ --smart-case\ --follow
+  set grepprg=rg\ --vimgrep\ --smart-case\ $*
   set grepformat=%f:%l:%c:%m,%f:%l:%m
-  command! -nargs=+ Grep execute 'silent grep! <q-args>'
 endif
 
 colorscheme spartan
 
-cmap w!! w !sudo tee > /dev/null %
+" nnoremap ,html :-1read $HOME/.vim/.skeleton.html<CR>3jwf>a
+
 nnoremap Y y$
 nnoremap <c-j> <c-w>j
 nnoremap <c-k> <c-w>k
@@ -60,10 +83,14 @@ nnoremap gD g<C-]>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :lcd ~/.notes <bar> e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
-nnoremap gs :Grep<space>
+nnoremap gs :grep<space>
 nnoremap gc :!ctags -R .<CR>
 nnoremap gl :cclose<CR>
 nnoremap Q @q
+xmap ga <Plug>(EasyAlign)
+nmap ga <Plug>(EasyAlign)
+nnoremap <A-n> :cnext<CR>
+nnoremap <A-p> :cprevious<CR>
 cnoremap        <C-A> <Home>
 cnoremap        <C-B> <Left>
 cnoremap <expr> <C-D> getcmdpos()>strlen(getcmdline())?"\<Lt>C-D>":"\<Lt>Del>"
@@ -73,12 +100,20 @@ augroup base
     autocmd!
     autocmd BufEnter * :syntax sync fromstart
     autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
-    autocmd QuickFixCmdPost cgetexpr cwindow
-    autocmd QuickFixCmdPost lgetexpr lwindow
+    " TODO what do these quickfix autocmds do?
+    " autocmd QuickFixCmdPost cgetexpr cwindow
+    " autocmd QuickFixCmdPost lgetexpr lwindow
+	autocmd QuickFixCmdPost [^l]* nested cwindow
     autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
     autocmd FileType markdown setlocal nonumber
+    autocmd FileType clojure packadd vim-fireplace
     autocmd FileType ruby,html,clojure setl ts=2 sw=2 sts=2
 augroup END
+
+command! SudoWrite :w !sudo tee > /dev/null %
+command! TrimWhitespace :%s/\s\+$//
+command! GenerateHelpTags :helptags ALL
+command! -range -nargs=* Align <line1>,<line2>!column <args>
 
 function! SelectaCommand(choice_command, selecta_args, vim_command)
   try
@@ -101,3 +136,29 @@ function! SelectaFile(path, glob, command)
 endfunction
 
 nnoremap <space> :call SelectaFile(".", "*", ":edit")<cr>
+
+" TODO specific setup for gradle, will need to generalise
+set makeprg=./gradlew\ test
+set errorformat=
+    \%f:%l:\ error:\ %m,
+    \%-G%.%#
+
+function Test()
+    if filereadable("mvnw")
+        set makeprg=./mvnw\ test
+        " Standard Maven error format
+        set errorformat=[ERROR]\ %f:[%l\\,%c]\ %m,%-G%.%#
+    elseif filereadable("gradlew")
+        set makeprg=./gradlew\ test
+        set errorformat=
+                    \%f:%l:\ error:\ %m,
+                    \%-G%.%#
+    else
+        echom "No test configuration detected"
+        return
+    endif
+
+    make
+endfunction
+
+command! Test :call Test()<CR>

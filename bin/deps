@@ -78,36 +78,32 @@ fi
 
 echo "--------------------------"
 
-pkg_dir="$HOME/.vim/pack/base/start"
+pkg_base="$HOME/.vim/pack/base"
 local_bin="$HOME/.local/bin"
 
-mkdir -p $pkg_dir
+
+plugin() {
+    local slug="$1"
+    local sub_dir="${2:-start}"
+    local repo_name="${slug#*/}"
+    local target_dir="$pkg_base/$sub_dir/$repo_name"
+
+    if [[ ! -d "$target_dir" ]]; then
+        echo "Cloning $slug into $sub_dir..."
+        git clone "https://github.com/$slug.git" "$target_dir" --depth=1
+    else
+        echo "$repo_name already exists in $sub_dir. Skipping."
+    fi
+}
+
+mkdir -p $pkg_base/start $pkg_base/opt
 
 echo 'Ensuring vim plugins and selecta are available'
 
-if [[ ! -d $pkg_dir/vim-fireplace ]]; then
-    git clone https://github.com/tpope/vim-fireplace.git \
-        $pkg_dir/vim-fireplace \
-        --depth=1
-fi
-
-if [[ ! -d $pkg_dir/vim-fugitive ]]; then
-    git clone https://github.com/tpope/vim-fugitive.git \
-        $pkg_dir/vim-fugitive \
-        --depth=1
-fi
-
-if [[ ! -d $pkg_dir/vim-dadbod ]]; then
-    git clone https://github.com/tpope/vim-dadbod.git \
-        $pkg_dir/vim-dadbod \
-        --depth=1
-fi
-
-if [[ ! -d $pkg_dir/tabular ]]; then
-    git clone https://github.com/godlygeek/tabular.git \
-        $pkg_dir/tabular \
-        --depth=1
-fi
+plugin "tpope/vim-fireplace" "opt"
+plugin "tpope/vim-fugitive"
+plugin "tpope/vim-dadbod"
+plugin "junegunn/vim-easy-align"
 
 if [[ ! -f $local_bin/selecta ]]; then
   curl -L -o "$local_bin/selecta" \

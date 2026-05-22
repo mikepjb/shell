@@ -76,10 +76,24 @@ call s:hl('PmenuSel', {'fg': 'fg', 'bg': 'bg++'})
 call s:hl('MatchParen', {'fg': 'magenta'})
 
 " Messages and errors
+call s:hl('Error', {'fg': 'magenta'})
 call s:hl('ErrorMsg', {'fg': 'magenta'})
 call s:hl('WarningMsg', {'fg': 'yellow'})
 call s:hl('MoreMsg', {'fg': 'teal'})
 call s:hl('Question', {'fg': 'teal'})
+
+" Diff
+call s:hl('DiffAdd', {'fg': 'magenta'})
+call s:hl('DiffChange', {'fg': 'yellow'})
+call s:hl('DiffDelete', {'fg': 'teal'})
+call s:hl('DiffText', {'fg': 'teal'})
+call s:hl('DiffTextAdd', {'fg': 'teal'})
+
+" Spell
+call s:hl('SpellBad', {'fg': 'magenta'})
+call s:hl('SpellCap', {'fg': 'yellow'})
+call s:hl('SpellLocal', {'fg': 'teal'})
+call s:hl('SpellRare', {'fg': 'teal'})
 
 " Syntax highlighting
 call s:hl('Comment', {'fg': 'fg++'})
