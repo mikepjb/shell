@@ -1,12 +1,8 @@
 " -----------------------------------------
 " Spartan config
 " -----------------------------------------
-"  TODO set spell.. but you'll need your own list
 "  TODO also snippets for html/css at least
-"  TODO some rando Error hl (not ErrorMsg) is pink bg and unreadable!
 "  TODO lang/dep lookup (and java dep class decompile)
-"  TODO very useful to re-implement persistent undo history.. or hidden? or
-"  both?
 
 set nocompatible " Disable VI Compatibility
 syntax on
@@ -42,8 +38,6 @@ set re=2                          " re=1 by default, typescript hl is slow witho
 set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
 set laststatus=2
 set notermguicolors
-set spell
-set spellfile=~/.vim/spell/spell.utf-8.add
 
 if !isdirectory("/tmp/.vim-undo-dir")
     call mkdir("/tmp/.vim-undo-dir", "", 0700)
