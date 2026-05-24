@@ -38,7 +38,7 @@ hi Question     ctermfg=4 ctermbg=NONE
 
 " Syntax
 hi Comment      ctermfg=8
-hi Todo         ctermfg=1
+hi Todo         ctermfg=1 ctermbg=NONE
 
 hi link SpecialComment Comment
 
