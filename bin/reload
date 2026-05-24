@@ -18,20 +18,20 @@ for config_file in "$sconf/"*; do
     ln -sfv "$config_file" "$HOME/.$filename"
 done
 
-mkdir -p "$HOME"/.config/{clojure,nvim,ghostty,ctags}
-mkdir -p "$HOME/.config/nvim/colors"
+mkdir -p "$HOME"/.config/{clojure,ghostty,ctags}
+mkdir -p "$HOME"/.vim/{colors,spell}
 mkdir -p "$HOME/.vim/colors"
 mkdir -p "$HOME/.config/ghostty/themes"
 
 ln -sfv "$sconf/deps.edn" "$HOME/.config/clojure/deps.edn"
 ln -sfv "$sconf/ghostty.conf" "$HOME/.config/ghostty/config"
-ln -sfv "$sconf/spartan-dark.conf" "$HOME/.config/ghostty/themes/spartan-dark"
-ln -sfv "$sconf/spartan-light.conf" "$HOME/.config/ghostty/themes/spartan-light"
 ln -sfv "$sconf/vimrc" "$HOME/.vimrc"
 ln -sfv "$sconf/ctags" "$HOME/.config/ctags/base.ctags"
 ln -sfv "$sconf/spartan.vim" "$HOME/.vim/colors/spartan.vim"
-ln -sfv "$sconf/init.lua" "$HOME/.config/nvim/init.lua"
-ln -sfv "$sconf/spartan.lua" "$HOME/.config/nvim/colors/spartan.lua"
+
+if [[ -f "$HOME/.notes/spell.utf-8.add" ]]; then
+    ln -sfv "$HOME/.notes/spell.utf-8.add" "$HOME/.vim/spell/spell.utf-8.add"
+fi
 
 echo 'Symlinking scripts from ./bin'
 

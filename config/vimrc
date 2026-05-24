@@ -1,15 +1,8 @@
 " -----------------------------------------
 " Spartan config
 " -----------------------------------------
-"
-"  TODO figure out a good grep approach (good if you use . + copen)
-"  really I don't want to 'follow' to the first match and copen by default would
-"  be nice. We probably also don't want to run grep in the parent shell but a
-"  sub-shell.
-"  TODO also, we want all the docs for plugins to be available pls.
 "  TODO set spell.. but you'll need your own list
 "  TODO also snippets for html/css at least
-"  TODO <M-n> does not appear to work as described
 "  TODO some rando Error hl (not ErrorMsg) is pink bg and unreadable!
 "  TODO lang/dep lookup (and java dep class decompile)
 "  TODO very useful to re-implement persistent undo history.. or hidden? or
@@ -48,6 +41,9 @@ set gdefault                      " replaces all matches, not just the first
 set re=2                          " re=1 by default, typescript hl is slow without this
 set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
 set laststatus=2
+set notermguicolors
+set spell
+set spellfile=~/.vim/spell/spell.utf-8.add
 
 if !isdirectory("/tmp/.vim-undo-dir")
     call mkdir("/tmp/.vim-undo-dir", "", 0700)
@@ -65,8 +61,6 @@ if executable('rg') " N.B ripgrep searches all files by default
 endif
 
 colorscheme spartan
-
-" nnoremap ,html :-1read $HOME/.vim/.skeleton.html<CR>3jwf>a
 
 nnoremap Y y$
 nnoremap <c-j> <c-w>j
@@ -95,6 +89,7 @@ cnoremap        <C-A> <Home>
 cnoremap        <C-B> <Left>
 cnoremap <expr> <C-D> getcmdpos()>strlen(getcmdline())?"\<Lt>C-D>":"\<Lt>Del>"
 cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
+nnoremap Z :echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')<CR>
 
 augroup base
     autocmd!
@@ -136,12 +131,6 @@ function! SelectaFile(path, glob, command)
 endfunction
 
 nnoremap <space> :call SelectaFile(".", "*", ":edit")<cr>
-
-" TODO specific setup for gradle, will need to generalise
-set makeprg=./gradlew\ test
-set errorformat=
-    \%f:%l:\ error:\ %m,
-    \%-G%.%#
 
 function Test()
     if filereadable("mvnw")

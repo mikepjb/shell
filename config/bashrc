@@ -60,7 +60,7 @@ vc() {
     [[ -f "$1" ]] || { echo "File not found: $1"; return 1; }
     sed 's/,,/, ,/g; s/,,/, ,/g; s/,,/, ,/g' "$1" | column -s, -t | less -S
 }
-viw() { nvim $(which "$1"); }
+viw() { vim $(which "$1"); }
 
 encrypt() {
   tar czf - "$1" | openssl enc -aes-256-cbc -salt -out "${1}.tar.gz.enc"

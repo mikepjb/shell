@@ -33,12 +33,14 @@ function! s:hl(group, settings)
     let l:fg   = get(a:settings, 'fg', 'none')
     let l:bg   = get(a:settings, 'bg', 'none')
     let l:attr = get(a:settings, 'attr', 'none')
+    let l:term = get(a:settings, 'term', 'none')
 
-    let l:cmd = printf('hi %s ctermfg=%s ctermbg=%s cterm=%s', 
+    let l:cmd = printf('hi %s ctermfg=%s ctermbg=%s cterm=%s term=%s guifg=NONE guibg=NONE gui=NONE', 
         \ a:group, 
         \ s:colors[l:fg], 
         \ s:colors[l:bg], 
-        \ l:attr)
+        \ s:colors[l:attr],
+        \ s:colors[l:term])
 
     execute l:cmd
 endfunction
@@ -49,7 +51,6 @@ call s:hl('NonText',      {'fg': 'fg',    'bg': 'bg'})
 
 " Cursor and Columns
 call s:hl('CursorLine',   {'fg': 'bg',    'bg': 'bg+'})
-" call s:hl('CursorColumn', {'fg': 'bg',    'bg': 'bg+'})
 call s:hl('ColorColumn',  {'bg': 'bg+'})
 
 " Gutters and Numbers
@@ -78,6 +79,7 @@ call s:hl('MatchParen', {'fg': 'magenta'})
 " Messages and errors
 call s:hl('Error', {'fg': 'magenta'})
 call s:hl('ErrorMsg', {'fg': 'magenta'})
+call s:hl('Debug', {'fg': 'magenta'})
 call s:hl('WarningMsg', {'fg': 'yellow'})
 call s:hl('MoreMsg', {'fg': 'teal'})
 call s:hl('Question', {'fg': 'teal'})
