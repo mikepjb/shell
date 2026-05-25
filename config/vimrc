@@ -1,7 +1,6 @@
 " -----------------------------------------
 " Spartan config
 " -----------------------------------------
-"  TODO lang/dep lookup (and java dep class decompile)
 
 set nocompatible " Disable VI Compatibility
 syntax on
@@ -98,12 +97,20 @@ augroup base
     autocmd FileType markdown setlocal nonumber
     autocmd FileType clojure packadd vim-fireplace
     autocmd FileType ruby,html,clojure setl ts=2 sw=2 sts=2
+    autocmd BufWinEnter *.class nested call DecompileJava()
 augroup END
 
 command! SudoWrite :w !sudo tee > /dev/null %
 command! TrimWhitespace :%s/\s\+$//
 command! GenerateHelpTags :helptags ALL
 command! -range -nargs=* Align <line1>,<line2>!column <args>
+
+function! DecompileJava()
+    let l:output = system('java-decompile ' . shellescape(expand("%:p")))
+    enew | setlocal filetype=java buftype=nofile
+    call setline(1, split(l:output, "\n"))
+    setlocal nomodified
+endfunction
 
 function! SelectaCommand(choice_command, selecta_args, vim_command)
   try

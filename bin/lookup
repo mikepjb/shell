@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+#
+# lookup is a script for finding and viewing dependency code both at a language
+# (as in the language source code) and 3rd party library level.
+#
+# It will take your initial arguments, present you with a fuzzy selecting
+# interface (using selecta) and finally return a filepath that you can open in
+# your text editor.
+#
+# Example Scenario:
+# - looking for ring docs, :Lookup java => fuzzy /ring => given ring base path
+#
+# Usage: ./lookup <lang|dep> <java|go|clojure|javascript>
+# 
+# CLI Example: 
+# vim $(./bin/lookup language java | selecta)
+
+depth="$1"
+language="$2"
+cache_base="$HOME/.cache/vim-java-src"
+
+mkdir -p "$cache_base"
+
+lookup_java() {
+    local depth="$1"
+
+    if [[ "$depth" == "language" ]]; then
+        src_zip="$HOME/.sdkman/candidates/java/current/lib/src.zip"
+        target_dir="$cache_base/jdk-src"
+
+        if [[ ! -f "$src_zip" ]]; then
+            echo "error: sdkman java source zip not found at $src_zip" >&2
+            exit 1
+        fi
+
+        if [[ ! -d "$target_dir" ]]; then
+            mkdir -p "$target_dir"
+            unzip -q "$src_zip" -d "$target_dir"
+            (cd "$target_dir" && ctags -r .)
+        fi
+        
+        find "$target_dir" -type f -name "*.java"
+    else
+        find "$HOME/.m2/repository" \
+            "$HOME/.gradle/caches/modules-2/files-2.1" \
+            -type f -name "*.jar" 2>/dev/null \
+            | grep -vE "(-sources|-javadoc)\.jar$"
+    fi
+}
+
+lookup_go() {
+    local depth="$1"
+
+    if [[ "$depth" == "language" ]]; then
+        find /usr/lib/go/src/ -type f -name "*.go"
+    else
+        local go_mod_path="${GOPATH:-$HOME/go}/pkg/mod"
+        if [[ ! -d "$go_mod_path" ]]; then
+            echo "error: Go module cache not found at $go_mod_path" >&2
+            exit 1
+        fi
+
+        find "$go_mod_path" -type f -name "go.mod" 2>/dev/null | while read -r gomod; do
+        dirname "$gomod"
+    done
+    fi
+}
+
+lookup_js() {
+    local depth="$1"
+
+    if [[ "$depth" == "language" ]]; then
+        find "$HOME/.local/src/node" -type f -name "*.js"
+    else
+        local current_dir=$(pwd)
+        while [[ "$current_dir" != "/" ]]; do
+            if [[ -d "$current_dir/node_modules" ]]; then
+
+            find "$current_dir/node_modules" -maxdepth 2 -type d ! -name "node_modules" ! -name ".*" 2>/dev/null | while read -r dir; do
+            if [[ $(basename "$dir") =~ ^@ ]]; then
+                continue
+            fi
+            echo "$dir"
+        done
+        return 0
+            fi
+            current_dir=$(dirname "$current_dir")
+        done
+
+        echo "error: No node_modules folder found" >&2
+        exit 1
+    fi
+}
+
+case "$language" in
+    java|clojure) lookup_java "$depth";;
+    go) lookup_go "$depth";;
+    javascript|typescript|javascriptreact|typescriptreact) lookup_js "$depth";;
+    *) echo "'$language' is unsupported";;
+esac

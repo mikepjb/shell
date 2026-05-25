@@ -110,3 +110,23 @@ if [[ ! -f $local_bin/selecta ]]; then
     https://github.com/garybernhardt/selecta/raw/refs/heads/master/selecta
   chmod +x "$local_bin/selecta"
 fi
+
+mkdir -p "$HOME/.local/src"
+
+if [[ ! -d "$HOME/.local/src/node" ]]; then
+    git clone https://github.com/nodejs/node.git \
+        "$HOME/.local/src/node" --depth=1
+fi
+
+mkdir -p "$HOME/.local/jars"
+
+if [[ ! -f "$HOME/.local/jars/cfr.jar" ]]; then
+    echo "Downloading latest CFR Java Decompiler..."
+    curl -s https://api.github.com/repos/leibnitz27/cfr/releases/latest \
+        | grep "browser_download_url" \
+        | grep -vE "(-sources|-javadoc)\.jar" \
+        | cut -d '"' -f 4 \
+        | xargs curl -L -o "$HOME/.local/jars/cfr.jar"
+    
+    echo "✔ CFR downloaded and saved to ~/.local/jars/cfr.jar"
+fi
