@@ -37,57 +37,48 @@ hi MoreMsg      ctermfg=4 ctermbg=NONE
 hi Question     ctermfg=4 ctermbg=NONE
 
 " Syntax
-hi Comment      ctermfg=8
-hi Todo         ctermfg=1 ctermbg=NONE
+hi Comment     ctermfg=8
+hi Todo        ctermfg=1 ctermbg=NONE
+hi DiffAdd     ctermfg=2
+hi DiffChange  ctermfg=3
+hi DiffDelete  ctermfg=1
+hi DiffText    ctermfg=4
+hi DiffTextAdd ctermfg=4
+hi SpellBad    ctermfg=1 ctermbg=NONE cterm=underline
+hi SpellCap    ctermfg=3 ctermbg=NONE cterm=underline
+hi SpellLocal  ctermfg=3 ctermbg=NONE cterm=underline
+hi SpellRare   ctermfg=3 ctermbg=NONE cterm=underline
+hi Title       ctermfg=5
+hi Statement   ctermfg=7
+hi String      ctermfg=3
+hi Function    ctermfg=5
+hi Constant    ctermfg=6
+hi Type        ctermfg=3
+hi PreProc     ctermfg=4
+hi Delimiter   ctermfg=6
+hi Special     ctermfg=3
+hi Identifier  ctermfg=2
+hi Added       ctermfg=2
+hi Removed     ctermfg=1
 
 hi link SpecialComment Comment
+hi link gitcommitBranch String
+hi link markdownCode Type
+hi link markdownCodeBlock Type
 
-" " Diff
-" call s:hl('DiffAdd', {'fg': 'magenta'})
-" call s:hl('DiffChange', {'fg': 'yellow'})
-" call s:hl('DiffDelete', {'fg': 'teal'})
-" call s:hl('DiffText', {'fg': 'teal'})
-" call s:hl('DiffTextAdd', {'fg': 'teal'})
-" 
-" " Spell
-" call s:hl('SpellBad', {'fg': 'magenta'})
-" call s:hl('SpellCap', {'fg': 'yellow'})
-" call s:hl('SpellLocal', {'fg': 'teal'})
-" call s:hl('SpellRare', {'fg': 'teal'})
-" 
-" " Syntax highlighting
-" call s:hl('Comment', {'fg': 'fg++'})
-" call s:hl('SpecialComment', {'fg': 'magenta'})
-" call s:hl('Todo', {'fg': 'magenta'})
-" call s:hl('Title', {'fg': 'yellow'})
-" call s:hl('String', {'fg': 'teal'})
-" call s:hl('Function', {'fg': 'fg+'})
-" call s:hl('Statement', {'fg': 'fg+'})
-" call s:hl('Constant', {'fg': 'sapphire'})
-" call s:hl('Type', {'fg': 'teal'})
-" call s:hl('PreProc', {'fg': 'lavender'})
-" call s:hl('Delimiter', {'fg': 'sapphire'})
-" call s:hl('Special', {'fg': 'teal'})
-" call s:hl('Identifier', {'fg': 'sapphire'})
-" call s:hl('Added', {'fg': 'green', 'bg': 'bg+'})
-" call s:hl('Removed', {'fg': 'red', 'bg': 'bg+'})
-" call s:hl('gitcommitBranch', {'fg': 'yellow'})
-" call s:hl('markdownCode', {'fg': 'cyan'})
-" call s:hl('markdownCodeBlock', {'fg': 'cyan'})
-" 
-" " hi link rubyDefine          Keyword
-" " hi link rubySymbol          Constant
-" " hi link rubyEval            rubyMethod
-" " hi link rubyException       rubyMethod
-" " hi link rubyInclude         rubyMethod
-" " hi link rubyMacro           rubyMethod
-" " hi link rubyStringDelimiter rubyString
-" " hi link rubyRegexp          Regexp
-" " hi link rubyRegexpDelimiter rubyRegexp
-" " 
-" " hi link javascriptRegexpString  Regexp
-" " 
-" " hi link diffAdded               String
-" " hi link diffRemoved             Statement
-" " hi link diffLine                PreProc
-" " hi link diffSubname             Comment
+hi link rubyDefine          Keyword
+hi link rubySymbol          Constant
+hi link rubyEval            rubyMethod
+hi link rubyException       rubyMethod
+hi link rubyInclude         rubyMethod
+hi link rubyMacro           rubyMethod
+hi link rubyStringDelimiter rubyString
+hi link rubyRegexp          Regexp
+hi link rubyRegexpDelimiter rubyRegexp
+
+hi link javascriptRegexpString  Regexp
+
+hi link diffAdded               String
+hi link diffRemoved             Statement
+hi link diffLine                PreProc
+hi link diffSubname             Comment

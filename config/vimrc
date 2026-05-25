@@ -1,7 +1,6 @@
 " -----------------------------------------
 " Spartan config
 " -----------------------------------------
-"  TODO also snippets for html/css at least
 "  TODO lang/dep lookup (and java dep class decompile)
 
 set nocompatible " Disable VI Compatibility
@@ -38,6 +37,7 @@ set re=2                          " re=1 by default, typescript hl is slow witho
 set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
 set laststatus=2
 set notermguicolors
+set mouse=a " mainly for mouse scrolling
 
 if !isdirectory("/tmp/.vim-undo-dir")
     call mkdir("/tmp/.vim-undo-dir", "", 0700)
@@ -73,6 +73,7 @@ nnoremap gn :lcd ~/.notes <bar> e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gs :grep<space>
 nnoremap gc :!ctags -R .<CR>
+nnoremap gr :read !snip<space>
 nnoremap gl :cclose<CR>
 nnoremap Q @q
 xmap ga <Plug>(EasyAlign)

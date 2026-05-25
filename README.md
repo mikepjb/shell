@@ -18,7 +18,7 @@ _Primarily
 2. Javascript/Typescript
 3. Java
 4. Go
-5. Bash
+5. Bash (yes bash is considered a first-class language)
 
 _Secondarily_
 

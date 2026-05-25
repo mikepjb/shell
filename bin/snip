@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+read -r -d '' snip_html << EOM
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New Page</title>
+    <meta name="description" content="New page description">
+    <meta property="og:title" content="New Page">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+      <text y='.9em' font-size='90'>⚡</text></svg>">
+  </head>
+  <body>
+  </body>
+</html>
+EOM
+
+read -r -d '' snip_css << EOM
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0;}
+body { line-height: 1.5; font-size: 100%; -webkit-font-smoothing: antialiased; }
+img, picture, video, canvas, svg { display: block; max-width: 100%; }
+input, button, textarea, select { font: inherit; }
+p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
+html { -moz-text-size-adjust: none; -webkit-text-size-adjust: none; text-size-adjust: none; }
+EOM
+
+case "$1" in
+    html) echo "$snip_html";;
+    css) echo "$snip_css";;
+    *) echo "No snip for '$1' was found";;
+esac
