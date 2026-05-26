@@ -96,7 +96,8 @@ augroup base
     autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
     autocmd FileType markdown setlocal nonumber
     autocmd FileType clojure packadd vim-fireplace
-    autocmd FileType javascriptreact,ruby,html,clojure setl ts=2 sw=2 sts=2
+    autocmd FileType ruby,html,clojure setl ts=2 sw=2 sts=2
+    autocmd FileType javascriptreact,json setl ts=2 sw=2 sts=2
     autocmd BufWinEnter *.class nested call DecompileJava()
 augroup END
 
