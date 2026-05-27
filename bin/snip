@@ -27,8 +27,18 @@ p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
 html { -moz-text-size-adjust: none; -webkit-text-size-adjust: none; text-size-adjust: none; }
 EOM
 
+read -r -d '' snip_task << EOM
+**Context**
+....
+**Solution**
+....
+**AC**
+- [ ] We will do this
+EOM
+
 case "$1" in
     html) echo "$snip_html";;
     css) echo "$snip_css";;
+    task) echo "$snip_task";;
     *) echo "No snip for '$1' was found";;
 esac

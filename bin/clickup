@@ -1,36 +1,152 @@
 #!/usr/bin/env bash
 #
 # clickup is a bash script to interact with clickup to organise tasks.
+#
+# Without arguments, it will list all the tasks in your space using the
+# $CLICKUP_SPACE_ID. If you want to work with a task, copy the [id] in square
+# brackets at the end of a line.
+#
+# With `new` as the argument it will create a new task, opening your favourite
+# $EDITOR (which should definitely be vim) where you can write a clickup task
+# like you would a git commit.
+#
+# With anything else besides `new` as the first argument, the script will assume
+# you copy pasted a task id and will get the information and present it in your
+# editor so you can edit it and update it!
+#
+# Other notes:
+# - The script will always assign you (defined via $CLICKUP_USER_ID) as an
+# assignee.
+# - You will also need to define your $CLICKUP_TEAM_ID and a $CLICKUP_LIST_ID to
+# put new tasks into. You'll also need to generate an API key and export it as
+# $CLICKUP_API_TOKEN.
 
 api_url='https://api.clickup.com/api/v2'
 
-# TODO create task
-# TODO update task
+read -r -d '' task_template << EOM
+**Context**
+....
+**Solution**
+....
+**AC**
+- [ ] We will do this
+EOM
+
+if [[ -z "$CLICKUP_API_TOKEN" ]]; then
+  echo "Error: CLICKUP_API_TOKEN is not set." >&2
+  exit 1
+fi
 
 main() {
-  if [[ -n "$1" ]]; then
-    get_task "$1"
-  else
+  if [[ -z "$1" ]]; then
     list_tasks
+  else
+    save_task "$1"
   fi
-}
-
-get_task() {
-  task_detail=$(curl --request GET \
-    --url "https://api.clickup.com/api/v2/task/$1" \
-    --header "Authorization: $CLICKUP_API_TOKEN" \
-    --header 'accept: application/json')
-
-  echo $task_detail
 }
 
 list_tasks() {
   task_list=$(curl --request GET \
+    --silent \
     --url "$api_url/team/$CLICKUP_TEAM_ID/task?space_ids[]=$CLICKUP_SPACE_ID&order_by=updated" \
     --header "Authorization: $CLICKUP_API_TOKEN" \
     --header 'accept: application/json')
 
-  echo $task_list | jq -r '.tasks[] | "\(.custom_id): \(.name) :: \(.status.status) [\(.id)]"'
+  echo "$task_list" | jq -r '.tasks[] | "\(.custom_id // .id): \(.name) :: \(.status.status) [\(.id)]"'
 }
 
-main "$*"
+save_task() {
+  local target="$1"
+  local current_name=""
+  local current_status="in progress" # Default status updated here
+  local current_desc="$task_template"
+
+  if [[ "$target" == "new" ]]; then
+    echo "Creating a new task..."
+    local method="POST"
+    local endpoint="$api_url/list/$CLICKUP_LIST_ID/task"
+  else
+    echo "Fetching task $target for editing..."
+    local method="PUT"
+    local endpoint="$api_url/task/$target"
+
+    local task_json=$(curl --request GET \
+      --silent \
+      --url "${endpoint}?include_markdown_description=true" \
+      --header "Authorization: $CLICKUP_API_TOKEN" \
+      --header 'accept: application/json')
+
+    if echo "$task_json" | jq -e '.err' > /dev/null; then
+      echo "Error fetching task: $(echo "$task_json" | jq -r '.err')" >&2
+      exit 1
+    fi
+
+    current_name=$(echo "$task_json" | jq -r '.name')
+    current_status=$(echo "$task_json" | jq -r '.status.status')
+    current_desc=$(echo "$task_json" | jq -r '.markdown_description // ""')
+  fi
+
+  tmp_file=$(mktemp /tmp/clickup_task_XXXXXX.txt)
+  
+  cat << EOF > "$tmp_file"
+$current_name
+$current_status
+---
+$current_desc
+EOF
+
+  : "${EDITOR:=vim}"
+  $EDITOR "$tmp_file"
+  
+  local editor_status=$?
+
+  if [[ $editor_status -ne 0 ]]; then
+    echo "Aborting operation. Changes discarded."
+    rm -f "$tmp_file"
+    exit $editor_status
+  fi
+
+  local new_name=$(sed -n '1p' "$tmp_file")
+  local new_status=$(sed -n '2p' "$tmp_file")
+  local new_desc=$(sed -n '4,$p' "$tmp_file")
+
+  rm -f "$tmp_file"
+
+  local payload=$(jq -n \
+    --arg name "$new_name" \
+    --arg status "$new_status" \
+    --arg desc "$new_desc" \
+    '{
+      name: $name,
+      status: $status,
+      markdown_content: $desc
+    }')
+
+  if [[ -n "$CLICKUP_USER_ID" ]]; then
+    if [[ "$method" == "POST" ]]; then
+      payload=$(echo "$payload" | jq --arg uid "$CLICKUP_USER_ID" '. + {assignees: [$uid]}')
+    else
+      payload=$(echo "$payload" | jq --arg uid "$CLICKUP_USER_ID" '. + {assignees: {add: [$uid]}}')
+    fi
+  fi
+
+  echo "Saving to ClickUp..."
+  response=$(curl --request "$method" \
+    --silent \
+    --url "$endpoint" \
+    --header "Authorization: $CLICKUP_API_TOKEN" \
+    --header 'Content-Type: application/json' \
+    --header 'accept: application/json' \
+    --data "$payload")
+
+  if echo "$response" | jq -e '.id' > /dev/null; then
+    local action=$([[ "$method" == "POST" ]] && echo "created" || echo "updated")
+    local final_id=$(echo "$response" | jq -r '.id')
+    echo "Task $final_id successfully $action!"
+  else
+    echo "API Error:"
+    echo "$response" | jq '.'
+  fi
+}
+
+main "$1"
