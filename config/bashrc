@@ -36,6 +36,7 @@ alias vi='vim'
 
 alias k='kubectl'
 alias kc='kubectl config current-context'
+alias ks='kubectl config use-context $(k config get-contexts -o "name" | selecta)'
 alias reload='source ~/.local/bin/reload'
 alias cup='git -C ~/src/shell up && git -C ~/.notes up' # config up
 alias gc='ctags -R .' # generate ctags
@@ -48,7 +49,7 @@ alias dr='deno run -A'
 alias cljx='clj -M:repl:dev'
 alias scrape='wget -p -k -E -H'
 alias tree='tree -I node_modules -I ./target -I ./dist'
-alias ks='kill -9 $(lsof -ti:8080)'
+# alias ks='kill -9 $(lsof -ti:8080)'
 alias gp='gh pr create --fill'
 alias gd='gh pr create --draft --fill'
 alias gw='gh pr view --web'
