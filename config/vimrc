@@ -79,8 +79,8 @@ cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
 nnoremap Z :echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')<CR>
 nnoremap <A-t> :cexpr system('test-this ' . expand('%'))<cr>
 nnoremap <A-T> :cexpr system('test-this')<cr>
-nnoremap <A-c> :cexpr system('lint-this "' . expand('%') . '"')<cr>
-nnoremap <A-C> :cexpr system('lint-this "' . expand('%') . '" --fix')<cr>
+nnoremap <A-r> :cexpr system('lint-this "' . expand('%') . '"')<cr>
+nnoremap <A-R> :cexpr system('lint-this "' . expand('%') . '" --fix')<cr>
 
 augroup base
   autocmd!
