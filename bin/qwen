@@ -29,4 +29,5 @@ llama-server \
     --top-k 20 \
     --min-p 0.00 \
     --presence-penalty 0.0 \
-    --repeat-penalty 1.05
+    --repeat-penalty 1.05 \
+    --reasoning off
