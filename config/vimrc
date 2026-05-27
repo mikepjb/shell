@@ -33,13 +33,12 @@ set re=2                          " re=1 by default, typescript hl is slow witho
 set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
 set laststatus=2
 let &l:errorformat = '%f:%l:%c:\ %m,%f:%l:\ %m,%-G%.%#'
+let [g:omni_sql_no_default_maps, g:sh_noisk] = [1, 1] " prevent remaps
 
 set undodir=/tmp/.vim-undo-dir undofile
 if !isdirectory(&undodir)
   call mkdir(&undodir, "", 0700)
 endif
-
-let [g:omni_sql_no_default_maps, g:sh_noisk] = [1, 1] " prevent remaps
 
 if executable('rg') " N.B ripgrep searches all files by default
   set grepprg=rg\ --vimgrep\ --smart-case\ $*
@@ -86,6 +85,7 @@ augroup base
   autocmd!
   autocmd BufEnter * :syntax sync fromstart
   autocmd QuickFixCmdPost [^l]* nested cwindow
+  autocmd FileType markdown setlocal formatoptions+=t " wrap lines in .md
   autocmd FileType clojure packadd vim-fireplace
   autocmd FileType go,java,rust setl ts=4 sw=4 sts=4
 augroup END
