@@ -14,14 +14,14 @@ hi NonText      ctermfg=NONE ctermbg=NONE
 hi CursorLine   ctermfg=NONE ctermbg=0  cterm=NONE
 hi CursorColumn ctermfg=NONE ctermbg=0  cterm=NONE
 hi ColorColumn  ctermfg=NONE ctermbg=0  cterm=NONE
-hi LineNr       ctermfg=0
+hi LineNr       ctermfg=8
 hi CursorLineNr ctermfg=8    ctermbg=0  cterm=NONE
 hi StatusLine   ctermbg=0    cterm=NONE term=NONE
 hi StatusLineNC ctermbg=0    cterm=NONE term=NONE
 hi TabLine      ctermbg=0    cterm=NONE term=NONE
 hi TabLineFill  ctermbg=0    cterm=NONE term=NONE
 hi TabLineSel   ctermbg=8    cterm=NONE term=NONE
-hi VertSplit    ctermfg=0    cterm=NONE term=NONE
+hi VertSplit    ctermfg=8    cterm=NONE term=NONE
 hi Directory    ctermfg=4
 hi WildMenu     ctermfg=0    ctermbg=7
 hi Visual       ctermbg=14
