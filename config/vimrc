@@ -24,9 +24,9 @@ set clipboard=unnamed,unnamedplus
 set nobackup
 set nowritebackup
 set noswapfile
-set tabstop=4                     " Number of spaces <tab> counts for
-set softtabstop=4
-set shiftwidth=4
+set tabstop=2                     " Number of spaces <tab> counts for
+set softtabstop=2
+set shiftwidth=2
 set expandtab                     " Space > Tabs
 set colorcolumn=+1
 set nowrap
@@ -37,16 +37,14 @@ set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
 set laststatus=2
 set notermguicolors
 set mouse=a " mainly for mouse scrolling
+let &l:errorformat = '%f:%l:%c:\ %m,%f:%l:\ %m,%-G%.%#'
 
-if !isdirectory("/tmp/.vim-undo-dir")
-    call mkdir("/tmp/.vim-undo-dir", "", 0700)
+set undodir=/tmp/.vim-undo-dir undofile
+if !isdirectory(&undodir)
+  call mkdir(&undodir, "", 0700)
 endif
-set undodir=/tmp/.vim-undo-dir
-set undofile
 
-" prevent remaps
-let g:omni_sql_no_default_maps = 1
-let g:sh_noisk=1
+let [g:omni_sql_no_default_maps, g:sh_noisk] = [1, 1] " prevent remaps
 
 if executable('rg') " N.B ripgrep searches all files by default
   set grepprg=rg\ --vimgrep\ --smart-case\ $*
@@ -64,11 +62,11 @@ inoremap <c-l> <space>=><space>
 inoremap <c-c> <esc>
 nnoremap S <c-^>
 nnoremap <c-q> :q<CR>
-nnoremap <c-g> :noh<CR><c-g>
+nnoremap <c-g> :noh<CR>:redraw!<CR><c-g>
 nnoremap gd <C-]> " check if this conflicts with vim-fireplace
 nnoremap gD g<C-]>
 nnoremap gi :e ~/.vimrc<CR>
-nnoremap gn :lcd ~/.notes <bar> e ~/.notes/index.md<CR>
+nnoremap gn :e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gs :grep<space>
 nnoremap gc :!ctags -R .<CR>
@@ -86,71 +84,31 @@ cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
 nnoremap Z :echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')<CR>
 
 augroup base
-    autocmd!
-    autocmd BufEnter * :syntax sync fromstart
-    autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
-    " TODO what do these quickfix autocmds do?
-    " autocmd QuickFixCmdPost cgetexpr cwindow
-    " autocmd QuickFixCmdPost lgetexpr lwindow
-	autocmd QuickFixCmdPost [^l]* nested cwindow
-    autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
-    autocmd FileType markdown setlocal nonumber
-    autocmd FileType clojure packadd vim-fireplace
-    autocmd FileType ruby,html,clojure setl ts=2 sw=2 sts=2
-    autocmd FileType javascriptreact,json setl ts=2 sw=2 sts=2
-    autocmd BufWinEnter *.class nested call DecompileJava()
+  autocmd!
+  autocmd BufEnter * :syntax sync fromstart
+  autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
+  autocmd QuickFixCmdPost [^l]* nested cwindow
+  autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
+  autocmd FileType clojure packadd vim-fireplace
+  autocmd FileType go,java setl ts=4 sw=4 sts=4
 augroup END
 
 command! SudoWrite :w !sudo tee > /dev/null %
 command! TrimWhitespace :%s/\s\+$//
 command! GenerateHelpTags :helptags ALL
-command! -range -nargs=* Align <line1>,<line2>!column <args>
-
-function! DecompileJava()
-    let l:output = system('java-decompile ' . shellescape(expand("%:p")))
-    enew | setlocal filetype=java buftype=nofile
-    call setline(1, split(l:output, "\n"))
-    setlocal nomodified
-endfunction
 
 function! SelectaCommand(choice_command, selecta_args, vim_command)
   try
-    exec a:vim_command . " " . SelectaOutput(a:choice_command, a:selecta_args)
+    let selection = system(a:choice_command . " | selecta " . a:selecta_args)
+    let selection = substitute(selection, ' ', '\\ ', "g")
+    redraw!
+
+    exec a:vim_command . " " . selection
   catch /Vim:Interrupt/
     redraw!
     return
   endtry
 endfunction
 
-function! SelectaOutput(choice_command, selecta_args)
-  let selection = system(a:choice_command . " | selecta " . a:selecta_args)
-  let selection = substitute(selection, ' ', '\\ ', "g")
-  redraw!
-  return selection
-endfunction
-
-function! SelectaFile(path, glob, command)
-  call SelectaCommand("fd -t f . " . a:path, "", a:command)
-endfunction
-
-nnoremap <space> :call SelectaFile(".", "*", ":edit")<cr>
-
-function Test()
-    if filereadable("mvnw")
-        set makeprg=./mvnw\ test
-        " Standard Maven error format
-        set errorformat=[ERROR]\ %f:[%l\\,%c]\ %m,%-G%.%#
-    elseif filereadable("gradlew")
-        set makeprg=./gradlew\ test
-        set errorformat=
-                    \%f:%l:\ error:\ %m,
-                    \%-G%.%#
-    else
-        echom "No test configuration detected"
-        return
-    endif
-
-    make
-endfunction
-
-command! Test :call Test()<CR>
+nnoremap <space> :call SelectaCommand("fd -t f . .", "", ":edit")<cr>
+nnoremap <A-o> :call SelectaCommand("fd -t f . ~/.notes/", "", ":edit")<cr>

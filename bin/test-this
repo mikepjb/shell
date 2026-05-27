@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#
+# test-this is a script that will either run a single test file or the entire
+# test suite of your project.
+#
+# This depends on whether test-this is given an argument, which will be assumed
+# to be the filepath for a test file to run.
+
+if [[ -n $1 ]]; then
+  echo 'running single file'
+else
+  echo 'running test suite'
+fi

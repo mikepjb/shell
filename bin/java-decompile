@@ -6,27 +6,18 @@
 CFR_JAR="$HOME/.local/jars/cfr.jar"
 INPUT_PATH="$1"
 
-# Safety check: Ensure CFR is actually there
 if [[ ! -f "$CFR_JAR" ]]; then
     echo "/* Error: CFR decompiler not found at $CFR_JAR */"
     exit 1
 fi
 
-# Check if the path is a Vim zipfile virtual URI
 if [[ "$INPUT_PATH" =~ ^zipfile:// ]]; then
-    # Strip the prefix and capture the real .jar path on disk
-    # Example: zipfile:///path/to/foo.jar::org/bar/Baz.class -> /path/to/foo.jar
     JAR_PATH=$(echo "$INPUT_PATH" | sed -E 's|^zipfile://(.*)::.*$|\1|')
-    
-    # Isolate the internal path and convert slashes to dots for a fully qualified class name
-    # Example: org/bar/Baz.class -> org.bar.Baz
     INTERNAL_PATH=$(echo "$INPUT_PATH" | sed -E 's|^.*::(.*)\.class$|\1|')
     CLASS_NAME=$(echo "$INTERNAL_PATH" | tr '/' '.')
 
-    # Execute CFR targeting the specific class within the archive
     java -jar "$CFR_JAR" "$JAR_PATH" "$CLASS_NAME" --silent
 else
-    # Fallback for standard standalone .class files on the file system
     java -jar "$CFR_JAR" "$INPUT_PATH" --silent
 fi
 
