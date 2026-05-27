@@ -35,6 +35,8 @@ hi ErrorMsg     ctermfg=1 ctermbg=NONE
 hi WarningMsg   ctermfg=3 ctermbg=NONE
 hi MoreMsg      ctermfg=4 ctermbg=NONE
 hi Question     ctermfg=4 ctermbg=NONE
+hi QuickFixLine ctermbg=0
+hi qfLineNr     ctermfg=3
 
 " Syntax
 hi Comment     ctermfg=8
