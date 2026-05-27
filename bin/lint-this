@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#
+# lint-this will find an appropriate linter and formatter for a given file and
+# optionally apply fixes to it if "--fix" is also passed as a second argument.
+
+# there is only shellcheck
+shellcheck $1

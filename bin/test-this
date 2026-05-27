@@ -10,4 +10,21 @@ if [[ -n $1 ]]; then
   echo 'running single file'
 else
   echo 'running test suite'
+  all_tests='true'
+fi
+
+if [[ -f "mvnw" ]]; then
+  if [[ -n "$all_tests" ]]; then
+    ./mvnw test
+  else
+    echo 'I would run a single mvn test if I knew how'
+  fi
+elif [[ -f "gradlew" ]]; then
+  if [[ -n "$all_tests" ]]; then
+    ./gradlew test
+  else
+    echo 'I would run a single gradle test if I knew how'
+  fi
+else
+  echo 'could not detect any tests to run'
 fi

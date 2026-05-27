@@ -30,7 +30,7 @@ set shiftwidth=2
 set expandtab                     " Space > Tabs
 set colorcolumn=+1
 set nowrap
-set path+=** " expands find results in a fuzzy manner
+set path+=**                      " expands find results in a fuzzy manner
 set gdefault                      " replaces all matches, not just the first
 set re=2                          " re=1 by default, typescript hl is slow without this
 set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
@@ -54,16 +54,16 @@ endif
 colorscheme spartan
 
 nnoremap Y y$
-nnoremap <c-j> <c-w>j
-nnoremap <c-k> <c-w>k
-nnoremap <c-h> <c-w>h
-nnoremap <c-l> <c-w>l
-inoremap <c-l> <space>=><space>
-inoremap <c-c> <esc>
-nnoremap S <c-^>
-nnoremap <c-q> :q<CR>
-nnoremap <c-g> :noh<CR>:redraw!<CR><c-g>
-nnoremap gd <C-]> " check if this conflicts with vim-fireplace
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+inoremap <C-l> <space>=><space>
+inoremap <C-c> <esc>
+nnoremap S <C-^>
+nnoremap <C-q> :q<CR>
+nnoremap <C-g> :noh<CR>:redraw!<CR><C-g>
+nnoremap gd <C-]>
 nnoremap gD g<C-]>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :e ~/.notes/index.md<CR>
@@ -82,13 +82,15 @@ cnoremap        <C-B> <Left>
 cnoremap <expr> <C-D> getcmdpos()>strlen(getcmdline())?"\<Lt>C-D>":"\<Lt>Del>"
 cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
 nnoremap Z :echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')<CR>
+nnoremap <A-t> :cexpr system('test-this ' . expand('%'))<cr>
+nnoremap <A-T> :cexpr system('test-this')<cr>
+nnoremap <A-c> :cexpr system('lint-this "' . expand('%') . '"')<cr>
+nnoremap <A-C> :cexpr system('lint-this "' . expand('%') . '" --fix')<cr>
 
 augroup base
   autocmd!
   autocmd BufEnter * :syntax sync fromstart
-  autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
   autocmd QuickFixCmdPost [^l]* nested cwindow
-  autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
   autocmd FileType clojure packadd vim-fireplace
   autocmd FileType go,java setl ts=4 sw=4 sts=4
 augroup END
