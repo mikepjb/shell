@@ -28,7 +28,6 @@ set shiftwidth=2
 set expandtab                     " Space > Tabs
 set colorcolumn=+1
 set nowrap
-set path+=**                      " expands find results in a fuzzy manner
 set gdefault                      " replaces all matches, not just the first
 set re=2                          " re=1 by default, typescript hl is slow without this
 set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
@@ -88,7 +87,7 @@ augroup base
   autocmd BufEnter * :syntax sync fromstart
   autocmd QuickFixCmdPost [^l]* nested cwindow
   autocmd FileType clojure packadd vim-fireplace
-  autocmd FileType go,java setl ts=4 sw=4 sts=4
+  autocmd FileType go,java,rust setl ts=4 sw=4 sts=4
 augroup END
 
 command! SudoWrite :w !sudo tee > /dev/null %
