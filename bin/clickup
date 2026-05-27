@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# clickup is a bash script to interact with clickup to organise tasks.
+
+api_url='https://api.clickup.com/api/v2'
+
+# TODO create task
+# TODO update task
+
+main() {
+  if [[ -n "$1" ]]; then
+    get_task "$1"
+  else
+    list_tasks
+  fi
+}
+
+get_task() {
+  task_detail=$(curl --request GET \
+    --url "https://api.clickup.com/api/v2/task/$1" \
+    --header "Authorization: $CLICKUP_API_TOKEN" \
+    --header 'accept: application/json')
+
+  echo $task_detail
+}
+
+list_tasks() {
+  task_list=$(curl --request GET \
+    --url "$api_url/team/$CLICKUP_TEAM_ID/task?space_ids[]=$CLICKUP_SPACE_ID&order_by=updated" \
+    --header "Authorization: $CLICKUP_API_TOKEN" \
+    --header 'accept: application/json')
+
+  echo $task_list | jq -r '.tasks[] | "\(.custom_id): \(.name) :: \(.status.status) [\(.id)]"'
+}
+
+main "$*"
