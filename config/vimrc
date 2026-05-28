@@ -53,6 +53,7 @@ nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
 inoremap <C-l> <space>=><space>
+inoremap <C-u> - TODO<space>
 inoremap <C-c> <esc>
 nnoremap S <C-^>
 nnoremap <C-q> :q<CR>
@@ -87,7 +88,7 @@ augroup base
   autocmd QuickFixCmdPost [^l]* nested cwindow
   autocmd FileType markdown setlocal formatoptions+=t " wrap lines in .md
   autocmd FileType clojure packadd vim-fireplace
-  autocmd FileType go,java,rust setl ts=4 sw=4 sts=4
+  autocmd FileType go,java,rust,sh setl ts=4 sw=4 sts=4
 augroup END
 
 command! SudoWrite :w !sudo tee > /dev/null %

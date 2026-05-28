@@ -40,7 +40,7 @@ hi qfLineNr     ctermfg=3
 
 " Syntax
 hi Comment     ctermfg=8
-hi Todo        ctermfg=1 ctermbg=NONE
+hi Todo        ctermfg=3 ctermbg=NONE
 hi DiffAdd     ctermfg=2
 hi DiffChange  ctermfg=3
 hi DiffDelete  ctermfg=1
@@ -84,3 +84,18 @@ hi link diffAdded               String
 hi link diffRemoved             Statement
 hi link diffLine                PreProc
 hi link diffSubname             Comment
+
+" We use autocmds to ensure these run after markdown syntax file is loaded
+augroup MarkdownTaskHighlighting
+  autocmd!
+  autocmd FileType markdown syntax match Todo /\v\c<(TODO)>/ containedin=ALL
+  autocmd FileType markdown syntax match TaskNext /\v\c<(NEXT|CURRENT)>/ containedin=ALL
+  autocmd FileType markdown syntax match TaskDone /\v\c<(DONE)>/ containedin=ALL
+augroup END
+
+" You can leave these at the root of the colorscheme file safely
+hi TaskNext ctermfg=1 guifg=#FF0000
+hi TaskDone ctermfg=2 guifg=#00FF00 cterm=strikethrough gui=strikethrough
+
+hi TaskNext ctermfg=1
+hi TaskDone ctermfg=2 cterm=strikethrough
