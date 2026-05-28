@@ -47,7 +47,23 @@ stop() {
     if [ -f "$PID_FILE" ]; then
         local PID=$(cat "$PID_FILE")
         echo "Stopping '$NAME' (PID: $PID)..."
-        kill "$PID" 2>/dev/null && rm "$PID_FILE" "$(get_cmd_file "$NAME")"
+
+        # Try SIGTERM first, then SIGKILL
+        kill -15 "$PID" 2>/dev/null
+        sleep 0.5
+
+        if kill -0 "$PID" 2>/dev/null; then
+            kill -9 "$PID" 2>/dev/null
+            sleep 0.2
+        fi
+
+        # Double-check if still running
+        if kill -0 "$PID" 2>/dev/null; then
+            echo "Warning: Process still running after kill -9"
+        fi
+
+        rm -f "$PID_FILE" "$(get_cmd_file "$NAME")"
+        echo "Stopped '$NAME'."
     else
         echo "Error: No PID file found for '$NAME'."
     fi
