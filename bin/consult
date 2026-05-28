@@ -7,7 +7,7 @@
 # - `cat src/core.clj | consult "review this file"`
 
 ENDPOINT="http://127.0.0.1:7777/v1/chat/completions"
-MODEL="qwen-4b"
+MODEL="qwen-9b"
 SYSTEM_PROMPT="You are an expert senior software engineer. Your core expertise
 is Clojure, but you are highly proficient in Rust, Go, JavaScript, TypeScript,
 and Java.
