@@ -8,12 +8,14 @@
 # Now experimenting with 9B at Q5 quantisation from 70tps down to 40tps vs. 4B
 # Q3.
 
-model_file="$HOME/models/Qwen3.5-9B-UD-Q5_K_XL.gguf" 
+model_size="4B"
+
+model_file="$HOME/models/Qwen3.5-$model_size-UD-Q5_K_XL.gguf"
 
 if [ ! -f $model_file ]; then
     hf download \
-        unsloth/Qwen3.5-9B-GGUF \
-        Qwen3.5-9B-UD-Q5_K_XL.gguf \
+        "unsloth/Qwen3.5-$model_size-GGUF" \
+        "Qwen3.5-$model_size-UD-Q5_K_XL.gguf" \
         --local-dir ~/models
 fi
 
@@ -22,7 +24,7 @@ args=(
     --no-jinja              # We don't use tool calls so jinja is not necessary
     --host 127.0.0.1
     --port 7777
-    -c 16384                # Context size (tokens)
+    -c 8096                 # Context size (tokens)
     --cache-prompt          # Cache the prompt to speed up requests
     --metrics               # Show tps etc in llama-server's logs
     -ngl -1                 # Offload all layers to GPU (-1)
@@ -33,6 +35,7 @@ args=(
     --top-k 20              # Top-k sampling
     --min-p 0.00            # Minimum probability threshold
     --reasoning off         # Disable internal reasoning tokens if applicable
+    --reasoning-budget 0    # Sometimes --reasoning doesn't actually stop thinking.
     # --presence-penalty 0.0  # Penalty for repeating topics
     # --repeat-penalty 1.05   # Penalty for repeating exact words
 )
