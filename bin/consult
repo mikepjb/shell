@@ -8,17 +8,18 @@
 
 ENDPOINT="http://127.0.0.1:7777/v1/chat/completions"
 MODEL="qwen-4b"
-SYSTEM_PROMPT="You are an expert senior developer specializing in Clojure, but
-proficient in Rust, Go, JavaScript, TypeScript, and Java.
+SYSTEM_PROMPT="You are an expert senior software engineer. Your core expertise
+is Clojure, but you are highly proficient in Rust, Go, JavaScript, TypeScript,
+and Java.
 
-Your role is to provide clear, concise, and constructive code reviews
-or detailed Stack Overflow-style answers.
+Provide elite, production-grade code snippets, concise reviews, or direct
+technical answers. Always default to Clojure unless another language is
+explicitly specified.
 
-Always default to Clojure unless a specific language is
-requested.
-
-Focus on idiomatic solutions and best practices. Respond directly to
-the code or question presented."
+CRITICAL DIRECTIVES:
+1. Focus exclusively on idiomatic solutions, stable/standard libraries, and modern best practices.
+2. Be direct, dense, and objective. Strip out conversational filler, introductions, greetings, and concluding remarks.
+3. Deliver answers optimized for a terminal UI: prioritize clean code blocks over long prose explanations."
 
 USER_INPUT="$@"
 if [ ! -t 0 ]; then
@@ -39,10 +40,27 @@ PAYLOAD=$(jq -n \
     --arg user "$FULL_PROMPT" \
     '{model: $model, messages: [{role: "system", content: $sys}, {role: "user", content: $user}]}')
 
-RESPONSE=$(curl -sS -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$ENDPOINT" | jq -r '.choices[0].message.content')
+START_TIME=$(date +%s%N)
+RAW_RESPONSE=$(curl -sS -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$ENDPOINT")
+END_TIME=$(date +%s%N)
+
+RESPONSE=$(echo "$RAW_RESPONSE" | jq -r '.choices[0].message.content // "Error: No content received."')
+COMPLETION_TOKENS=$(echo "$RAW_RESPONSE" | jq -r '.usage.completion_tokens // 0')
+
+DURATION_NS=$((END_TIME - START_TIME))
+DURATION_SEC=$(awk "BEGIN {print $DURATION_NS / 1000000000}")
+
+if (( $(awk "BEGIN {print ($COMPLETION_TOKENS > 0 && $DURATION_SEC > 0) ? 1 : 0}") )); then
+    TOKENS_PER_SEC=$(awk "BEGIN {printf \"%.2f\", $COMPLETION_TOKENS / $DURATION_SEC}")
+else
+    TOKENS_PER_SEC="0.00"
+fi
+
+STATS_FOOTER=$(printf "\n\n---\n*⏱️ Time taken: %.2fs | 🚀 Speed: %s tok/s (%s tokens)*" "$DURATION_SEC" "$TOKENS_PER_SEC" "$COMPLETION_TOKENS")
 
 if [ -t 1 ] && command -v glow &> /dev/null; then
-    echo "$RESPONSE" | glow
+    (echo "$RESPONSE"; echo "$STATS_FOOTER") | glow
 else
     echo "$RESPONSE"
+    echo "$STATS_FOOTER"
 fi
