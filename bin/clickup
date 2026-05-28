@@ -46,13 +46,57 @@ main() {
 }
 
 list_tasks() {
+  # Define literal ANSI Color Codes
+  local RESET=$'\E[0m'
+  local CYAN=$'\E[0;36m'
+  local GREEN=$'\E[0;32m'
+  local PURPLE=$'\E[0;35m'
+  local DIM=$'\E[0;2m'
+
   task_list=$(curl --request GET \
     --silent \
     --url "$api_url/team/$CLICKUP_TEAM_ID/task?space_ids[]=$CLICKUP_SPACE_ID&order_by=updated" \
     --header "Authorization: $CLICKUP_API_TOKEN" \
     --header 'accept: application/json')
 
-  echo "$task_list" | jq -r '.tasks[] | "\(.custom_id // .id): \(.name) :: \(.status.status) [\(.id)]"'
+  # Current time in seconds
+  local now=$(date +%s)
+
+  # Output fields separated by a tab, then process the time relative to 'now'
+  echo "$task_list" | jq -r '
+    .tasks[] |
+    ([
+      (.custom_id // .id),
+      .name,
+      (.date_updated | tostring | sub("(?<m>\\d{10})\\d{3}"; .m) | tonumber),
+      .status.status,
+      .id
+    ] | join("\t"))
+  ' | while IFS=$'\t' read -r custom_id name date_updated status id; do
+
+    # Calculate relative time string
+    local diff=$(( now - date_updated ))
+    local relative_time=""
+
+    if [ $diff -lt 60 ]; then
+      relative_time="$diff seconds ago"
+    elif [ $diff -lt 3600 ]; then
+      relative_time="$(( diff / 60 )) minutes ago"
+    elif [ $diff -lt 86400 ]; then
+      relative_time="$(( diff / 3600 )) hours ago"
+    else
+      local days=$(( diff / 86400 ))
+      if [ $days -eq 1 ]; then
+        relative_time="1 day ago"
+      else
+        relative_time="$days days ago"
+      fi
+    fi
+
+    # Print the beautifully formatted and colored line
+    printf "${CYAN}%s${RESET} %s ${DIM}(%s)${RESET} :: ${GREEN}%s${RESET} ${PURPLE}[%s]${RESET}\n" \
+      "$custom_id" "$name" "$relative_time" "$status" "$id"
+  done
 }
 
 save_task() {
@@ -87,7 +131,7 @@ save_task() {
   fi
 
   tmp_file=$(mktemp /tmp/clickup_task_XXXXXX.txt)
-  
+
   cat << EOF > "$tmp_file"
 $current_name
 $current_status
@@ -97,7 +141,7 @@ EOF
 
   : "${EDITOR:=vim}"
   $EDITOR "$tmp_file"
-  
+
   local editor_status=$?
 
   if [[ $editor_status -ne 0 ]]; then
