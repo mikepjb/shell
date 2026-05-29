@@ -9,7 +9,7 @@ filetype plugin indent on
 set autoindent
 set backspace=indent,eol,start
 set formatoptions-=t              " Don't add line-breaks for lines over 'textwidth' chars
-set hlsearch incsearch            " highlight + follows matches as you /search
+set hlsearch incsearch ignorecase " highlight matches live + ignore case matching
 set nonumber
 set nostartofline
 set showmatch
