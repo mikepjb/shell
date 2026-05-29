@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # This script just makes sure the deps are available and does not update
 # them. For that use `sudo pacman -Syu` or `brew upgrade`.
+#
+# TODO util-linux is weird, linux has it, mac os has an alternative set of cli
+# utils with the same names so my current script doesn't work for this..
 
 declare -A -r PACKAGES=(
     # ['k3d']='rancher-k3d-bin k3d' # requires AUR
@@ -103,7 +106,7 @@ echo 'Ensuring vim plugins and selecta are available'
 plugin "tpope/vim-fireplace" "opt"
 plugin "tpope/vim-fugitive"
 plugin "tpope/vim-dadbod"
-plugin "junegunn/vim-easy-align"
+plugin "godlygeek/tabular"
 
 if [[ ! -f $local_bin/selecta ]]; then
   curl -L -o "$local_bin/selecta" \

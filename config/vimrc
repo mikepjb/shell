@@ -11,7 +11,6 @@ set backspace=indent,eol,start
 set formatoptions-=t              " Don't add line-breaks for lines over 'textwidth' chars
 set hlsearch
 set incsearch                     " cursor follows matches as you /search
-set ignorecase
 set nonumber
 set nostartofline
 set showmatch
@@ -53,23 +52,19 @@ nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
 nnoremap <C-l> <C-w>l
 inoremap <C-l> <space>=><space>
-inoremap <C-u> - TODO<space>
 inoremap <C-c> <esc>
 nnoremap S <C-^>
 nnoremap <C-q> :q<CR>
 nnoremap <C-g> :noh<CR>:redraw!<CR><C-g>
 nnoremap gd <C-]>
-nnoremap gD g<C-]>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gs :grep<space>
 nnoremap gc :!ctags -R .<CR>
 nnoremap gr :read !snip<space>
-nnoremap gl :cclose<CR>
+nnoremap <expr> gl empty(filter(getwininfo(), 'v:val.quickfix')) ? ':copen<CR>' : ':cclose<CR>'
 nnoremap Q @q
-xmap ga <Plug>(EasyAlign)
-nmap ga <Plug>(EasyAlign)
 nnoremap <A-n> :cnext<CR>
 nnoremap <A-p> :cprevious<CR>
 cnoremap        <C-A> <Home>
@@ -91,10 +86,6 @@ augroup base
   autocmd FileType go,java,rust,sh setl ts=4 sw=4 sts=4
 augroup END
 
-command! SudoWrite :w !sudo tee > /dev/null %
-command! TrimWhitespace :%s/\s\+$//
-command! GenerateHelpTags :helptags ALL
-
 function! SelectaCommand(choice_command, selecta_args, vim_command)
   try
     let selection = system(a:choice_command . " | selecta " . a:selecta_args)
@@ -103,7 +94,6 @@ function! SelectaCommand(choice_command, selecta_args, vim_command)
     exec a:vim_command . " " . selection
   catch /Vim:Interrupt/
     redraw!
-    return
   endtry
 endfunction
 

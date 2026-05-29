@@ -68,16 +68,6 @@ hi link gitcommitBranch String
 hi link markdownCode Type
 hi link markdownCodeBlock Type
 
-hi link rubyDefine          Keyword
-hi link rubySymbol          Constant
-hi link rubyEval            rubyMethod
-hi link rubyException       rubyMethod
-hi link rubyInclude         rubyMethod
-hi link rubyMacro           rubyMethod
-hi link rubyStringDelimiter rubyString
-hi link rubyRegexp          Regexp
-hi link rubyRegexpDelimiter rubyRegexp
-
 hi link javascriptRegexpString  Regexp
 
 hi link diffAdded               String
@@ -85,7 +75,7 @@ hi link diffRemoved             Statement
 hi link diffLine                PreProc
 hi link diffSubname             Comment
 
-" We use autocmds to ensure these run after markdown syntax file is loaded
+" We use autocmds to ensure these run after syntax files is loaded
 augroup MarkdownTaskHighlighting
   autocmd!
   autocmd FileType markdown syntax match Todo /\v\c<(TODO)>/ containedin=ALL
@@ -93,9 +83,14 @@ augroup MarkdownTaskHighlighting
   autocmd FileType markdown syntax match TaskDone /\v\c<(DONE)>/ containedin=ALL
 augroup END
 
-" You can leave these at the root of the colorscheme file safely
 hi TaskNext ctermfg=1 guifg=#FF0000
 hi TaskDone ctermfg=2 guifg=#00FF00 cterm=strikethrough gui=strikethrough
 
 hi TaskNext ctermfg=1
 hi TaskDone ctermfg=2 cterm=strikethrough
+
+augroup TrailingWhitespaceHighlighting
+  autocmd!
+  autocmd FileType * highlight RedundantWhitespace ctermbg=0
+  autocmd FileType * match RedundantWhitespace /\s\+$\| \+\ze\t/
+augroup END
