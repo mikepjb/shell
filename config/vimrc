@@ -9,28 +9,21 @@ filetype plugin indent on
 set autoindent
 set backspace=indent,eol,start
 set formatoptions-=t              " Don't add line-breaks for lines over 'textwidth' chars
-set hlsearch
-set incsearch                     " cursor follows matches as you /search
+set hlsearch incsearch            " highlight + follows matches as you /search
 set nonumber
 set nostartofline
 set showmatch
-set showcmd                       " bottom right of screen shows partially-typed commands i.e 'g'
-set textwidth=80                  " 80 columns
+set textwidth=80 colorcolumn=+1   " 80 column width + highlight
 set fillchars=vert:│
 set belloff=all
 set clipboard=unnamed,unnamedplus
-set nowritebackup
-set noswapfile
-set tabstop=2                     " Number of spaces <tab> counts for
-set softtabstop=2
-set shiftwidth=2
-set expandtab                     " Space > Tabs
-set colorcolumn=+1
 set nowrap
 set gdefault                      " replaces all matches, not just the first
 set re=2                          " re=1 by default, typescript hl is slow without this
-set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
+set nowritebackup noswapfile      " no temporary files please, git covers saves
 set laststatus=2
+set tabstop=2 softtabstop=2 shiftwidth=2 expandtab " 2-width, prefer spaces > tab
+set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
 let &l:errorformat = '%f:%l:%c:\ %m,%f:%l:\ %m,%-G%.%#'
 let [g:omni_sql_no_default_maps, g:sh_noisk] = [1, 1] " prevent remaps
 
