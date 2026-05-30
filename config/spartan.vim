@@ -78,9 +78,9 @@ hi link diffSubname             Comment
 " We use autocmds to ensure these run after syntax files is loaded
 augroup MarkdownTaskHighlighting
   autocmd!
-  autocmd FileType markdown syntax match Todo /\v\c<(TODO)>/ containedin=ALL
-  autocmd FileType markdown syntax match TaskNext /\v\c<(NEXT|CURRENT)>/ containedin=ALL
-  autocmd FileType markdown syntax match TaskDone /\v\c<(DONE)>/ containedin=ALL
+  autocmd FileType markdown syntax match Todo /\v\C<(TODO)>/ containedin=ALL
+  autocmd FileType markdown syntax match TaskNext /\v\C<(NEXT|CURRENT)>/ containedin=ALL
+  autocmd FileType markdown syntax match TaskDone /\v\C<(DONE)>/ containedin=ALL
 augroup END
 
 hi TaskNext ctermfg=1 guifg=#FF0000
