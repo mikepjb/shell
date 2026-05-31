@@ -205,6 +205,7 @@ case "$1" in
     html) echo "$snip_html";;
     css) echo "$snip_css";;
     task) echo "$snip_task";;
+    deps) echo "$snip_deps";;
     htmx) echo "$snip_htmx";;
     core) echo "$snip_core";;
     user) echo "$snip_user";;
