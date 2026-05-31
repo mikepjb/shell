@@ -36,9 +36,177 @@ read -r -d '' snip_task << EOM
 - [ ] We will do this
 EOM
 
+read -r -d '' snip_deps << EOM
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.4"}
+
+        ;; Ring for HTTP server
+        ring/ring-core {:mvn/version "1.9.6"}
+        ring/ring-jetty-adapter {:mvn/version "1.9.6"}
+        ring/ring-devel {:mvn/version "1.9.6"} ;; Added for middleware.reload
+
+        ;; Hiccup for HTML generation
+        hiccup/hiccup {:mvn/version "2.0.0-alpha2"}
+
+        ;; Integrant for component management
+        integrant/integrant {:mvn/version "0.8.1"}
+
+        ;; Routing
+        metosin/reitit-ring {:mvn/version "0.6.0"}
+
+        ;; Logging
+        org.slf4j/slf4j-simple {:mvn/version "2.0.7"}}
+
+ :aliases
+ {:dev {:extra-paths ["dev" "test"]
+        :extra-deps {integrant/repl {:mvn/version "0.3.3"}}}
+
+  :test {:extra-paths ["test"]
+         :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
+                      io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+         :main-opts ["-m" "cognitect.test-runner"]}
+
+  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.9.6" :git/sha "8e78bcc"}}
+          :ns-default build}
+  :run {:main-opts ["-m" "app.core"]}}}
+EOM
+
+read -r -d '' snip_htmx << EOM
+(ns app.views
+  (:require [hiccup2.core :as h]
+            [hiccup.page :as page]))
+
+(defn layout [content]
+  (page/html5
+      [:html
+       [:head
+        [:meta {:charset "UTF-8"}]
+        [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
+        [:title "Clojure + HTMX Demo"]
+        ;; Include HTMX from CDN
+        [:script {:src "https://unpkg.com/htmx.org@1.9.6" :defer true}]
+        ;; Simple CSS
+        [:style "body { font-family: system-ui, sans-serif; line-height: 1.5; max-width: 800px; margin: 0 auto; padding: 1rem; }"]]
+       [:body content]]))
+
+(defn index []
+  (layout
+    [:div
+     [:h1 "Clojure + HTMX Demo"]
+     [:p "This is a minimal server using Clojure, Ring, Hiccup, and Integrant."]
+     [:div.demo
+      [:h2 "HTMX Counter Example"]
+      [:div#counter
+       [:span "Count: 0"]
+       [:button {:hx-get "/counter"
+                 :hx-target "#counter"
+                 :hx-swap "outerHTML"}
+        "Increment"]]]]))
+
+(defonce count-store (atom 0))
+
+(defn counter [reset?]
+  (if reset?
+    (reset! count-store 0)
+    (swap! count-store inc))
+  (str (h/html [:div#counter
+                [:span (str "Count: " @count-store)]
+                [:button {:hx-get "/counter"
+                          :hx-target "#counter"
+                          :hx-swap "outerHTML"}
+                 "Increment"]
+                [:button {:hx-get "/counter-reset"
+                          :hx-target "#counter"
+                          :hx-swap "outerHTML"}
+                 "Reset"]])))
+EOM
+
+read -r -d '' snip_core << EOM
+(ns app.core
+  (:require [integrant.core :as ig]
+            [ring.adapter.jetty :as jetty]
+            [ring.middleware.reload :refer [wrap-reload]]
+            [reitit.ring :as ring])
+  (:gen-class))
+
+(defn dev-handler [handler]
+  (if (= (System/getenv "CLOJURE_ENV") "dev")
+    (-> handler
+        (wrap-reload {:dirs ["src"]}))
+    handler))
+
+(defn routes [_]
+  [["/api/health" {:get (fn [_] (response/response {:status "healthy"}))}]
+   ["/" {:get (fn [_] (-> (response/response (views/index))
+                          (response/content-type "text/html")))}]
+   ["/counter" {:get (fn [_] (-> (response/response (views/counter false))
+                                 (response/content-type "text/html")))}]
+   ["/counter-reset" {:get (fn [_] (-> (response/response (views/counter true))
+                                       (response/content-type "text/html")))}]])
+
+(defn app-system [config]
+  {:adapter/jetty {:handler (ig/ref :handler/ring)
+                   :port (:port config 3000)}
+   :handler/ring {:routes (routes/routes config)
+                  :dev? (:dev? config false)}})
+
+(defmethod ig/init-key :adapter/jetty [_ {:keys [handler port]}]
+  (println "Starting server on port" port)
+  (jetty/run-jetty handler {:port port :join? false}))
+
+(defmethod ig/halt-key! :adapter/jetty [_ server]
+  (.stop server))
+
+(defmethod ig/init-key :handler/ring [_ {:keys [routes dev?]}]
+  (cond-> (ring/ring-handler
+           (ring/router routes)
+           (ring/create-default-handler))
+    dev? dev-handler))
+
+(defn -main [& args]
+  (let [config {:port (or (some-> (System/getenv "PORT") Integer/parseInt) 3000)
+                :dev? (= (System/getenv "CLOJURE_ENV") "dev")}
+        system (-> config
+                   app-system
+                   ig/init)]
+    (.addShutdownHook (Runtime/getRuntime)
+                      (Thread. #(ig/halt! system)))))
+EOM
+
+read -r -d '' snip_user << EOM
+(ns user
+  (:require [integrant.repl :refer [clear go halt prep init reset reset-all]]
+            [integrant.repl.state :refer [system config]]
+            [app.core :as core]))
+
+(integrant.repl/set-prep!
+ (fn []
+   (core/app-system {:port 3000 :dev? true})))
+
+(defn start []
+  (go))
+
+(defn stop []
+  (halt))
+
+(defn restart []
+  (reset))
+
+(comment
+  (start) ;; Start the system
+  (stop) ;; Stop the system
+  (restart) ;; Reload changed files and restart
+  system ;; Get access to the running system
+  (:adapter/jetty system) ;; For example, get the web server
+  )
+EOM
+
 case "$1" in
     html) echo "$snip_html";;
     css) echo "$snip_css";;
     task) echo "$snip_task";;
+    htmx) echo "$snip_htmx";;
+    core) echo "$snip_core";;
+    user) echo "$snip_user";;
     *) echo "No snip for '$1' was found";;
 esac
