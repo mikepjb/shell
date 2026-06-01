@@ -1,6 +1,6 @@
 ;; User level Clojure config
 {:aliases
- {:dev
+ {:nrepl
   {:extra-deps {nrepl/nrepl {:mvn/version "1.7.0"}
                 cider/cider-nrepl {:mvn/version "0.59.0"}}
    :main-opts ["-m" "nrepl.cmdline"

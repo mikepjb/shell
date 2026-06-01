@@ -126,7 +126,8 @@ read -r -d '' snip_core << EOM
   (:require [integrant.core :as ig]
             [ring.adapter.jetty :as jetty]
             [ring.middleware.reload :refer [wrap-reload]]
-            [reitit.ring :as ring])
+            [reitit.ring :as ring]
+            [ring.util.response :as response])
   (:gen-class))
 
 (defn dev-handler [handler]
