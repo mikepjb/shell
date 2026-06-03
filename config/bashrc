@@ -1,6 +1,7 @@
-# Bash Configuration
+# ------------------------------------------
+# Bash configuration
+# ------------------------------------------
 
-# -- Environment --------------------------------------------------------------
 # Mac OS likes to think bash is going out of fashion.
 export BASH_SILENCE_DEPRECATION_WARNING=1
 [ -t 0 ] && stty -ixon # disable C-s C-q slow/regular print keybinds, only when in a terminal
@@ -8,32 +9,36 @@ export BASH_SILENCE_DEPRECATION_WARNING=1
 export PAGER='less -S' # instead of wrapping long/wide output, explore with less
 export NPM_CONFIG_PREFIX=$HOME/.npm
 export XDG_CONFIG_HOME=$HOME/.config
+export HISTSIZE=50000
+export HISTFILESIZE=50000
+export HISTCONTROL=ignoreboth
+export CDPATH=.:$HOME/src
+export EDITOR='vim'
 
-go_paths="/usr/local/go/bin:$HOME/go/bin"
-node_paths="$HOME/.config/n/bin:$HOME/.npm/bin"
-deno_paths="$HOME/.deno/bin/"
-mac_paths="/sbin:/opt/homebrew/bin"
-sys_paths="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin"
-rust_paths="$HOME/.cargo/bin"
-user_paths="$HOME/.local/bin"
-export PATH="$user_paths:$mac_paths:$sys_paths:$go_paths:$rust_paths:$deno_paths:$node_paths"
+shopt -s histappend
 
-if [[ -n "${PREFIX+x}" ]]; then # for termux
-    export PATH="$PREFIX/bin:$PATH"
+path_collection=(
+    "$HOME/.local/bin" # User bin dir
+    "usr/local/go/bin"
+    "$HOME/go/bin"
+    "/bin"
+    "/sbin" # Mac OS puts some binaries in here like `lsof`
+    "/opt/homebrew/bin" # Mac OS Homebrew package manager
+    "/usr/local/bin"
+    "/usr/bin"
+    "/usr/local/sbin"
+    "$HOME/.cargo/bin" # Rust!
+)
+
+if [[ -z "$PATH_EXPANDED" ]]; then
+    join_array() { local IFS=':'; printf '%s' "$*"; }
+    export PATH="$(join_array "${path_collection[@]}")"
+    export PATH_EXPANDED=1
 fi
 
 eval "$(fnm env --use-on-cd --shell bash)"
 
-HISTSIZE=50000
-HISTFILESIZE=50000
-HISTCONTROL=ignoreboth
-shopt -s histappend
-
-CDPATH=.:$HOME/src
-
-export EDITOR='vim'
 alias vi='vim'
-
 alias k='kubectl'
 alias kc='kubectl config current-context'
 alias ks='kubectl config use-context $(k config get-contexts -o "name" | selecta)'

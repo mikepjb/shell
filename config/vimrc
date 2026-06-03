@@ -1,5 +1,5 @@
 " -----------------------------------------
-" Spartan config
+" Vim configuration
 " -----------------------------------------
 
 set nocompatible " Disable VI Compatibility

@@ -8,7 +8,7 @@
 # Now experimenting with 9B at Q5 quantisation from 70tps down to 40tps vs. 4B
 # Q3.
 
-model_size="4B"
+model_size="9B"
 
 model_file="$HOME/models/Qwen3.5-$model_size-UD-Q5_K_XL.gguf"
 
