@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 #
 # Consult is a script to be able to query Qwen or my local LLM of choice.
-# Either within neovim or via bash.
+# Either within vim or via bash.
 #
 # Usage:
-# - `cat src/core.clj | consult "review this file"`
+# - `cat src/core.clj | consult -m "review this file"`
+# - `cat src/core.clj | consult` (Opens Vim to write instructions)
 
 ENDPOINT="http://127.0.0.1:7777/v1/chat/completions"
 MODEL="qwen-9b"
@@ -21,19 +22,49 @@ CRITICAL DIRECTIVES:
 2. Be direct, dense, and objective. Strip out conversational filler, introductions, greetings, and concluding remarks.
 3. Deliver answers optimized for a terminal UI: prioritize clean code blocks over long prose explanations."
 
-USER_INPUT="$@"
+# 1. Capture piped context if available
 if [ ! -t 0 ]; then
     CONTEXT=$(cat -)
 else
     CONTEXT=""
 fi
 
+# 2. Check for the Git-style -m flag
+if [[ "$1" == "-m" || "$1" == "--message" ]]; then
+    USER_INPUT="$2"
+else
+    # Fallback to Vim editor
+    TMPFILE=$(mktemp /tmp/consult_prompt.XXXXXX)
+    trap 'rm -f "$TMPFILE"' EXIT
+
+    # Construct standard Git-style template
+    echo -e "\n" > "$TMPFILE"
+    echo "# ---------------------------------------------------------------------" >> "$TMPFILE"
+    echo "# Please enter your prompt instructions above." >> "$TMPFILE"
+    echo "# Lines starting with '#' will be ignored." >> "$TMPFILE"
+    echo "# Leaving this file empty will abort the request." >> "$TMPFILE"
+    echo "# ---------------------------------------------------------------------" >> "$TMPFILE"
+
+    # Open Vim handling TTY redirection cleanly
+    vim "$TMPFILE" < /dev/tty > /dev/tty
+
+    # Strip out comments and cleanup whitespace
+    USER_INPUT=$(grep -v '^#' "$TMPFILE" | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')
+
+    if [ -z "$USER_INPUT" ]; then
+        echo "⚠️ Prompt empty. Consult aborted."
+        exit 0
+    fi
+fi
+
+# 3. Combine Context and Instructions
 if [ -n "$CONTEXT" ]; then
     FULL_PROMPT=$(printf "\`\`\`\n%s\n\`\`\`\n\n%s" "$CONTEXT" "$USER_INPUT")
 else
     FULL_PROMPT="$USER_INPUT"
 fi
 
+# 4. Build Payload and Execute
 PAYLOAD=$(jq -n \
     --arg model "$MODEL" \
     --arg sys "$SYSTEM_PROMPT" \
