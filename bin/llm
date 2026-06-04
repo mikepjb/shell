@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+#
+# Currently trialing Gemma 4 12B (Q5)
+#
+# Previous models:
+# - Qwen 3.5 2B (Q3) :: hallucenates too much (i.e thinks lucene-clojure exists)
+# - Qwen 3.5 4B (Q3) :: good balance speed/quality, limited to stdlib/core knowledge
+# - Qwen 3.5 9B (Q5) :: 40tps, good results but will sometimes hang
+
+model_file="$HOME/models/gemma-4-12b-it-UD-Q5_K_XL.gguf"
+
+if [ ! -f $model_file ]; then
+    hf download \
+        "unsloth/gemma-4-12b-it-GGUF" \
+        "gemma-4-12b-it-UD-Q5_K_XL.gguf" \
+        --local-dir ~/models
+fi
+
+# model_size="9B"
+# model_file="$HOME/models/Qwen3.5-$model_size-UD-Q5_K_XL.gguf"
+# 
+# if [ ! -f $model_file ]; then
+#     hf download \
+#         "unsloth/Qwen3.5-$model_size-GGUF" \
+#         "Qwen3.5-$model_size-UD-Q5_K_XL.gguf" \
+#         --local-dir ~/models
+# fi
+
+args=(
+    -m "$model_file"        # Path to the model file
+    --jinja  # Required for Gemma 4 12B, otherwise prefer --no-jinja
+    --host 127.0.0.1
+    --port 7777
+    -c 8096                 # Context size (tokens)
+    --cache-prompt          # Cache the prompt to speed up requests
+    --metrics               # Show tps etc in llama-server's logs
+    -ngl -1                 # Offload all layers to GPU (-1)
+    -np 1                   # Number of parallel slots/users
+    --flash-attn on         # Enable Flash Attention for speed
+    --temp 1              # LLM temperature (creativity)
+    --top-p 0.95            # Top-p sampling
+    --top-k 64              # Top-k sampling
+)
+
+llama-server "${args[@]}"

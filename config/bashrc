@@ -19,11 +19,11 @@ shopt -s histappend
 
 path_collection=(
     "$HOME/.local/bin" # User bin dir
+    "/opt/homebrew/bin" # Mac OS Homebrew package manager
     "usr/local/go/bin"
     "$HOME/go/bin"
     "/bin"
     "/sbin" # Mac OS puts some binaries in here like `lsof`
-    "/opt/homebrew/bin" # Mac OS Homebrew package manager
     "/usr/local/bin"
     "/usr/bin"
     "/usr/local/sbin"
@@ -39,6 +39,7 @@ fi
 eval "$(fnm env --use-on-cd --shell bash)"
 
 alias vi='vim'
+alias c='consult'
 alias k='kubectl'
 alias kc='kubectl config current-context'
 alias ks='kubectl config use-context $(k config get-contexts -o "name" | selecta)'

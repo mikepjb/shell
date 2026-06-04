@@ -8,7 +8,7 @@
 # - `cat src/core.clj | consult` (Opens Vim to write instructions)
 
 ENDPOINT="http://127.0.0.1:7777/v1/chat/completions"
-MODEL="qwen-9b"
+MODEL="gemma-4-12b"
 SYSTEM_PROMPT="You are an expert senior software engineer. Your core expertise
 is Clojure, but you are highly proficient in Rust, Go, JavaScript, TypeScript,
 and Java.
