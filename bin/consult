@@ -4,12 +4,11 @@
 # Either within vim or via bash.
 #
 # Usage:
-# - `cat src/core.clj | consult -m "review this file"`
+# - `cat src/core.clj | consult -p "review this file"`
 # - `cat src/core.clj | consult` (Opens Vim to write instructions)
 
-ENDPOINT="http://127.0.0.1:7777/v1/chat/completions"
-MODEL="gemma-4-12b"
-SYSTEM_PROMPT="You are an expert senior software engineer. Your core expertise
+endpoint="http://127.0.0.1:7777/v1/chat/completions"
+system_prompt="You are an expert senior software engineer. Your core expertise
 is Clojure, but you are highly proficient in Rust, Go, JavaScript, TypeScript,
 and Java.
 
@@ -22,76 +21,68 @@ CRITICAL DIRECTIVES:
 2. Be direct, dense, and objective. Strip out conversational filler, introductions, greetings, and concluding remarks.
 3. Deliver answers optimized for a terminal UI: prioritize clean code blocks over long prose explanations."
 
-# 1. Capture piped context if available
+# pull in stdin if provided i.e `cat file.md | consult -p 'review this'`
+context=""
 if [ ! -t 0 ]; then
-    CONTEXT=$(cat -)
-else
-    CONTEXT=""
+    context=$(cat -)
 fi
 
-# 2. Check for the Git-style -m flag
-if [[ "$1" == "-m" || "$1" == "--message" ]]; then
-    USER_INPUT="$2"
+# check if prompt was provided as a parameter, otherwise open vim to write it.
+if [[ "$1" == "-p" ]]; then
+    prompt="$2"
 else
-    # Fallback to Vim editor
-    TMPFILE=$(mktemp /tmp/consult_prompt.XXXXXX)
-    trap 'rm -f "$TMPFILE"' EXIT
+    tmp_file=$(mktemp /tmp/consult_prompt.XXXXXX)
+    trap 'rm -f "$tmp_file"' EXIT
+    vim "$tmp_file" < /dev/tty > /dev/tty
+    prompt=$(grep -v '^#' "$tmp_file" | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')
 
-    # Construct standard Git-style template
-    echo -e "\n" > "$TMPFILE"
-    echo "# ---------------------------------------------------------------------" >> "$TMPFILE"
-    echo "# Please enter your prompt instructions above." >> "$TMPFILE"
-    echo "# Lines starting with '#' will be ignored." >> "$TMPFILE"
-    echo "# Leaving this file empty will abort the request." >> "$TMPFILE"
-    echo "# ---------------------------------------------------------------------" >> "$TMPFILE"
-
-    # Open Vim handling TTY redirection cleanly
-    vim "$TMPFILE" < /dev/tty > /dev/tty
-
-    # Strip out comments and cleanup whitespace
-    USER_INPUT=$(grep -v '^#' "$TMPFILE" | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')
-
-    if [ -z "$USER_INPUT" ]; then
+    if [ -z "$prompt" ]; then
         echo "⚠️ Prompt empty. Consult aborted."
         exit 0
     fi
 fi
 
-# 3. Combine Context and Instructions
-if [ -n "$CONTEXT" ]; then
-    FULL_PROMPT=$(printf "\`\`\`\n%s\n\`\`\`\n\n%s" "$CONTEXT" "$USER_INPUT")
-else
-    FULL_PROMPT="$USER_INPUT"
+# include context if this was provided via stdin
+if [ -n "$context" ]; then
+    prompt="$prompt\n\n\n$context"
 fi
 
-# 4. Build Payload and Execute
-PAYLOAD=$(jq -n \
-    --arg model "$MODEL" \
-    --arg sys "$SYSTEM_PROMPT" \
-    --arg user "$FULL_PROMPT" \
-    '{model: $model, messages: [{role: "system", content: $sys}, {role: "user", content: $user}]}')
+payload=$(jq -n \
+    --arg sys "$system_prompt" \
+    --arg user "$prompt" \
+    '{
+        messages: [{role: "system", content: $sys}, {role: "user", content: $user}],
+        stream: false,
+        reasoning_format: "auto",
+        chat_template_kwargs: {enable_thinking: false},
+        reasoning_control: true,
+        backend_sampling: false,
+        timings_per_token: true
+    }')
 
-START_TIME=$(date +%s%N)
-RAW_RESPONSE=$(curl -sS -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$ENDPOINT")
-END_TIME=$(date +%s%N)
+start_time=$(date +%s%N)
+raw_response=$(curl -sS -X POST \
+    -H "Content-Type: application/json" \
+    -H "Transfer-Encoding:" \
+    -d "$payload" "$endpoint")
+end_time=$(date +%s%N)
 
-RESPONSE=$(echo "$RAW_RESPONSE" | jq -r '.choices[0].message.content // "Error: No content received."')
-COMPLETION_TOKENS=$(echo "$RAW_RESPONSE" | jq -r '.usage.completion_tokens // 0')
+response=$(echo "$raw_response" | jq -r '.choices[0].message.content // "Error: No content received."')
+completion_tokens=$(echo "$raw_response" | jq -r '.usage.completion_tokens // 0')
 
-DURATION_NS=$((END_TIME - START_TIME))
-DURATION_SEC=$(awk "BEGIN {print $DURATION_NS / 1000000000}")
+duration_ns=$((end_time - start_time))
+duration_sec=$(awk "BEGIN {print $duration_ns / 1000000000}")
 
-if (( $(awk "BEGIN {print ($COMPLETION_TOKENS > 0 && $DURATION_SEC > 0) ? 1 : 0}") )); then
-    TOKENS_PER_SEC=$(awk "BEGIN {printf \"%.2f\", $COMPLETION_TOKENS / $DURATION_SEC}")
-else
-    TOKENS_PER_SEC="0.00"
+tps='0.00'
+if (( $(awk "BEGIN {print ($completion_tokens > 0 && $duration_sec > 0) ? 1 : 0}") )); then
+    tps=$(awk "BEGIN {printf \"%.2f\", $completion_tokens / $duration_sec}")
 fi
 
-STATS_FOOTER=$(printf "\n\n---\n*⏱️ Time taken: %.2fs | 🚀 Speed: %s tok/s (%s tokens)*" "$DURATION_SEC" "$TOKENS_PER_SEC" "$COMPLETION_TOKENS")
+footer=$(printf "\n\n---\n*⏱️ Time taken: %.2fs | 🚀 Speed: %s tok/s (%s tokens)*" "$duration_sec" "$tokens_per_sec" "$completion_tokens")
 
 if [ -t 1 ] && command -v glow &> /dev/null; then
-    (echo "$RESPONSE"; echo "$STATS_FOOTER") | glow
+    (echo "$response"; echo "$footer") | glow
 else
-    echo "$RESPONSE"
-    echo "$STATS_FOOTER"
+    echo "$response"
+    echo "$footer"
 fi
