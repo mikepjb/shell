@@ -10,7 +10,7 @@
 # - Theorised Qwen 3.5 2B with finetuning (Clojure open source?), for my
 # particular use case this could be gold!
 
-model_size="4B"
+model_size="9B"
 model_file="$HOME/models/Qwen3.5-$model_size-UD-Q5_K_XL.gguf"
 
 if [ ! -f $model_file ]; then
@@ -30,7 +30,7 @@ args=(
     --metrics              # Show tps etc in llama-server's logs
     -ngl -1                # Offload all layers to GPU (-1)
     -np 1                  # Number of parallel slots/users
-    --temp 1               # LLM temperature (creativity) (1 for Gemma, 0.6 Qwen)
+    --temp 0.6             # LLM temperature (creativity) (1 for Gemma, 0.6 Qwen)
     --top-p 0.95           # Top-p sampling
     --top-k 20             # Top-k sampling (64 for Gemma, 20 for Qwen)
     --flash-attn on        # Enable Flash Attention for speed

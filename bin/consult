@@ -40,6 +40,8 @@ else
         echo "⚠️ Prompt empty. Consult aborted."
         exit 0
     fi
+
+    echo "$prompt" # print prompt if it was input for vim so it's in bash history.
 fi
 
 # include context if this was provided via stdin
@@ -78,7 +80,9 @@ if (( $(awk "BEGIN {print ($completion_tokens > 0 && $duration_sec > 0) ? 1 : 0}
     tps=$(awk "BEGIN {printf \"%.2f\", $completion_tokens / $duration_sec}")
 fi
 
-footer=$(printf "\n\n---\n*⏱️ Time taken: %.2fs | 🚀 Speed: %s tok/s (%s tokens)*" "$duration_sec" "$tokens_per_sec" "$completion_tokens")
+footer=$(printf \
+    "\n\n---\n*⏱️ Time taken: %.2fs | 🚀 Speed: %s tok/s (%s tokens)*" \
+    "$duration_sec" "$tps" "$completion_tokens")
 
 if [ -t 1 ] && command -v glow &> /dev/null; then
     (echo "$response"; echo "$footer") | glow
