@@ -18,6 +18,7 @@ export EDITOR='vim'
 shopt -s histappend
 
 path_collection=(
+    "$HOME/src/llama.cpp/build/bin" # llama.cpp built from source
     "$HOME/.local/bin" # User bin dir
     "/opt/homebrew/bin" # Mac OS Homebrew package manager
     "usr/local/go/bin"
@@ -30,11 +31,8 @@ path_collection=(
     "$HOME/.cargo/bin" # Rust!
 )
 
-if [[ -z "$PATH_EXPANDED" ]]; then
-    join_array() { local IFS=':'; printf '%s' "$*"; }
-    export PATH="$(join_array "${path_collection[@]}")"
-    export PATH_EXPANDED=1
-fi
+join_array() { local IFS=':'; printf '%s' "$*"; }
+export PATH="$(join_array "${path_collection[@]}")"
 
 eval "$(fnm env --use-on-cd --shell bash)"
 

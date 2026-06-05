@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# llama-update is a script used to control the installation of llama.cpp since
+# it is a fast moving project, the latest branch can break fairly often.
+
+src_url="https://github.com/ggml-org/llama.cpp.git"
+src_dir="$HOME/src/llama.cpp"
+release_version="b9518"
+extra_build_params=""
+
+if [[ ! -d "$src_dir" ]]; then
+    git clone "$src_url" "$src_dir"
+else
+    git -C "$src_dir" pull
+fi
+
+cd "$src_dir"
+
+git checkout "$release_version"
+
+if [[ $(uname) = 'Linux' ]]; then
+    extra_build_params="-DGGML_VULKAN=1"
+fi
+
+cmake -B build "$extra_build_params"
+cmake --build build --config Release
+
+# N.B Binaries end up in ./build/bin which I've added to PATH

@@ -19,6 +19,7 @@ declare -A -r PACKAGES=(
     ['pip']=''
     ['pipx']=''
     ['python']=''
+    ['zig']=''
     ['rg']='ripgrep'
     ['fd']='fd'
     ['shellcheck']=''
