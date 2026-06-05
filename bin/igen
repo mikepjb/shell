@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+model_file="$HOME/models/sdxl-lightning.gguf"
+
+if [ ! -f $model_file ]; then
+    hf download \
+        "OlegSkutte/SDXL-Lightning-GGUF" \
+        "sdxl_lightning_4step.q8_0.gguf" \
+        --local-dir ~/models
+fi
+
+# Had to download:
+# git clone https://aur.archlinux.org/stable-diffusion.cpp-vulkan-git.git
+# and remove the outdate mv command (because originally the tool was `sd` but is
+# now `sd-cli` and installation would fail because it can't find the 'missing'
+# binary.
+
+# example prompt
+
+# sd-cli \
+#   -m ~/models/sdxl_lightning_4step.q8_0.gguf \
+#   -p "A retro cyberpunk hacker terminal, highly detailed, neon purple glow" \
+#   --vae-tiling --vae-conv-direct --diffusion-conv-direct \
+#   --steps 4 --cfg-scale 1.5 -W 1024 -H 1024 -o output.png
