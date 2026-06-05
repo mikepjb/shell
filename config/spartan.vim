@@ -41,11 +41,11 @@ hi qfLineNr     ctermfg=3
 " Syntax
 hi Comment     ctermfg=8
 hi Todo        ctermfg=3 ctermbg=NONE
-hi DiffAdd     ctermfg=2
-hi DiffChange  ctermfg=3
-hi DiffDelete  ctermfg=1
-hi DiffText    ctermfg=4
-hi DiffTextAdd ctermfg=4
+hi DiffAdd     ctermfg=2 ctermbg=NONE
+hi DiffChange  ctermfg=3 ctermbg=NONE
+hi DiffDelete  ctermfg=1 ctermbg=NONE
+hi DiffText    ctermfg=4 ctermbg=NONE
+hi DiffTextAdd ctermfg=4 ctermbg=NONE
 hi SpellBad    ctermfg=1 ctermbg=NONE cterm=underline
 hi SpellCap    ctermfg=3 ctermbg=NONE cterm=underline
 hi SpellLocal  ctermfg=3 ctermbg=NONE cterm=underline
