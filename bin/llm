@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 #
-# Currently trialing Qwen 3.5 4B (Q5)
+# Current primary is Qwen 3.5 4B (Q5).
+#
+# The 4B Q5 model is around 50-60% faster than 9B on my 780M machine AND the Q5
+# vs Q3 makes a really big difference on Clojure related questions, theory here
+# is that less well trained data gets cracked first, where previously I had
+# assumed that Clojure just wasn't in the dataset vs. Go/Javascript knowledge.
 #
 # Previous models:
 # - Qwen 3.5 2B (Q3) :: hallucenates too much (i.e thinks lucene-clojure exists)
@@ -9,14 +14,20 @@
 # - Gemma 4 12B (Q5) :: Good on M3 Max (~30tps) does not load on my 780M
 # - Theorised Qwen 3.5 2B with finetuning (Clojure open source?), for my
 # particular use case this could be gold!
+#
+# Quantisation:
+# - Q5 > Q3, at least on 780M is only like 10-15% slower but the quality of the
+# output means this is a very good trade as there is little speed up to
+# compensate.
 
-model_size="9B"
-model_file="$HOME/models/Qwen3.5-$model_size-UD-Q5_K_XL.gguf"
+model_size="4B"
+quantisation="UD-Q5_K_XL"
+model_file="$HOME/models/Qwen3.5-$model_size-$quantisation.gguf"
 
 if [ ! -f $model_file ]; then
     hf download \
         "unsloth/Qwen3.5-$model_size-GGUF" \
-        "Qwen3.5-$model_size-UD-Q5_K_XL.gguf" \
+        "Qwen3.5-$model_size-$quantisation.gguf" \
         --local-dir ~/models
 fi
 
@@ -38,4 +49,5 @@ args=(
     --presence-penalty 0.0 # 0.0 == disabled
 )
 
+echo "llama-server ${args[@]}" # print args out incase we need to debug
 llama-server "${args[@]}"
