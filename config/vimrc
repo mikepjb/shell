@@ -26,6 +26,7 @@ set tabstop=2 softtabstop=2 shiftwidth=2 expandtab " 2-width, prefer spaces > ta
 set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
 let &l:errorformat = '%f:%l:%c:\ %m,%f:%l:\ %m,%-G%.%#'
 let [g:omni_sql_no_default_maps, g:sh_noisk] = [1, 1] " prevent remaps
+let g:markdown_fenced_languages=['bash=sh', 'css', 'html', 'go', 'ruby', 'sql', 'yaml']
 
 set undodir=/tmp/.vim-undo-dir undofile
 if !isdirectory(&undodir)

@@ -23,6 +23,7 @@ path_collection=(
     "/opt/homebrew/bin" # Mac OS Homebrew package manager
     "usr/local/go/bin"
     "$HOME/go/bin"
+    "$HOME/.npm/bin"
     "/bin"
     "/sbin" # Mac OS puts some binaries in here like `lsof`
     "/usr/local/bin"
