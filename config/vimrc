@@ -57,6 +57,7 @@ nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gs :grep<space>
 nnoremap gc :!ctags -R .<CR>
 nnoremap gr :read !snip<space>
+nnoremap gp :!goimports -w %<CR>
 nnoremap <expr> gl empty(filter(getwininfo(), 'v:val.quickfix')) ? ':copen<CR>' : ':cclose<CR>'
 nnoremap Q @q
 nnoremap <A-n> :cnext<CR>
