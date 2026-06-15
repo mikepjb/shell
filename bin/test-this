@@ -25,6 +25,8 @@ elif [[ -f "gradlew" ]]; then
     else
         ./gradlew test --tests="$1" --info # --stacktrace
     fi
+elif [[ -f "Makefile" ]]; then
+    make test
 else
     echo 'could not detect any tests to run'
 fi
