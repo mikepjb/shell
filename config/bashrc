@@ -72,6 +72,10 @@ encrypt() {
   tar czf - "$1" | openssl enc -aes-256-cbc -salt -out "${1}.tar.gz.enc"
 }
 
+hiccup() {
+  bb -d hickory -i "(import '[hickory.core :refer [parse as-hiccup]]) (-> *input* doall first parse as-hiccup println)"
+}
+
 [[ -f $HOME/.bashrc.local ]] && . $HOME/.bashrc.local
 
 jobs_signal() { [[ $(jobs) != "" ]] && echo -e "\x01\033[0;36m\x02\$\x01\033[0m\x02" || echo -e "\$"; }

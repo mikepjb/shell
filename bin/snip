@@ -59,7 +59,7 @@ read -r -d '' snip_deps << EOM
 
         ;; Data
         metosin/malli {:mvn/version "0.20.1"}
-        dakrone/cheshire {:mvn/version "6.2.0"}
+        metosin/jsonista {:mvn/version "1.0.0"}
         clj-common/camel-snake-kebab {:mvn/version "0.4.3"}
 
         ;; Search Engine

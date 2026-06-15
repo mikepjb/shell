@@ -1,6 +1,10 @@
 " -----------------------------------------
 " Vim configuration
 " -----------------------------------------
+"
+" TODO may be a problem when loading clojure filetype doesn't load fireplace the
+" first time a buffer is opened (at least via vim-fireplace, check original
+" handling code first.
 
 set nocompatible " Disable VI Compatibility
 syntax on
@@ -57,6 +61,7 @@ nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gs :grep<space>
 nnoremap gc :!ctags -R .<CR>
 nnoremap gr :read !snip<space>
+nnoremap gR :Eval (user/restart)<CR>
 nnoremap gp :!goimports -w %<CR>
 nnoremap <expr> gl empty(filter(getwininfo(), 'v:val.quickfix')) ? ':copen<CR>' : ':cclose<CR>'
 nnoremap Q @q
