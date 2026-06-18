@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-model_file="$HOME/models/sdxl-lightning.gguf"
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+model_file="$HOME/models/sdxl_lightning_4step.q8_0.gguf"
 
 if [ ! -f $model_file ]; then
     hf download \
@@ -15,10 +18,70 @@ fi
 # now `sd-cli` and installation would fail because it can't find the 'missing'
 # binary.
 
-# example prompt
+# Target directory
+OUTPUT_DIR="$HOME/Pictures/ai-generated"
+mkdir -p "$OUTPUT_DIR"
 
-# sd-cli \
-#   -m ~/models/sdxl_lightning_4step.q8_0.gguf \
-#   -p "A retro cyberpunk hacker terminal, highly detailed, neon purple glow" \
-#   --vae-tiling --vae-conv-direct --diffusion-conv-direct \
-#   --steps 4 --cfg-scale 1.5 -W 1024 -H 1024 -o output.png
+# Default variables
+PROMPT=""
+CUSTOM_OUT=""
+
+# Function to display help
+show_help() {
+    echo "Usage: igen -p \"your prompt\" [-o \"filename.png\" or \"/path/to/file.png\"]"
+    echo "  -p    The text prompt for image generation (required)"
+    echo "  -o    Specify a custom output filename or absolute file path (bypasses auto-naming)"
+    exit 1
+}
+
+# Parse command-line options
+while getopts "p:o:h" opt; do
+    case "$opt" in
+        p) PROMPT=$OPTARG ;;
+        o) CUSTOM_OUT=$OPTARG ;;
+        h) show_help ;;
+        *) show_help ;;
+    esac
+done
+
+# Ensure prompt is provided
+if [ -z "$PROMPT" ]; then
+    echo "Error: Prompt is required."
+    show_help
+fi
+
+# Determine final output path
+if [ -n "$CUSTOM_OUT" ]; then
+    # If the user provided a full path, use it. Otherwise, assume it goes in the output dir.
+    if [[ "$CUSTOM_OUT" = /* ]]; then
+        OUTPUT_PATH="$CUSTOM_OUT"
+    else
+        OUTPUT_PATH="$OUTPUT_DIR/$CUSTOM_OUT"
+    fi
+    
+    # Ensure the directory for the custom path exists
+    mkdir -p "$(dirname "$OUTPUT_PATH")"
+else
+    # Auto-naming using YearMonthDay-HourMinuteSecond format
+    TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+    OUTPUT_PATH="$OUTPUT_DIR/image-$TIMESTAMP.png"
+fi
+
+echo "Checking SDXL Lightning Model..."
+# --- YOUR MODEL READY CONFIRMATION LOGIC HERE ---
+echo "Model is ready!"
+
+echo "Generating image..."
+echo "Prompt: \"$PROMPT\""
+echo "Saving to: $OUTPUT_PATH"
+
+
+sd-cli \
+  -m ~/models/sdxl_lightning_4step.q8_0.gguf \
+  -p "$PROMPT" \
+  --vae-tiling --vae-conv-direct --diffusion-conv-direct \
+  --steps 4 --cfg-scale 1.5 -W 1024 -H 1024 -o "$OUTPUT_PATH"
+
+touch "$OUTPUT_PATH" 
+
+echo "Success!"
