@@ -39,6 +39,9 @@ EOM
 read -r -d '' snip_deps << EOM
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.12.4"}
+        ;; Clojurescript
+        ;; org.clojure/clojurescript {:mvn/version "1.12.145"}
+        ;; thheller/shadow-cljs {:mvn/version "3.4.11"}
 
         ;; Ring for HTTP server
         ring/ring-core {:mvn/version "1.9.6"}
@@ -48,7 +51,7 @@ read -r -d '' snip_deps << EOM
         ;; HTTP
         dakrone/clj-http {:mvn/version "3.13.1"}
 
-        ;; Hiccup for HTML generation
+        ;; Hiccup for HTML generation (deprecated in favor of Rum)
         hiccup/hiccup {:mvn/version "2.0.0"}
 
         ;; Integrant for component management

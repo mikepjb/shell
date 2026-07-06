@@ -1,10 +1,6 @@
 " -----------------------------------------
 " Vim configuration
 " -----------------------------------------
-"
-" TODO may be a problem when loading clojure filetype doesn't load fireplace the
-" first time a buffer is opened (at least via vim-fireplace, check original
-" handling code first.
 
 set nocompatible " Disable VI Compatibility
 syntax on
@@ -63,7 +59,8 @@ nnoremap gs :grep<space>
 nnoremap gc :!ctags -R .<CR>
 nnoremap gr :read !snip<space>
 nnoremap gR :Eval (user/restart)<CR>
-nnoremap gP :Piggieback (start-cljs)<CR>
+nnoremap gP :CljEval (shadow/repl :
+" nnoremap gP :Piggieback (start-cljs)<CR>
 nnoremap gp :!goimports -w %<CR>
 nnoremap <expr> gl empty(filter(getwininfo(), 'v:val.quickfix')) ? ':copen<CR>' : ':cclose<CR>'
 nnoremap Q @q
@@ -84,7 +81,6 @@ augroup base
   autocmd BufEnter * :syntax sync fromstart
   autocmd QuickFixCmdPost [^l]* nested cwindow
   autocmd FileType markdown setlocal formatoptions+=t " wrap lines in .md
-  autocmd FileType clojure packadd vim-fireplace
   autocmd FileType go,java,rust,sh setl ts=4 sw=4 sts=4
 augroup END
 
@@ -93,7 +89,9 @@ function! SelectaCommand(choice_command, selecta_args, vim_command)
     let selection = system(a:choice_command . " | selecta " . a:selecta_args)
     let selection = substitute(selection, ' ', '\\ ', "g")
     redraw!
-    exec a:vim_command . " " . selection
+    if selection != ''
+      exec a:vim_command . " " . selection
+    endif
   catch /Vim:Interrupt/
     redraw!
   endtry

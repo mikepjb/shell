@@ -104,7 +104,7 @@ mkdir -p $pkg_base/start $pkg_base/opt
 
 echo 'Ensuring vim plugins and selecta are available'
 
-plugin "tpope/vim-fireplace" "opt"
+plugin "tpope/vim-fireplace" # "opt"
 plugin "tpope/vim-fugitive"
 plugin "tpope/vim-dadbod"
 plugin "godlygeek/tabular"

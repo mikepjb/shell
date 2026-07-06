@@ -14,7 +14,7 @@ export HISTFILESIZE=50000
 export HISTCONTROL=ignoreboth
 export CDPATH=.:$HOME/src
 export EDITOR='vim'
-export EDC='~/.notes/edc.edn'
+export EDC="$HOME/.notes/edc.edn"
 
 shopt -s histappend
 
