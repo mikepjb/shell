@@ -28,6 +28,7 @@ ln -sfv "$sconf/deps.edn" "$HOME/.config/clojure/deps.edn"
 ln -sfv "$sconf/ghostty.conf" "$HOME/.config/ghostty/config"
 ln -sfv "$sconf/vimrc" "$HOME/.vimrc"
 ln -sfv "$sconf/init.el" "$HOME/.emacs.d/init.el"
+ln -sfv "$sconf/flow-theme.el" "$HOME/.emacs.d/flow-theme.el"
 ln -sfv "$sconf/ctags" "$HOME/.config/ctags/base.ctags"
 ln -sfv "$sconf/spartan.vim" "$HOME/.vim/colors/spartan.vim"
 

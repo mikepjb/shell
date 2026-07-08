@@ -82,6 +82,41 @@ fi
 
 echo "--------------------------"
 
+emacs_base="$HOME/.emacs.d/external"
+
+# need to download paredit at least
+
+elisp_base="$HOME/.emacs.d/lisp"
+
+mkdir -p $elisp_base
+
+elisp() {
+    local repo="$1"
+    local filepath="$2"
+    local branch="${3:-main}"
+    local raw_domain="https://raw.githubusercontent.com"
+
+    if [[ ! -f "$elisp_base/$filepath" ]]; then
+	curl -L -o "$elisp_base/$filepath" \
+	     "$raw_domain/$repo/refs/heads/$branch/$filepath"
+    else
+	echo "$filepath already exists in $elisp_base. Skipping."
+    fi
+}
+
+elisp "clojure-emacs/clojure-mode" "clojure-mode.el" "master"
+elisp "emacsmirror/paredit" "paredit.el" "master"
+elisp "dominik/go-mode.el" "go-mode.el" "master"
+
+# TODO
+# markdown-mode
+# json-mode?
+# js2-mode?
+# web-mode?
+# olivetti? nah not spartan.
+
+echo "--------------------------"
+
 pkg_base="$HOME/.vim/pack/base"
 local_bin="$HOME/.local/bin"
 
