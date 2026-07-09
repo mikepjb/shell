@@ -9,8 +9,7 @@
 
 (defun flow-toggle-theme ()
   (interactive)
-  (setq flow-mode
-        (if (eq flow-mode 'dark) 'light 'dark))
+  (setq flow-mode (if (eq flow-mode 'dark) 'light 'dark))
   (load-theme 'flow t))
 
 (defface font-lock-paren-face nil "" :group 'font-lock-faces)
@@ -18,7 +17,6 @@
 (defface font-lock-brace-face nil "" :group 'font-lock-faces)
 (defface org-current nil "" :group 'font-lock-faces)
 (defface org-next nil "" :group 'font-lock-faces)
-(defface flow-org-bullet nil "" :group 'font-lock-faces)
 
 (let* ((dark-p (eq flow-mode 'dark))
        ;; Color organised as a pyramid for attention, with small areas
@@ -174,7 +172,6 @@
       (org-checkbox :inherit fixed-pitch)
       (org-meta-line :inherit fixed-pitch)
       (org-drawer :inherit fixed-pitch)
-      (flow-org-bullet :foreground ,fg++++ :slant normal :underline nil)
 
       (markdown-markup-face :background ,bg+++)
 

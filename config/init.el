@@ -1,24 +1,18 @@
 (setq gc-cons-threshold (* 64 1024 1024))
 
-;; TODO consider navi too (from external?) though possibly just cli?
-;; TODO also auto-kill git commit buffer/consult buffer on save?
-;; TODO completion at point? with/without eglot?
-;; TODO ctags?
-;; it seems Emacs+ does not support 'alpha-background
-;; (set-frame-parameter nil 'alpha 88)
-
 ;; i. variables ----------------------------------------------------------------
 
 (defvar *context-markers*
   '("Makefile" "gradlew" "pom.xml" "go.mod" "package.json" "deps.edn" ".git"))
 
 (defconst +repl-config
-  '("clojure" '(inferior-lisp "clojure -A:dev")
-    "sicp" "racket"
-    "python" run-python
-    "sqlite" sql-sqlite
-    "node" '(comint-run "node")
-    "ruby" '(comint-run "irb")))
+  '(("clojure" inferior-lisp "clojure -A:dev")
+    ("sicp"    racket)
+    ("java"    comint-run "jshell")
+    ("python"  run-python)
+    ("sqlite"  sql-sqlite)
+    ("node"    comint-run "node")
+    ("ruby"    comint-run "irb")))
 
 ;; ii. functions & macros ------------------------------------------------------
 
@@ -31,11 +25,13 @@
 
 (defun +repl (&optional arg)
   (interactive "P")
-  (let* ((choice (if arg (completing-read "REPL: " +repl-config nil t)
-	    "clojure"))
-	 (spec (cdr (assoc +repl-config))))
-    (other-window-prefix)
-    (apply (car spec) (cdr spec))))
+  (let* ((choice (if arg 
+                     (completing-read "REPL: " (mapcar #'car +repl-config) nil t)
+                   "clojure"))
+         (spec (cdr (assoc choice +repl-config))))
+    (when spec
+      (other-window-prefix)
+      (apply (car spec) (cdr spec)))))
 
 (defmacro +with-context (&rest body)
   `(let ((default-directory
@@ -59,6 +55,22 @@
   (cond ((region-active-p) (call-interactively #'kill-region))
         ((bound-and-true-p paredit-mode) (paredit-backward-kill-word))
         (t (backward-kill-word 1))))
+
+(defun +ctags ()
+  (interactive)
+  (+with-context
+   (make-process
+    :name "ctags" :buffer nil
+    :command '("ctags" "-eR" "-f" ".tags"
+               "--exclude=node_modules" "--exclude=dist" ".")
+    :sentinel (lambda (_ e) (message "ctags: %s" (string-trim e))))))
+
+(defun +ctags-link ()
+  (when-let ((dir (locate-dominating-file default-directory ".tags")))
+    (let ((tags-file (expand-file-name ".tags" dir)))
+      (when (and (file-regular-p tags-file)
+                 (not (member tags-file tags-table-list)))
+        (visit-tags-table tags-file t)))))
 
 ;; iii. Packages ---------------------------------------------------------------
 
@@ -133,11 +145,14 @@
 
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
 
+(add-hook 'find-file-hook #'+ctags-link)
+
 (with-eval-after-load 'icomplete
   (define-key icomplete-minibuffer-map (kbd "C-w") #'backward-kill-word))
 
 (with-eval-after-load 'paredit
   (define-key paredit-mode-map (kbd "M-s") nil)
+  (define-key paredit-mode-map (kbd "M-;") nil)
   (define-key paredit-mode-map (kbd "C-c s") #'paredit-splice-sexp)
   (define-key paredit-mode-map (kbd "M-k") #'paredit-forward-barf-sexp)
   (define-key paredit-mode-map (kbd "M-l") #'paredit-forward-slurp-sexp))
@@ -198,6 +213,8 @@
 	     ("M-H" ,help-map)
 	     ("M-RET" toggle-frame-fullscreen)
        ("M--" ,(il (set-frame-size nil 160 55)))
+       ("C-;" completion-at-point)
+       ("M-/" comment-line)
 	     ("M-p" backward-paragraph)
 	     ("M-n" forward-paragraph)
              ("C-h" delete-backward-char)
@@ -217,23 +234,3 @@
 (require 'server)
 (unless (server-running-p)
   (server-start))
-
-;; scratch
-
-(defun +ctags ()
-  (interactive)
-  (+with-context
-   (make-process
-    :name "ctags" :buffer nil
-    :command '("ctags" "-eR" "-f" ".tags"
-               "--exclude=node_modules" "--exclude=dist" ".")
-    :sentinel (lambda (_ e) (message "ctags: %s" (string-trim e))))))
-
-(defun +ctags-link ()
-  (when-let ((dir (locate-dominating-file default-directory ".tags")))
-    (let ((tags-file (expand-file-name ".tags" dir)))
-      (when (and (file-regular-p tags-file)
-                 (not (member tags-file tags-table-list)))
-        (visit-tags-table tags-file t)))))
-
-(add-hook 'find-file-hook #'+ctags-link)
