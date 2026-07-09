@@ -1,8 +1,5 @@
 (setq gc-cons-threshold (* 64 1024 1024))
 
-;; TODO eshell configured for git di to not say this is not a terminal lol
-;; TODO eshell configure to work with C-u to kill line and C-l to clear
-
 (add-to-list 'load-path (concat user-emacs-directory "lisp"))
 
 (defmacro +setm (&rest modes)
@@ -58,6 +55,7 @@
  tool-bar-mode -1
  scroll-bar-mode -1
  blink-cursor-mode -1
+ fringe-mode 0
  electric-pair-mode 1
  show-paren-mode 1
  savehist-mode 1
@@ -73,6 +71,14 @@
     hl-line-mode 1
     display-fill-column-indicator-mode 1)))
 
+(add-hook
+ 'term-mode-hook
+ (lambda ()
+   (compilation-shell-minor-mode)
+   (define-key term-raw-map (kbd "M-o") 'other-window-or-split)
+   (define-key term-raw-map (kbd "M-x") 'execute-extended-command)
+   (define-key term-raw-map (kbd "M-:") 'eval-expression)))
+
 (dolist (hook '(emacs-lisp-mode-hook
                 lisp-mode-hook
                 lisp-interaction-mode-hook ; For the *scratch* buffer
@@ -80,6 +86,8 @@
 		;; eval-expression-minibuffer-setup
                 clojure-mode-hook))
   (add-hook hook (lambda () (+setm paredit-mode 1))))
+
+(add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
 
 (with-eval-after-load 'paredit
   (define-key paredit-mode-map (kbd "M-s") nil)
@@ -98,16 +106,36 @@
  c-default-style '((java-mode . "+java") (other . "gnu"))
  c-basic-offset 4
  vc-follow-symlinks t
+ create-lockfiles nil
+ make-backup-files nil
+ auto-save-default nil
+ isearch-wrap-pause 'no
  compilation-always-kill t
  compilation-scroll-output t
  custom-file (concat user-emacs-directory "local.el")
  package-archives '(("melpa" . "https://melpa.org/packages/")
                     ("gnu" . "https://elpa.gnu.org/packages/")))
 
+(setq-default
+ display-fill-column-indicator-column 80
+ truncate-lines t
+ indent-tabs-mode nil
+ tab-width 2
+ standard-indent 2
+ whitespace-style '(face trailing tabs empty indentation::space)
+ cursor-in-non-selected-windows nil)
+
 (c-add-style ;; custom java intendation style
  "+java"
  '("stroustrup" (c-offsets-alist . ((arglist-cont-nonempty . 0)
                                     (statement-block-intro . +)))))
+
+(defun +ignore-dirs-for (list)
+  (dolist (ignored-dirs
+           '("build" "dist" "node_modules" "target" ".tags" ".idea"))
+    (add-to-list list ignored-dirs)))
+
+(with-eval-after-load 'grep (+ignore-dirs-for 'grep-find-ignored-directories))
 
 (defconst +repl-config
   '("clojure" '(inferior-lisp "clojure -A:dev")
@@ -131,6 +159,7 @@
 	     ("C-c i" ,(ff user-emacs-directory "init.el"))
 	     ("M-R" +repl)
 	     ("C-w" +kill-region-or-backward-word)
+	     ("C-z" ,(il (ansi-term "/usr/bin/env bash")))
 	     ))
   (global-set-key (kbd (car b)) (cadr b)))
 
@@ -148,4 +177,6 @@
 (add-to-list 'auto-mode-alist '("\\.cljc\\'" . clojurec-mode))
 (add-to-list 'auto-mode-alist '("\\.edn\\'" . edn-mode))
 
-;; C-w (maybe another way?)
+(require 'server)
+(unless (server-running-p)
+  (server-start))

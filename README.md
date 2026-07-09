@@ -26,6 +26,14 @@ _Secondarily_
 7. Ruby
 8. Rust
 
+# Emacs
+
+The key to understanding Emacs is that it is a REPL machine. It runs
+on lisp, it is well suited to working with node/irb/clojure/sqlite and
+other interpreters/REPLs. This time round I am also using ansi-term as
+a first class REPL too, i.e using command line git instead of opting
+for vc-mode/magit.
+
 # Ctags
 
 A tool used to index projects and make it easier to navigate. Like Vim, the more I understand this tool, the better leverage I'm going to get out of it.
