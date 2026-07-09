@@ -32,7 +32,8 @@ The key to understanding Emacs is that it is a REPL machine. It runs
 on lisp, it is well suited to working with node/irb/clojure/sqlite and
 other interpreters/REPLs. This time round I am also using ansi-term as
 a first class REPL too, i.e using command line git instead of opting
-for vc-mode/magit.
+for vc-mode/magit. Possibly this also applies to using navi (my
+REPl-like agent harness).
 
 # Ctags
 

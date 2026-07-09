@@ -1,5 +1,9 @@
 (setq gc-cons-threshold (* 64 1024 1024))
 
+;; TODO missing features
+;; fuzzy search within a project (can we use pwd from ansi-term for this too?)
+;; navigation between projects (though maybe just ido is fine) (potentially also drop us in an ansi-term)
+
 (add-to-list 'load-path (concat user-emacs-directory "lisp"))
 
 (defmacro +setm (&rest modes)
