@@ -35,6 +35,8 @@ a first class REPL too, i.e using command line git instead of opting
 for vc-mode/magit. Possibly this also applies to using navi (my
 REPl-like agent harness).
 
+On Mac OS, installed using the homebrew cask from [here](https://github.com/d12frosted/homebrew-emacs-plus)
+
 # Ctags
 
 A tool used to index projects and make it easier to navigate. Like Vim, the more I understand this tool, the better leverage I'm going to get out of it.

@@ -106,7 +106,7 @@ elisp() {
 
 elisp "clojure-emacs/clojure-mode" "clojure-mode.el" "master"
 elisp "emacsmirror/paredit" "paredit.el" "master"
-elisp "dominik/go-mode.el" "go-mode.el" "master"
+elisp "dominikh/go-mode.el" "go-mode.el" "master"
 
 # TODO
 # markdown-mode

@@ -45,6 +45,7 @@ export PATH="$(join_array "${path_collection[@]}")"
 eval "$(fnm env --use-on-cd --shell bash)"
 
 alias vi='vim'
+alias e='emacsclient -n'
 alias c='consult'
 alias k='kubectl'
 alias kc='kubectl config current-context'

@@ -209,53 +209,6 @@
 
   (add-hook 'prog-mode-hook #'flow-delimiters-enable)
 
-  (defun flow-org-style-bullets ()
-    (font-lock-add-keywords
-     nil
-     '(("^\\**\\(\\*\\) "
-        (1 (prog1 'flow-org-bullet
-             (compose-region (match-beginning 1) (match-end 1) "	◉")) t))
-       ("^ *\\(-\\) "
-        (1 (prog1 'flow-org-bullet
-             (compose-region (match-beginning 1) (match-end 1) "	•")) t)))
-     'append)
-    (font-lock-flush))
-
-  (add-hook 'org-mode-hook #'flow-org-style-bullets)
-
-  (defvar flow/vc-commit-age-cache (make-hash-table :test 'equal))
-
-  (defun flow/vc-commit-age-refresh ()
-    (when-let* ((root (and buffer-file-name (vc-root-dir)))
-                (root (expand-file-name root)))
-      (unless (gethash root flow/vc-commit-age-cache)
-        (puthash root 'pending flow/vc-commit-age-cache)
-        (make-process
-         :name "flow/vc-commit-age"
-         :command (list "git" "--no-pager" "-C" root "log" "-1" "--format=%ct")
-         :noquery t
-         :filter (lambda (_ output)
-                   (let* ((ts (string-to-number (string-trim output)))
-                          (secs (- (float-time) ts))
-                          (age (when (> ts 0)
-                                 (cond ((< secs 3600)  (format "%dm" (/ secs 60)))
-                                       ((< secs 86400) (format "%dh" (/ secs 3600)))
-                                       (t              (format "%dd" (/ secs 86400)))))))
-                     (puthash root (or age 'error) flow/vc-commit-age-cache)
-                     (force-mode-line-update t)))))))
-
-  (defun flow/vc-commit-age ()
-    (when-let* ((root (and buffer-file-name (vc-root-dir)))
-                (val (gethash (expand-file-name root) flow/vc-commit-age-cache)))
-      (unless (memq val '(pending error)) val)))
-
-  (defvar flow--timers nil)
-  (dolist (timer flow--timers) (cancel-timer timer))
-
-  (setq flow--timers
-        (list (run-with-idle-timer 0.5 t #'flow/vc-commit-age-refresh)
-              (run-with-timer 0 60 (lambda () (clrhash flow/vc-commit-age-cache)))))
-
   (defun flow/truncate-buffer-name ()
     (let* ((name (if buffer-file-name
                      (abbreviate-file-name buffer-file-name)
@@ -283,9 +236,6 @@
                     (propertize " | " 'face '(:foreground ,bg++++))))
           (:eval (when (and (boundp 'vc-mode) vc-mode)
               (concat (replace-regexp-in-string "^ Git[-:]" "" vc-mode)
-                      (when-let ((age (flow/vc-commit-age)))
-                        (propertize (concat " (" age ")")
-                                    'face '(:foreground ,fg++++)))
                       (propertize " | " 'face '(:foreground ,bg++++)))))
      "%l:%c"
      (:eval (propertize " | " 'face '(:foreground ,bg++++)))
