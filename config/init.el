@@ -222,6 +222,7 @@
              ("C-j" newline) ;; autoindents
 	     ("M-j" ,(il (join-line -1)))
 	     ("C-c i" ,(ff user-emacs-directory "init.el"))
+       ("C-c n" ,(ff (getenv "HOME") "/.notes/index.org"))
        ("M-i" ,(il (+with-context (call-interactively 'rgrep))))
        ("M-I" ,(il (+with-context (call-interactively 'occur))))
        ("C-c u" imenu) ;; bad binding but also a reminder for i(ndex)menu
