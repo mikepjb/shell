@@ -17,6 +17,13 @@
 
 ;; ii. functions & macros ------------------------------------------------------
 
+(defmacro +with-context (&rest body)
+  "Execute BODY with `default-directory' bound to the current project root."
+  `(let ((default-directory (if-let ((proj (project-current)))
+                                (project-root proj)
+                              default-directory)))
+     ,@body))
+
 (defun +repl (&optional arg)
   (interactive "P")
   (let* ((choice (if arg 
@@ -25,7 +32,7 @@
          (spec (cdr (assoc choice +repl-config))))
     (when spec
       (other-window-prefix)
-      (apply (car spec) (cdr spec)))))
+      (+with-context (apply (car spec) (cdr spec))))))
 
 (defmacro il (&rest body) `(lambda () (interactive) ,@body))
 (defmacro ff (&rest path) `(il (find-file (concat ,@path))))
@@ -43,13 +50,6 @@
         ((bound-and-true-p paredit-mode) (paredit-backward-kill-word))
         (t (backward-kill-word 1))))
 
-(defmacro +with-context (&rest body)
-  "Execute BODY with `default-directory' bound to the current project root."
-  `(let ((default-directory (if-let ((proj (project-current)))
-                                (project-root proj)
-                              default-directory)))
-     ,@body))
-
 (defun +ctags ()
   (interactive)
   (+with-context
@@ -65,6 +65,10 @@
       (when (and (file-regular-p tags-file)
                  (not (member tags-file tags-table-list)))
         (visit-tags-table tags-file t)))))
+
+(defun +lisp-load-current-file ()
+  (interactive)
+  (lisp-load-file (buffer-file-name)))
 
 ;; iii. Packages ---------------------------------------------------------------
 
@@ -121,12 +125,14 @@
    (define-key term-raw-map (kbd "M-:") 'eval-expression)))
 
 (add-hook
- 'clojure-mode
+ 'clojure-mode-hook
  (lambda ()
    (setq-local inferior-lisp-load-command "(load-file \"%s\")\n")
    (define-key clojure-mode-map (kbd "C-x C-e") 'lisp-eval-last-sexp)
    (define-key clojure-mode-map (kbd "C-M-x") 'lisp-eval-defun)
-   (define-key clojure-mode-map (kbd "C-c C-l") 'lisp-load-file)))
+   (define-key clojure-mode-map (kbd "C-c C-k") '+lisp-load-current-file)))
+
+
 
 (dolist (hook '(emacs-lisp-mode-hook
                 lisp-mode-hook
@@ -202,7 +208,7 @@
 ;; (keymap-global-set "M-o" #'other-window-or-split)
 (dolist (b `(
 	     ("M-s" save-buffer)
-	     ("M-o" other-window-or-split)
+	     ("M-o" +other-window-or-split)
 	     ("M-O" delete-other-windows)
 	     ("M-H" ,help-map)
 	     ("M-RET" toggle-frame-fullscreen)
