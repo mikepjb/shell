@@ -2,8 +2,8 @@
 
 ;; i. variables ----------------------------------------------------------------
 
-(defvar *context-markers*
-  '("Makefile" "gradlew" "pom.xml" "go.mod" "package.json" "deps.edn" ".git"))
+(defvar project-vc-extra-root-markers
+  '("Makefile" "gradlew" "pom.xml" "go.mod" "package.json" "deps.edn"))
 
 (defconst +repl-config
   '(("clojure" inferior-lisp "clojure -A:dev")
@@ -16,13 +16,6 @@
 
 ;; ii. functions & macros ------------------------------------------------------
 
-(defmacro +setm (&rest modes)
-  "Sets modes according to the MODES interpreted as pairs using seq-partition."
-  (let (body)
-    (dolist (m (seq-partition modes 2))
-      (push `(,(car m) ,(cadr m)) body))
-    `(progn ,@(nreverse body))))
-
 (defun +repl (&optional arg)
   (interactive "P")
   (let* ((choice (if arg 
@@ -33,17 +26,10 @@
       (other-window-prefix)
       (apply (car spec) (cdr spec)))))
 
-(defmacro +with-context (&rest body)
-  `(let ((default-directory
-          (or (seq-some (lambda (f) (locate-dominating-file default-directory f))
-                        *context-markers*)
-              default-directory)))
-     ,@body))
-
 (defmacro il (&rest body) `(lambda () (interactive) ,@body))
 (defmacro ff (&rest path) `(il (find-file (concat ,@path))))
 
-(defun other-window-or-split ()
+(defun +other-window-or-split ()
   "If one window, split, otherwise invoke 'other-window'"
   (interactive)
   (when (= (length (window-list)) 1)
@@ -55,6 +41,13 @@
   (cond ((region-active-p) (call-interactively #'kill-region))
         ((bound-and-true-p paredit-mode) (paredit-backward-kill-word))
         (t (backward-kill-word 1))))
+
+(defmacro +with-context (&rest body)
+  "Execute BODY with `default-directory' bound to the current project root."
+  `(let ((default-directory (if-let ((proj (project-current)))
+                                (project-root proj)
+                              default-directory)))
+     ,@body))
 
 (defun +ctags ()
   (interactive)
@@ -99,18 +92,17 @@
 
 (set-face-attribute 'default nil  :font "Rec Mono Linear" :height 160)
 
-(+setm
- menu-bar-mode -1
- tool-bar-mode -1
- scroll-bar-mode -1
- blink-cursor-mode -1
- fringe-mode 0
- electric-pair-mode 1
- show-paren-mode 1
- savehist-mode 1
- save-place-mode 1
- global-auto-revert-mode 1
- fido-mode 1)
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(blink-cursor-mode -1)
+(fringe-mode 0)
+(electric-pair-mode 1)
+(show-paren-mode 1)
+(savehist-mode 1)
+(save-place-mode 1)
+(global-auto-revert-mode 1)
+(fido-mode 1)
 
 (add-hook
  'prog-mode-hook
@@ -124,22 +116,22 @@
  'term-mode-hook
  (lambda ()
    (compilation-shell-minor-mode)
-   (define-key term-raw-map (kbd "M-o") 'other-window-or-split)
+   (define-key term-raw-map (kbd "M-o") '+other-window-or-split)
    (define-key term-raw-map (kbd "M-x") 'execute-extended-command)
    (define-key term-raw-map (kbd "M-:") 'eval-expression)))
 
 (add-hook
  'clojure-mode
  (lambda ()
-   (setq-local inferior-lisp-load-command
-               "(load-file \"%s\")\n")
-   (define-key clojure-mode-map (kbd "C-x C-e") 'lisp-eval-last-sexp)))
+   (setq-local inferior-lisp-load-command "(load-file \"%s\")\n")
+   (define-key clojure-mode-map (kbd "C-x C-e") 'lisp-eval-last-sexp)
+   (define-key clojure-mode-map (kbd "C-M-x") 'lisp-eval-defun)
+   (define-key clojure-mode-map (kbd "C-c C-l") 'lisp-load-file)))
 
 (dolist (hook '(emacs-lisp-mode-hook
                 lisp-mode-hook
                 lisp-interaction-mode-hook ; For the *scratch* buffer
                 scheme-mode-hook           ; Often used for Racket/SICP
-		;; eval-expression-minibuffer-setup
                 clojure-mode-hook))
   (add-hook hook (lambda () (+setm paredit-mode 1))))
 
@@ -181,9 +173,7 @@
  org-ellipsis " ▼"
  ;; org-startup-folded 'show3levels
  org-startup-with-inline-images t
- org-todo-keywords '((sequence
-                      "TODO(t)" "NEXT(n)" "CURRENT(c)" "|"
-                      "DONE(d!)" "CANCELLED(x@)"))
+ org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "CURRENT(c)" "|" "DONE(d!)"))
  org-log-into-drawer t
  org-log-done 'time
  org-agenda-span 14
@@ -204,8 +194,12 @@
  '("stroustrup" (c-offsets-alist . ((arglist-cont-nonempty . 0)
                                     (statement-block-intro . +)))))
 
-(with-eval-after-load 'grep (+ignore-dirs-for 'grep-find-ignored-directories))
+(with-eval-after-load 'grep
+  (dolist (dir '("node_modules" "dist" "build" "target" ".tags" ".idea"))
+    (add-to-list 'grep-find-ignored-directories dir)))
 
+(keymap-global-set "M-s" #'save-buffer)
+(keymap-global-set "M-o" #'other-window-or-split)
 (dolist (b `(
 	     ("M-s" save-buffer)
 	     ("M-o" other-window-or-split)
@@ -213,7 +207,8 @@
 	     ("M-H" ,help-map)
 	     ("M-RET" toggle-frame-fullscreen)
        ("M--" ,(il (set-frame-size nil 160 55)))
-       ("C-;" completion-at-point)
+       ("C-;" hippie-expand)
+       ("M-;" completion-at-point)
        ("M-/" comment-line)
 	     ("M-p" backward-paragraph)
 	     ("M-n" forward-paragraph)

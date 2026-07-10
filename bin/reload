@@ -24,7 +24,7 @@ mkdir -p "$HOME/.vim/colors"
 mkdir -p "$HOME/.emacs.d"
 mkdir -p "$HOME/.config/ghostty/themes"
 
-ln -sfv "$sconf/deps.edn" "$HOME/.config/clojure/deps.edn"
+ln -sfv "$sconf/user.edn" "$HOME/.config/clojure/deps.edn"
 ln -sfv "$sconf/ghostty.conf" "$HOME/.config/ghostty/config"
 ln -sfv "$sconf/vimrc" "$HOME/.vimrc"
 ln -sfv "$sconf/init.el" "$HOME/.emacs.d/init.el"
