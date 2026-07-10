@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (setq gc-cons-threshold (* 64 1024 1024))
 
 ;; i. variables ----------------------------------------------------------------
@@ -107,10 +108,9 @@
 (add-hook
  'prog-mode-hook
  (lambda ()
-   (+setm
-    display-line-numbers-mode 1
-    hl-line-mode 1
-    display-fill-column-indicator-mode 1)))
+    (display-line-numbers-mode 1)
+    (hl-line-mode 1)
+    (display-fill-column-indicator-mode 1)))
 
 (add-hook
  'term-mode-hook
@@ -133,7 +133,7 @@
                 lisp-interaction-mode-hook ; For the *scratch* buffer
                 scheme-mode-hook           ; Often used for Racket/SICP
                 clojure-mode-hook))
-  (add-hook hook (lambda () (+setm paredit-mode 1))))
+  (add-hook hook (lambda () (paredit-mode 1))))
 
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
 
@@ -198,8 +198,8 @@
   (dolist (dir '("node_modules" "dist" "build" "target" ".tags" ".idea"))
     (add-to-list 'grep-find-ignored-directories dir)))
 
-(keymap-global-set "M-s" #'save-buffer)
-(keymap-global-set "M-o" #'other-window-or-split)
+;; (keymap-global-set "M-s" #'save-buffer)
+;; (keymap-global-set "M-o" #'other-window-or-split)
 (dolist (b `(
 	     ("M-s" save-buffer)
 	     ("M-o" other-window-or-split)
