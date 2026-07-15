@@ -184,7 +184,8 @@
  org-log-done 'time
  org-agenda-span 14
  org-agenda-start-on-weekday nil
- org-agenda-restore-windows-after-quit t)
+ org-agenda-restore-windows-after-quit t
+ js-indent-level 2)
 
 (setq-default
  display-fill-column-indicator-column 80
@@ -207,31 +208,37 @@
 ;; (keymap-global-set "M-s" #'save-buffer)
 ;; (keymap-global-set "M-o" #'other-window-or-split)
 (dolist (b `(
-	     ("M-s" save-buffer)
-	     ("M-o" +other-window-or-split)
-	     ("M-O" delete-other-windows)
-	     ("M-H" ,help-map)
-	     ("M-RET" toggle-frame-fullscreen)
-       ("M--" ,(il (set-frame-size nil 160 55)))
-       ("C-;" hippie-expand)
-       ("M-;" completion-at-point)
-       ("M-/" comment-line)
-	     ("M-p" backward-paragraph)
-	     ("M-n" forward-paragraph)
+	           ("M-s" save-buffer)
+	           ("M-o" +other-window-or-split)
+	           ("M-O" delete-other-windows)
+	           ("M-H" ,help-map)
+	           ("M-RET" toggle-frame-fullscreen)
+             ("M--" ,(il (set-frame-size nil 160 55)))
+             ("C-;" hippie-expand)
+             ("M-;" completion-at-point)
+             ("M-/" comment-line)
+	           ("M-p" backward-paragraph)
+	           ("M-n" forward-paragraph)
              ("C-h" delete-backward-char)
              ("C-j" newline) ;; autoindents
-	     ("M-j" ,(il (join-line -1)))
-	     ("C-c i" ,(ff user-emacs-directory "init.el"))
-       ("C-c n" ,(ff (getenv "HOME") "/.notes/index.org"))
-       ("M-i" ,(il (+with-context (call-interactively 'rgrep))))
-       ("M-I" ,(il (+with-context (call-interactively 'occur))))
-       ("C-c u" imenu) ;; bad binding but also a reminder for i(ndex)menu
-	     ("M-R" +repl)
-	     ("C-w" +kill-region-or-backward-word)
-	     ("C-z" ,(il (ansi-term "/usr/bin/env bash")))
-       ("C-c p" project-find-file)
-	     ))
+	           ("M-j" ,(il (join-line -1)))
+	           ("C-c i" ,(ff user-emacs-directory "init.el"))
+             ("C-c n" ,(ff (getenv "HOME") "/.notes/index.org"))
+             ("M-i" ,(il (+with-context (call-interactively 'rgrep))))
+             ("M-I" ,(il (+with-context (call-interactively 'occur))))
+             ("C-c u" imenu) ;; bad binding but also a reminder for i(ndex)menu
+	           ("M-R" +repl)
+	           ("C-w" +kill-region-or-backward-word)
+	           ("C-z" ,(il (ansi-term "/usr/bin/env bash")))
+             ("C-c p" project-find-file)
+             ("C-c o" find-file) ;; more ergonomic than C-x C-f
+	           ))
   (global-set-key (kbd (car b)) (cadr b)))
+
+(let ((path-str (shell-command-to-string
+                 "/bin/bash -c 'source $HOME/.bashrc && printf $PATH'")))
+  (setenv "PATH" path-str)
+  (setq exec-path (split-string path-str ":")))
 
 (require 'server)
 (unless (server-running-p)
