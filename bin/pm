@@ -150,7 +150,11 @@ main() {
             list
             ;;
         logs)
-            tail -n 20 -f "$(get_log_file "$2")"
+            if [[ "$2" == "--all" ]]; then
+                tail -n 20 -f "$PM_DIR"/*.log
+            else
+                tail -n 20 -f "$(get_log_file "$2")"
+            fi
             ;;
         *)
             echo "Usage: pm {start|clean|stop|stop-all|list|logs}"
