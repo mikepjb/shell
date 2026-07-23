@@ -145,6 +145,8 @@
 
 (add-hook 'find-file-hook #'+ctags-link)
 
+(add-hook 'org-mode-hook #'org-indent-mode)
+
 (with-eval-after-load 'icomplete
   (define-key icomplete-minibuffer-map (kbd "C-w") #'backward-kill-word))
 

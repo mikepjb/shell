@@ -56,10 +56,12 @@ nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gs :grep<space>
+nnoremap gt /\CTODO\\|NEXT\\|CURRENT\\|DONE<CR>
 nnoremap gc :!ctags -R .<CR>
 nnoremap gr :read !snip<space>
 nnoremap gR :Eval (user/restart)<CR>
 nnoremap gP :CljEval (shadow/repl :
+nnoremap g<space> :cd %:h \| pwd<CR>
 " nnoremap gP :Piggieback (start-cljs)<CR>
 nnoremap gp :!goimports -w %<CR>
 nnoremap <expr> gl empty(filter(getwininfo(), 'v:val.quickfix')) ? ':copen<CR>' : ':cclose<CR>'
