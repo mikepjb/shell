@@ -1,6 +1,4 @@
-" -----------------------------------------
-" Vim configuration
-" -----------------------------------------
+" Vim Configuration
 
 set nocompatible " Disable VI Compatibility
 syntax on
@@ -12,14 +10,12 @@ set backspace=indent,eol,start
 set formatoptions-=t              " Don't add line-breaks for lines over 'textwidth' chars
 set hlsearch incsearch ignorecase " highlight matches live + ignore case matching
 set nonumber
-set nostartofline
-set showmatch
+set nostartofline nowrap
+set showmatch gdefault            " gdefault replaces all matches, not just the first
 set textwidth=80 colorcolumn=+1   " 80 column width + highlight
 set fillchars=vert:│
 set belloff=all
 set clipboard=unnamed,unnamedplus
-set nowrap
-set gdefault                      " replaces all matches, not just the first
 set re=2                          " re=1 by default, typescript hl is slow without this
 set nowritebackup noswapfile      " no temporary files please, git covers saves
 set laststatus=2
@@ -41,6 +37,8 @@ endif
 
 colorscheme spartan
 
+command! -nargs=+ -complete=file Grep silent grep! <args> | redraw!
+
 nnoremap Y y$
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
@@ -55,15 +53,13 @@ nnoremap gd <C-]>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :e ~/.notes/index.md<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
-nnoremap gs :grep<space>
+nnoremap gs :Grep<space>
 nnoremap gt /\CTODO\\|NEXT\\|CURRENT\\|DONE<CR>
 nnoremap gc :!ctags -R .<CR>
 nnoremap gr :read !snip<space>
 nnoremap gR :Eval (user/restart)<CR>
-nnoremap gP :CljEval (shadow/repl :
 nnoremap g<space> :cd %:h \| pwd<CR>
-" nnoremap gP :Piggieback (start-cljs)<CR>
-nnoremap gp :!goimports -w %<CR>
+nnoremap gp :call Format()<CR>
 nnoremap <expr> gl empty(filter(getwininfo(), 'v:val.quickfix')) ? ':copen<CR>' : ':cclose<CR>'
 nnoremap Q @q
 nnoremap <A-n> :cnext<CR>
@@ -86,18 +82,23 @@ augroup base
   autocmd FileType go,java,rust,sh setl ts=4 sw=4 sts=4
 augroup END
 
-function! SelectaCommand(choice_command, selecta_args, vim_command)
+function! SelectaCommand(choice, args, vim_cmd)
   try
-    let selection = system(a:choice_command . " | selecta " . a:selecta_args)
-    let selection = substitute(selection, ' ', '\\ ', "g")
+    let sel = substitute(system(a:choice . " | selecta " . a:args), ' ', '\\ ', "g")
     redraw!
-    if selection != ''
-      exec a:vim_command . " " . selection
-    endif
-  catch /Vim:Interrupt/
-    redraw!
-  endtry
+    if sel != '' | exec a:vim_cmd . " " . sel | endif
+  catch /Vim:Interrupt/ | redraw! | endtry
 endfunction
 
-nnoremap <space> :call SelectaCommand("fd -t f . .", "", ":edit")<cr>
+function! Format()
+  let [v, ft, f] = [winsaveview(), &ft, shellescape(expand('%'))]
+  let c = ft ==# 'go' ? 'goimports -w ' . f : ft ==# 'templ' ? 'go tool templ fmt ' . f :
+        \ index(['javascript','typescript','javascriptreact','typescriptreact'], ft) >= 0 ?
+        \ (!empty(findfile('deno.json', '.;')) || !empty(findfile('deno.jsonc', '.;')) ? 'deno fmt ' . f : 'npx prettier --write ' . f) : ''
+  if empty(c) | echo 'No formatter configured for: ' . ft | return | endif
+  let out = system(c)
+  if v:shell_error | echoerr 'Formatting failed: ' . out | else | silent edit! | call winrestview(v) | endif
+endfunction
+
+nnoremap <space> :call SelectaCommand("fd -E '*_templ.go' -t f . .", "", ":edit")<cr>
 nnoremap <A-o> :call SelectaCommand("fd -t f . ~/.notes/", "", ":edit")<cr>
