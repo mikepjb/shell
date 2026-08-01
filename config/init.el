@@ -184,10 +184,21 @@
  org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "CURRENT(c)" "|" "DONE(d!)"))
  org-log-into-drawer t
  org-log-done 'time
+ org-directory "~/.notes"
+ org-agenda-files '("~/.notes")
  org-agenda-span 14
  org-agenda-start-on-weekday nil
  org-agenda-restore-windows-after-quit t
- js-indent-level 2)
+ org-agenda-custom-commands
+ '(("a" "Agenda + Unscheduled TODOs"
+    ((agenda "")
+     (todo "TODO|NEXT|CURRENT"
+           ((org-agenda-skip-function
+             '(org-agenda-skip-entry-if 'scheduled 'deadline 'timestamp))
+            (org-agenda-overriding-header "Unscheduled TODOs"))))))
+ js-indent-level 2
+ package-archives '(("melpa" . "https://melpa.org/packages/")
+                    ("gnu" . "https://elpa.gnu.org/packages/")))
 
 (setq-default
  display-fill-column-indicator-column 80
@@ -226,6 +237,9 @@
 	           ("M-j" ,(il (join-line -1)))
 	           ("C-c i" ,(ff user-emacs-directory "init.el"))
              ("C-c n" ,(ff (getenv "HOME") "/.notes/index.org"))
+             ("C-c a" ,(il (org-agenda nil "a")))
+             ("C-c c" org-capture)
+             ("C-c h" org-insert-heading) ;; org-toggle-heading is what I sometimes want too.
              ("M-i" ,(il (+with-context (call-interactively 'rgrep))))
              ("M-I" ,(il (+with-context (call-interactively 'occur))))
              ("C-c u" imenu) ;; bad binding but also a reminder for i(ndex)menu
