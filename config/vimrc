@@ -102,3 +102,22 @@ endfunction
 
 nnoremap <space> :call SelectaCommand("fd -E '*_templ.go' -t f . .", "", ":edit")<cr>
 nnoremap <A-o> :call SelectaCommand("fd -t f . ~/.notes/", "", ":edit")<cr>
+
+function! MarkdownFold()
+  let l:line = getline(v:lnum)
+
+  " ATX headings: # Heading, ## Heading, etc.
+  if l:line =~# '^#\{1,6}\s'
+    let l:level = strlen(matchstr(l:line, '^#\+'))
+    return '>' . l:level
+  endif
+
+  return '='
+endfunction
+
+augroup markdown_folding
+  autocmd!
+  autocmd FileType markdown setlocal foldmethod=expr
+  autocmd FileType markdown setlocal foldexpr=MarkdownFold()
+  autocmd FileType markdown setlocal foldlevel=1
+augroup END
