@@ -6,7 +6,7 @@ if exists("syntax_on")
    syntax reset
 endif
 
-let colors_name = "spartan"
+let colors_name = "flow"
 
 " Standard UI elements
 hi Normal       ctermfg=NONE ctermbg=NONE
@@ -82,13 +82,12 @@ augroup MarkdownTaskHighlighting
   autocmd!
   autocmd FileType markdown syntax match Todo /\v\C<(TODO)>/ containedin=ALL
   autocmd FileType markdown syntax match TaskNext /\v\C<(NEXT|CURRENT)>/ containedin=ALL
+  autocmd FileType markdown syntax match TaskWaiting /\v\C<(WAITING)>/ containedin=ALL
   autocmd FileType markdown syntax match TaskDone /\v\C<(DONE)>/ containedin=ALL
 augroup END
 
-hi TaskNext ctermfg=1 guifg=#FF0000
-hi TaskDone ctermfg=2 guifg=#00FF00 cterm=strikethrough gui=strikethrough
-
-hi TaskNext ctermfg=1
+hi TaskNext ctermfg=1 
+hi TaskWaiting ctermfg=3
 hi TaskDone ctermfg=2 cterm=strikethrough
 
 augroup TrailingWhitespaceHighlighting
