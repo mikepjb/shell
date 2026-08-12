@@ -28,7 +28,7 @@ ln -sfv "$sconf/ghostty.conf" "$HOME/.config/ghostty/config"
 ln -sfv "$sconf/vimrc" "$HOME/.vimrc"
 ln -sfv "$sconf/flow-theme.el" "$HOME/.emacs.d/flow-theme.el"
 ln -sfv "$sconf/ctags" "$HOME/.config/ctags/base.ctags"
-ln -sfv "$sconf/spartan.vim" "$HOME/.vim/colors/spartan.vim"
+ln -sfv "$sconf/flow.vim" "$HOME/.vim/colors/flow.vim"
 
 if [[ -f "$HOME/.notes/spell.utf-8.add" ]]; then
     ln -sfv "$HOME/.notes/spell.utf-8.add" "$HOME/.vim/spell/spell.utf-8.add"

@@ -35,7 +35,7 @@ if executable('rg') " N.B ripgrep searches all files by default
   set grepformat=%f:%l:%c:%m,%f:%l:%m
 endif
 
-colorscheme spartan
+colorscheme flow
 
 command! -nargs=+ -complete=file Grep silent grep! <args> | redraw!
 

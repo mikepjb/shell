@@ -27,6 +27,8 @@ hi WildMenu     ctermfg=0    ctermbg=7
 hi Visual       ctermbg=14
 hi Search       ctermbg=14
 hi IncSearch    ctermbg=6
+hi Folded       ctermbg=NONE ctermfg=8
+hi FoldColumn   ctermbg=0 ctermfg=NONE
 hi Pmenu        ctermfg=7 ctermbg=0
 hi PmenuSel     ctermfg=9 ctermbg=8
 hi MatchParen   ctermfg=9 ctermbg=NONE
