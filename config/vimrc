@@ -13,7 +13,7 @@ set nonumber
 set nostartofline nowrap
 set showmatch gdefault            " gdefault replaces all matches, not just the first
 set textwidth=80 colorcolumn=+1   " 80 column width + highlight
-set fillchars=vert:│
+set fillchars=vert:│,fold:\ 
 set belloff=all
 set clipboard=unnamed,unnamedplus
 set re=2                          " re=1 by default, typescript hl is slow without this
@@ -106,13 +106,16 @@ nnoremap <A-o> :call SelectaCommand("fd -t f . ~/.notes/", "", ":edit")<cr>
 function! MarkdownFold()
   let l:line = getline(v:lnum)
 
-  " ATX headings: # Heading, ## Heading, etc.
-  if l:line =~# '^#\{1,6}\s'
-    let l:level = strlen(matchstr(l:line, '^#\+'))
-    return '>' . l:level
+  let l:header = matchstr(l:line, '^\s\{0,3}#\{1,6}\ze\s')
+
+  if empty(l:header)
+    " Continue fold level from previous line
+    return '='
   endif
 
-  return '='
+  let l:level = strlen(matchstr(l:header, '#\+'))
+
+  return l:level >= 2 ? l:level - 1 : 0
 endfunction
 
 augroup markdown_folding
@@ -120,4 +123,5 @@ augroup markdown_folding
   autocmd FileType markdown setlocal foldmethod=expr
   autocmd FileType markdown setlocal foldexpr=MarkdownFold()
   autocmd FileType markdown setlocal foldlevel=1
+  autocmd FileType markdown nnoremap <C-d> za
 augroup END
