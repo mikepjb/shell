@@ -12,7 +12,7 @@ _A collection of tools I use for development work._
 
 # Languages supported
 
-_Primarily
+_Primarily_
 
 1. Go
 2. Javascript/Typescript
@@ -60,3 +60,13 @@ also ability to run multiple processes at the same time (think LVH stack)
 ## Why no tmux?
 
 tmux is great but overkill and leads spiralling complexity.
+
+## Vim syntax not working? Typescript slow?
+
+I recently removed some old lines that I am not sure are needed anymore:
+
+```
+autocmd BufEnter * :syntax sync fromstart " syntax highlights from the beginning
+of the file, sometimes syntax would be broken without it.
+set re=2 " forces newer NFA syntax engine
+```

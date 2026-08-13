@@ -2,6 +2,7 @@
 
 set nocompatible " Disable VI Compatibility
 syntax on
+packadd! matchit
 filetype plugin indent on
 
 set autoindent
@@ -16,7 +17,6 @@ set textwidth=80 colorcolumn=+1   " 80 column width + highlight
 set fillchars=vert:│,fold:\ 
 set belloff=all
 set clipboard=unnamed,unnamedplus
-set re=2                          " re=1 by default, typescript hl is slow without this
 set nowritebackup noswapfile      " no temporary files please, git covers saves
 set laststatus=2
 set tabstop=2 softtabstop=2 shiftwidth=2 expandtab " 2-width, prefer spaces > tab
@@ -76,51 +76,40 @@ nnoremap <A-R> :cexpr system('lint-this "' . expand('%') . '" --fix')<cr>
 
 augroup base
   autocmd!
-  autocmd BufEnter * :syntax sync fromstart
   autocmd QuickFixCmdPost [^l]* nested cwindow
   autocmd FileType markdown setlocal formatoptions+=t " wrap lines in .md
   autocmd FileType go,java,rust,sh setl ts=4 sw=4 sts=4
+  autocmd FileType qf setlocal statusline=Quickfix\ [%{len(getqflist())}]
 augroup END
 
-function! SelectaCommand(choice, args, vim_cmd)
+function! Selecta(cmd)
   try
-    let sel = substitute(system(a:choice . " | selecta " . a:args), ' ', '\\ ', "g")
+    let file = trim(system(a:cmd . ' | selecta'))
     redraw!
-    if sel != '' | exec a:vim_cmd . " " . sel | endif
+    if !empty(file) | execute 'edit' fnameescape(file) | endif
   catch /Vim:Interrupt/ | redraw! | endtry
 endfunction
 
+nnoremap <space> :call Selecta("fd -E '*_templ.go' -t f . .")<CR>
+nnoremap <A-o> :call Selecta("fd -t f . ~/.notes/")<CR>
+
 function! Format()
-  let [v, ft, f] = [winsaveview(), &ft, shellescape(expand('%'))]
-  let c = ft ==# 'go' ? 'goimports -w ' . f : ft ==# 'templ' ? 'go tool templ fmt ' . f :
-        \ index(['javascript','typescript','javascriptreact','typescriptreact'], ft) >= 0 ?
-        \ (!empty(findfile('deno.json', '.;')) || !empty(findfile('deno.jsonc', '.;')) ? 'deno fmt ' . f : 'npx prettier --write ' . f) : ''
-  if empty(c) | echo 'No formatter configured for: ' . ft | return | endif
-  let out = system(c)
-  if v:shell_error | echoerr 'Formatting failed: ' . out | else | silent edit! | call winrestview(v) | endif
+  update
+  let out = system('format-this ' . shellescape(expand('%')))
+  if v:shell_error | echoerr out | else | checktime | redraw! | endif
 endfunction
 
-nnoremap <space> :call SelectaCommand("fd -E '*_templ.go' -t f . .", "", ":edit")<cr>
-nnoremap <A-o> :call SelectaCommand("fd -t f . ~/.notes/", "", ":edit")<cr>
+nnoremap gp :call Format()<CR>
 
 function! s:MarkdownFold() abort
-  let l:header = matchstr(getline(v:lnum),
-        \ '^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)')
-
-  if empty(l:header)
-    return '='
-  endif
-
-  let l:level = strlen(l:header)
-
-  " # headings are not folds; ## through ###### are folds
-  return l:level == 1 ? 0 : '>' . (l:level - 1)
+  let level = strlen(matchstr(
+        \ getline(v:lnum),
+        \ '^\s\{0,3}\zs#\{2,6}\ze\%(\s\|$\)'))
+  return level ? '>' . (level - 1) : '='
 endfunction
 
 function! s:MarkdownFoldFormat()
-  let l:title = getline(v:foldstart)
-
-  return l:title . ' '
+  return getline(v:foldstart) . ' '
 endfunction
 
 augroup markdown_folding
@@ -129,5 +118,45 @@ augroup markdown_folding
   autocmd FileType markdown setlocal foldexpr=<SID>MarkdownFold()
   autocmd FileType markdown setlocal foldtext=<SID>MarkdownFoldFormat()
   autocmd FileType markdown setlocal foldlevel=0
-  autocmd FileType markdown nnoremap <C-d> za
+  autocmd FileType markdown nnoremap <buffer> <C-d> za
 augroup END
+
+let s:states = ['CURRENT', 'NEXT', 'TODO', 'WAITING']
+
+function! s:CompareTasks(a, b) abort
+  return index(s:states, matchstr(a:a.text, '\C\<\w\+\>'))
+        \ - index(s:states, matchstr(a:b.text, '\C\<\w\+\>'))
+endfunction
+
+function! Actions() abort
+  let results = systemlist(
+        \ 'rg --vimgrep --glob "*.md" --glob "!archive.md" '
+        \ . shellescape('^\s*-\s+(CURRENT|NEXT|TODO|WAITING)\b')
+        \ . ' ' . shellescape(expand('~/.notes')))
+
+  if empty(results) | echo 'No actions' | return | endif
+
+  call setqflist([], 'r', {'lines': results, 'efm': '%f:%l:%c:%m'})
+  let items = getqflist()
+  call sort(items, function('s:CompareTasks'))
+  call setqflist(items, 'r')
+  copen
+endfunction
+
+nnoremap <C-u> :call Actions()<CR>
+
+function! QuickfixText(info) abort
+  let items = getqflist({'id': a:info.id, 'items': 1}).items
+  let lines = []
+
+  for idx in range(a:info.start_idx - 1, a:info.end_idx - 1)
+    let item = items[idx]
+    let path = pathshorten(fnamemodify(bufname(item.bufnr), ':.'))
+    call add(lines, printf('%-24.24s │ %s',
+          \ path . ':' . item.lnum, item.text))
+  endfor
+
+  return lines
+endfunction
+
+set quickfixtextfunc=QuickfixText

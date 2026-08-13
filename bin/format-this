@@ -1,0 +1,19 @@
+#!/bin/sh
+
+file=$1
+
+case "$file" in
+  *.go)    goimports -w "$file" ;;
+  *.templ) go tool templ fmt "$file" ;;
+  *.js|*.jsx|*.ts|*.tsx)
+    if find-up deno.json deno.jsonc >/dev/null 2>&1; then
+      deno fmt "$file"
+    else
+      npx prettier --write "$file"
+    fi
+    ;;
+  *)
+    echo "No formatter configured for: $file" >&2
+    exit 1
+    ;;
+esac
