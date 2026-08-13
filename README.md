@@ -14,28 +14,17 @@ _A collection of tools I use for development work._
 
 _Primarily
 
-1. Clojure
+1. Go
 2. Javascript/Typescript
 3. Java
-4. Go
-5. Bash (yes bash is considered a first-class language)
+4. Bash (yes bash is considered a first-class language)
 
 _Secondarily_
 
+5. Clojure
 6. Python
 7. Ruby
 8. Rust
-
-# Emacs
-
-The key to understanding Emacs is that it is a REPL machine. It runs
-on lisp, it is well suited to working with node/irb/clojure/sqlite and
-other interpreters/REPLs. This time round I am also using ansi-term as
-a first class REPL too, i.e using command line git instead of opting
-for vc-mode/magit. Possibly this also applies to using navi (my
-REPl-like agent harness).
-
-On Mac OS, installed using the homebrew cask from [here](https://github.com/d12frosted/homebrew-emacs-plus)
 
 # Ctags
 
