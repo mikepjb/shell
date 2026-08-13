@@ -103,25 +103,32 @@ endfunction
 nnoremap <space> :call SelectaCommand("fd -E '*_templ.go' -t f . .", "", ":edit")<cr>
 nnoremap <A-o> :call SelectaCommand("fd -t f . ~/.notes/", "", ":edit")<cr>
 
-function! MarkdownFold()
-  let l:line = getline(v:lnum)
-
-  let l:header = matchstr(l:line, '^\s\{0,3}#\{1,6}\ze\s')
+function! FocusFold() abort
+  let l:header = matchstr(getline(v:lnum),
+        \ '^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)')
 
   if empty(l:header)
-    " Continue fold level from previous line
     return '='
   endif
 
-  let l:level = strlen(matchstr(l:header, '#\+'))
+  let l:level = strlen(l:header)
 
-  return l:level >= 2 ? l:level - 1 : 0
+  " # headings are not folds; ## through ###### are folds
+  return l:level == 1 ? 0 : '>' . (l:level - 1)
 endfunction
+
+function! FocusFoldText()
+  let l:title = getline(v:foldstart)
+
+  return l:title . ' '
+endfunction
+
 
 augroup markdown_folding
   autocmd!
   autocmd FileType markdown setlocal foldmethod=expr
-  autocmd FileType markdown setlocal foldexpr=MarkdownFold()
-  autocmd FileType markdown setlocal foldlevel=1
+  autocmd FileType markdown setlocal foldexpr=FocusFold()
+  autocmd FileType markdown setlocal foldtext=FocusFoldText()
+  autocmd FileType markdown setlocal foldlevel=0
   autocmd FileType markdown nnoremap <C-d> za
 augroup END
