@@ -1,0 +1,652 @@
+#!/usr/bin/env bash
+#
+# selecta is a small fuzzy selector. Input is read from stdin; the interface
+# and keystrokes use /dev/tty so that selecta can sit in a pipeline.
+#
+# Bash owns the terminal and the small amount of UI state. awk scores the
+# choices, and sort ranks the numeric match records.
+
+set -o pipefail
+
+VERSION='0.0.8'
+PROGRAM=${0##*/}
+
+requested_height=21
+initial_search=''
+
+choices=()
+match_indexes=()
+match_starts=()
+match_ends=()
+match_count=0
+cursor_index=0
+query=''
+selection=''
+
+tty_open=0
+raw_mode=0
+ui_started=0
+saved_stty=''
+screen_height=0
+screen_width=0
+ui_height=0
+visible_slots=0
+
+ESC=$'\033'
+CLEAR_LINE="${ESC}[2K"
+HIDE_CURSOR="${ESC}[?25l"
+SHOW_CURSOR="${ESC}[?25h"
+CURSOR_UP="${ESC}["
+INVERSE="${ESC}[7m"
+RESET="${ESC}[0m"
+RED="${ESC}[31m"
+DEFAULT_FG="${ESC}[39m"
+
+usage() {
+    cat <<EOF
+Usage: $PROGRAM [options]
+
+Options:
+  -s, --search SEARCH       Specify an initial search string
+      --height LINES        Specify UI height, including the prompt
+      --height full         Use the full terminal height
+  -h, --help                Show this message
+      --version             Show version
+EOF
+}
+
+error() {
+    printf '%s: %s\n' "$PROGRAM" "$1" >&2
+}
+
+set_height() {
+    local value=$1
+
+    if [[ $value == full ]]; then
+        requested_height=full
+        return 0
+    fi
+
+    if [[ ! $value =~ ^[0-9]+$ ]] || (( 10#$value < 2 )); then
+        error 'height must be at least 2 or "full"'
+        return 1
+    fi
+
+    requested_height=$((10#$value))
+}
+
+parse_options() {
+    while (($#)); do
+        case $1 in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            --version)
+                printf '%s\n' "$VERSION"
+                exit 0
+                ;;
+            --height)
+                if (($# < 2)); then
+                    error 'option --height requires an argument'
+                    usage >&2
+                    exit 1
+                fi
+                set_height "$2" || { usage >&2; exit 1; }
+                shift 2
+                ;;
+            --height=*)
+                set_height "${1#*=}" || { usage >&2; exit 1; }
+                shift
+                ;;
+            -s)
+                if (($# < 2)); then
+                    error 'option --search requires an argument'
+                    usage >&2
+                    exit 1
+                fi
+                initial_search=$2
+                shift 2
+                ;;
+            -s?*)
+                initial_search=${1#-s}
+                shift
+                ;;
+            --search)
+                if (($# < 2)); then
+                    error 'option --search requires an argument'
+                    usage >&2
+                    exit 1
+                fi
+                initial_search=$2
+                shift 2
+                ;;
+            --search=*)
+                initial_search=${1#*=}
+                shift
+                ;;
+            --)
+                shift
+                if (($#)); then
+                    error "unexpected argument: $1"
+                    usage >&2
+                    exit 1
+                fi
+                ;;
+            -*)
+                error "invalid option: $1"
+                usage >&2
+                exit 1
+                ;;
+            *)
+                error "unexpected argument: $1"
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+}
+
+trim_whitespace() {
+    local value=$1
+
+    # This is the usual Bash parameter-expansion trim. It covers the
+    # whitespace characters that can occur in a newline-delimited shell input
+    # stream, including CR from a CRLF input file.
+    value="${value#"${value%%[!$' \t\r\n\v\f']*}"}"
+    value="${value%"${value##*[!$' \t\r\n\v\f']}"}"
+    printf '%s' "$value"
+}
+
+read_choices() {
+    local line
+    local trimmed
+
+    while IFS= read -r line || [[ -n $line ]]; do
+        trimmed=$(trim_whitespace "$line")
+        [[ -n $trimmed ]] || continue
+        choices+=("$trimmed")
+    done
+}
+
+screen_size() {
+    local size
+
+    size=$(stty size <&3 2>/dev/null) || return 1
+    read -r screen_height screen_width <<< "$size"
+
+    [[ $screen_height =~ ^[0-9]+$ ]] || return 1
+    [[ $screen_width =~ ^[0-9]+$ ]] || return 1
+    (( screen_height > 0 && screen_width > 0 )) || return 1
+}
+
+selecta_cleanup() {
+    local status=$?
+    local newlines
+
+    trap - EXIT HUP INT TERM
+
+    if ((tty_open)); then
+        # Restore output processing before writing newlines. `stty raw` turns
+        # off ONLCR, so newlines written while raw mode is active would move
+        # down without returning to column zero.
+        if ((raw_mode)); then
+            stty "$saved_stty" <&3 2>/dev/null || true
+            raw_mode=0
+        fi
+
+        if ((ui_started)); then
+            # Rendering leaves the cursor on the prompt line. Move it below
+            # the rows occupied by the selector before returning to stdout.
+            printf '%s%s' "$SHOW_CURSOR" "$RESET" >&3 2>/dev/null || true
+            newlines=$((visible_slots + 1))
+            while ((newlines > 0)); do
+                printf '\n' >&3 2>/dev/null || true
+                ((newlines--))
+            done
+        fi
+
+        exec 3>&-
+        tty_open=0
+    fi
+
+    return "$status"
+}
+
+open_screen() {
+    # Bash 3.2 does not have dynamically allocated file descriptors, so use a
+    # private descriptor. All terminal input and drawing go through it.
+    exec 3<>/dev/tty 2>/dev/null || return 1
+    tty_open=1
+    trap 'selecta_cleanup' EXIT
+    trap 'exit 129' HUP
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+
+    saved_stty=$(stty -g <&3 2>/dev/null) || return 1
+    screen_size || return 1
+
+    if [[ $requested_height == full ]]; then
+        ui_height=$screen_height
+    elif (( requested_height < screen_height )); then
+        ui_height=$requested_height
+    else
+        ui_height=$screen_height
+    fi
+
+    (( ui_height >= 2 )) || return 1
+    visible_slots=$((ui_height - 1))
+
+    stty raw -echo -icanon <&3 2>/dev/null || return 1
+    raw_mode=1
+}
+
+refresh_matches() {
+    local current_query=$1
+    local output
+    local score
+    local span
+    local choice_length
+    local input_index
+    local start
+    local end
+    local tab=$'\t'
+
+    match_indexes=()
+    match_starts=()
+    match_ends=()
+    match_count=0
+
+    if [[ -z $current_query ]]; then
+        local index
+        for ((index = 0; index < ${#choices[@]}; index++)); do
+            match_indexes+=("$index")
+            match_starts+=("")
+            match_ends+=("")
+        done
+        match_count=${#choices[@]}
+        cursor_index=0
+        return 0
+    fi
+
+    if ((${#choices[@]} == 0)); then
+        cursor_index=0
+        return 0
+    fi
+
+    output=$(
+        printf '%s\n' "${choices[@]}" |
+            SELECTA_QUERY="$current_query" awk '
+                BEGIN {
+                    query = tolower(ENVIRON["SELECTA_QUERY"])
+                    query_length = length(query)
+                    for (i = 1; i <= query_length; i++) {
+                        query_char[i] = substr(query, i, 1)
+                    }
+                }
+
+                # This follows Selecta: ASCII letters, digits, and underscore
+                # are word characters. POSIX awk character classes make the
+                # behaviour locale-aware for ordinary non-ASCII input.
+                function is_boundary(character) {
+                    return character !~ /^[[:alnum:]_]$/
+                }
+
+                # Return score and final position separated by SUBSEP. The
+                # search deliberately takes the first available occurrence of
+                # every later query character, matching Selecta\047s eager
+                # scoring algorithm.
+                function score_from(text, first,    last, score, last_type,
+                                    query_index, character, offset, position) {
+                    last = first
+                    score = 1
+                    last_type = ""
+
+                    for (query_index = 2; query_index <= query_length; query_index++) {
+                        character = query_char[query_index]
+                        offset = index(substr(text, last + 1), character)
+                        if (!offset) {
+                            return ""
+                        }
+
+                        position = last + offset
+                        if (position == last + 1) {
+                            if (last_type != "sequential") {
+                                last_type = "sequential"
+                                score++
+                            }
+                        } else if (is_boundary(substr(text, position - 1, 1))) {
+                            if (last_type != "boundary") {
+                                last_type = "boundary"
+                                score++
+                            }
+                        } else {
+                            last_type = "normal"
+                            score += position - last
+                        }
+
+                        last = position
+                    }
+
+                    return score SUBSEP last
+                }
+
+                {
+                    text = tolower($0)
+                    best_score = -1
+                    search_from = 1
+
+                    while (search_from <= length(text)) {
+                        offset = index(substr(text, search_from), query_char[1])
+                        if (!offset) {
+                            break
+                        }
+
+                        first = search_from + offset - 1
+                        result = score_from(text, first)
+                        if (result != "") {
+                            split(result, parts, SUBSEP)
+                            score = parts[1] + 0
+                            last = parts[2] + 0
+
+                            # A strict comparison preserves the earliest range
+                            # when two starting positions have equal scores.
+                            if (best_score < 0 || score < best_score) {
+                                best_score = score
+                                best_first = first
+                                best_last = last
+                            }
+                        }
+
+                        search_from = first + 1
+                    }
+
+                    if (best_score >= 0) {
+                        printf "%d\t%d\t%d\t%d\t%d\t%d\n",
+                            best_score,
+                            best_last - best_first + 1,
+                            length($0),
+                            NR,
+                            best_first - 1,
+                            best_last - 1
+                    }
+                }
+            ' |
+            LC_ALL=C sort -t "$tab" -k1,1n -k2,2n -k3,3n -k4,4n
+    ) || return 1
+
+    if [[ -n $output ]]; then
+        while IFS=$'\t' read -r score span choice_length input_index start end; do
+            [[ $input_index =~ ^[0-9]+$ ]] || continue
+            match_indexes+=("$((input_index - 1))")
+            match_starts+=("$start")
+            match_ends+=("$end")
+            ((match_count++))
+        done <<< "$output"
+    fi
+
+    cursor_index=0
+}
+
+move_cursor() {
+    local direction=$1
+    local available=$match_count
+
+    (( available > visible_slots )) && available=$visible_slots
+    (( available > 0 )) || return 0
+
+    if (( direction > 0 )); then
+        cursor_index=$(( (cursor_index + 1) % available ))
+    else
+        cursor_index=$(( (cursor_index + available - 1) % available ))
+    fi
+}
+
+delete_word() {
+    local last_character
+
+    # Selecta's delete-word operation removes /[^ ]* *$/: the current word
+    # and any spaces after it, while retaining the separator before the word.
+    while [[ -n $query ]]; do
+        last_character=${query: -1}
+        [[ $last_character == ' ' ]] || break
+        query=${query:0:${#query}-1}
+    done
+
+    while [[ -n $query ]]; do
+        last_character=${query: -1}
+        [[ $last_character == ' ' ]] && break
+        query=${query:0:${#query}-1}
+    done
+
+    refresh_matches "$query"
+}
+
+handle_escape_sequence() {
+    local first=''
+    local code=''
+
+    # Arrow keys are a small convenience in addition to Selecta's original
+    # Ctrl-N/Ctrl-P bindings. A lone Escape is ignored.
+    IFS= read -r -n 1 -d '' -t 0.05 -u 3 first || return 0
+    case $first in
+        '['|O)
+            IFS= read -r -n 1 -d '' -t 0.05 -u 3 code || return 0
+            case $code in
+                A) move_cursor -1 ;;
+                B) move_cursor 1 ;;
+            esac
+            ;;
+    esac
+}
+
+truncate_line() {
+    local value=$1
+
+    if ((screen_width > 0)); then
+        RENDERED_LINE=${value:0:screen_width}
+    else
+        RENDERED_LINE=''
+    fi
+}
+
+render_choice() {
+    local choice_index=$1
+    local start=$2
+    local end=$3
+    local selected=$4
+    local text=${choices[$choice_index]}
+    local prefix=''
+    local matching=''
+    local suffix=''
+    local match_length=0
+    local remaining=$screen_width
+    local line
+
+    if [[ $start =~ ^[0-9]+$ && $end =~ ^[0-9]+$ && $start -le $end ]]; then
+        match_length=$((end - start + 1))
+        prefix=${text:0:start}
+        matching=${text:start:match_length}
+        suffix=${text:start+match_length}
+
+        if ((remaining > 0)); then
+            prefix=${prefix:0:remaining}
+            remaining=$((remaining - ${#prefix}))
+        else
+            prefix=''
+        fi
+
+        if ((remaining > 0)); then
+            matching=${matching:0:remaining}
+            remaining=$((remaining - ${#matching}))
+        else
+            matching=''
+        fi
+
+        if ((remaining > 0)); then
+            suffix=${suffix:0:remaining}
+        else
+            suffix=''
+        fi
+
+        line="${prefix}${RED}${matching}${DEFAULT_FG}${suffix}"
+    else
+        truncate_line "$text"
+        line=$RENDERED_LINE
+    fi
+
+    if ((selected)); then
+        RENDERED_LINE="${INVERSE}${line}${RESET}"
+    else
+        RENDERED_LINE=$line
+    fi
+}
+
+write_line() {
+    printf '%s\r%s' "$CLEAR_LINE" "$1" >&3
+}
+
+render_screen() {
+    local choice_count=${#choices[@]}
+    local label_width
+    local count_label
+    local prompt
+    local slot
+    local choice_index
+    local selected
+
+    label_width=${#choice_count}
+    count_label=$(printf "%${label_width}d" "$match_count")
+    prompt="${count_label} > ${query}"
+    truncate_line "$prompt"
+
+    ui_started=1
+    printf '%s' "$HIDE_CURSOR" >&3
+
+    write_line "$RENDERED_LINE"
+    printf '\n' >&3
+
+    for ((slot = 0; slot < visible_slots; slot++)); do
+        if ((slot < match_count)); then
+            choice_index=${match_indexes[$slot]}
+            selected=0
+            ((slot == cursor_index)) && selected=1
+            render_choice \
+                "$choice_index" \
+                "${match_starts[$slot]}" \
+                "${match_ends[$slot]}" \
+                "$selected"
+        else
+            RENDERED_LINE=''
+        fi
+
+        write_line "$RENDERED_LINE"
+        if ((slot < visible_slots - 1)); then
+            printf '\n' >&3
+        fi
+    done
+
+    # Cursor-up preserves the column from the last choice line. Redraw the
+    # prompt after moving up so the cursor ends at the end of the query, as in
+    # the original Ruby renderer.
+    printf '%s%dA' "$CURSOR_UP" "$visible_slots" >&3
+    truncate_line "$prompt"
+    write_line "$RENDERED_LINE"
+    printf '%s' "$SHOW_CURSOR" >&3
+}
+
+main() {
+    parse_options "$@"
+
+    for dependency in awk sort stty; do
+        command -v "$dependency" >/dev/null 2>&1 || {
+            error "required command not found: $dependency"
+            exit 1
+        }
+    done
+
+    read_choices
+    query=$initial_search
+    refresh_matches "$query" || {
+        error 'could not calculate matches'
+        exit 1
+    }
+
+    if ! open_screen; then
+        error "Can't get a working TTY. Selecta requires an ANSI-compatible terminal."
+        exit 1
+    fi
+
+    finished=0
+    while (( ! finished )); do
+        render_screen
+
+        key=''
+        # An empty -d argument makes NUL the delimiter, so read does not
+        # discard Return/Ctrl-J as newline delimiters.
+        if ! IFS= read -r -n 1 -d '' -u 3 key; then
+            finished=1
+            break
+        fi
+
+        case $key in
+            $'\003')
+                # The terminal is in raw mode, so Ctrl-C arrives as input rather
+                # than as SIGINT. Exit 130 after the EXIT trap restores the TTY.
+                exit 130
+                ;;
+            $'\016')
+                move_cursor 1
+                ;;
+            $'\020')
+                move_cursor -1
+                ;;
+            $'\025')
+                query=''
+                cursor_index=0
+                refresh_matches "$query"
+                ;;
+            $'\027')
+                delete_word
+                ;;
+            $'\010'|$'\177')
+                if [[ -n $query ]]; then
+                    query=${query:0:${#query}-1}
+                    cursor_index=0
+                    refresh_matches "$query"
+                fi
+                ;;
+            $'\012'|$'\015')
+                finished=1
+                ;;
+            $'\033')
+                handle_escape_sequence
+                ;;
+            *)
+                if [[ $key == [[:print:]] ]]; then
+                    query="${query}${key}"
+                    cursor_index=0
+                    refresh_matches "$query" || exit 1
+                fi
+                ;;
+        esac
+    done
+
+    if ((match_count > 0)); then
+        selection=${choices[${match_indexes[$cursor_index]}]}
+    fi
+
+    # Restore the terminal before writing the selected value. The Ruby
+    # implementation leaves its screen context before printing the result;
+    # doing this explicitly is necessary because the EXIT trap otherwise runs
+    # only after main has already written to stdout.
+    selecta_cleanup
+
+    if [[ -n $selection ]]; then
+        printf '%s\n' "$selection"
+    fi
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "$@"
+fi
