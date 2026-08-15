@@ -102,10 +102,28 @@ endfunction
 nnoremap gp :call Format()<CR>
 
 function! s:MarkdownFold() abort
+  let line = getline(v:lnum)
   let level = strlen(matchstr(
-        \ getline(v:lnum),
+        \ line,
         \ '^\s\{0,3}\zs#\{2,6}\ze\%(\s\|$\)'))
-  return level ? '>' . (level - 1) : '='
+
+  if level
+    return '>' . (level - 1)
+  endif
+
+  if line =~# '^-\s\+\%(CURRENT\|NEXT\|TODO\|WAITING\)\>'
+    for lnum in range(v:lnum - 1, 1, -1)
+      let heading = strlen(matchstr(
+            \ getline(lnum),
+            \ '^\s\{0,3}\zs#\{2,6}\ze\%(\s\|$\)'))
+      if heading
+        return '>' . heading
+      endif
+    endfor
+    return '>1'
+  endif
+
+  return '='
 endfunction
 
 function! s:MarkdownFoldFormat()
