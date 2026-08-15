@@ -5,6 +5,8 @@
 #
 # Bash owns the terminal and the small amount of UI state. awk scores the
 # choices, and sort ranks the numeric match records.
+#
+# Based on the original ruby-based selecta by Gary Bernhardt.
 
 set -o pipefail
 
