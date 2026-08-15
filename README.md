@@ -61,6 +61,13 @@ also ability to run multiple processes at the same time (think LVH stack)
 
 tmux is great but overkill and leads spiralling complexity.
 
+[experiment] bringing back tmux but not by default, this is so I can run agents
+in the background and do multitasking which in principal I am against as focused
+work in theory should be the most effective approach.
+
+Plan here is to keep to just a single window (bg services can still be used with
+PM) - if we going to multitask let's be honest and keep it all in the front view
+
 ## Vim syntax not working? Typescript slow?
 
 I recently removed some old lines that I am not sure are needed anymore:

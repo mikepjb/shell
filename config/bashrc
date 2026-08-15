@@ -47,6 +47,7 @@ eval "$(fnm env --use-on-cd --shell bash)"
 alias vi='vim'
 alias e='emacsclient -n'
 alias c='consult'
+alias x='tmux attach -t x || tmux new -s x'
 alias k='kubectl'
 alias kc='kubectl config current-context'
 alias ks='kubectl config use-context $(k config get-contexts -o "name" | selecta)'

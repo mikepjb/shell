@@ -23,6 +23,7 @@ mkdir -p "$HOME"/.vim/{colors,spell}
 mkdir -p "$HOME/.vim/colors"
 mkdir -p "$HOME/.config/ghostty/themes"
 
+ln -sfv "$sconf/tmux.conf" "$HOME/.config/tmux/tmux.conf"
 ln -sfv "$sconf/user.edn" "$HOME/.config/clojure/deps.edn"
 ln -sfv "$sconf/ghostty.conf" "$HOME/.config/ghostty/config"
 ln -sfv "$sconf/vimrc" "$HOME/.vimrc"
