@@ -105,9 +105,12 @@ function! s:MarkdownFold() abort
   let line = getline(v:lnum)
   let level = strlen(matchstr(
         \ line,
-        \ '^\s\{0,3}\zs#\{2,6}\ze\%(\s\|$\)'))
+        \ '^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)'))
 
-  if level
+  if level == 1
+    " Level-one headings are section boundaries, not folds.
+    return 0
+  elseif level > 1
     return '>' . (level - 1)
   endif
 
@@ -115,7 +118,7 @@ function! s:MarkdownFold() abort
     for lnum in range(v:lnum - 1, 1, -1)
       let heading = strlen(matchstr(
             \ getline(lnum),
-            \ '^\s\{0,3}\zs#\{2,6}\ze\%(\s\|$\)'))
+            \ '^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)'))
       if heading
         return '>' . heading
       endif
