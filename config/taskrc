@@ -1,7 +1,7 @@
 # vim: ft=conf
 
 # [Created by task 3.5.0 8/17/2026 13:39:08]
-data.location=/Users/mike.bruce/.task
+data.location=~/.task
 news.version=3.5.0
 
 # To use the default location of the XDG directories,
@@ -11,7 +11,7 @@ news.version=3.5.0
 #hooks.location=~/.config/task/hooks
 
 # Color theme (uncomment one to use)
-include default.theme
+# include default.theme
 #include light-16.theme
 #include light-256.theme
 #include bubblegum-256.theme
