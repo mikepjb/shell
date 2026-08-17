@@ -47,6 +47,8 @@ eval "$(fnm env --use-on-cd --shell bash)"
 alias vi='vim'
 alias e='emacsclient -n'
 alias t='task'
+alias te='task export | jq '\''sort_by(.uuid) | map(del(.id, .urgency))'\'' > ~/.notes/tasks.json'
+alias ti='task import ~/notes/tasks.json'
 alias c='consult'
 alias x='tmux attach -t x || tmux new -s x'
 alias k='kubectl'
