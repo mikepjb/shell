@@ -115,18 +115,6 @@ function! s:MarkdownFold() abort
     return '>' . (level - 1)
   endif
 
-  if line =~# '^-\s\+\%(CURRENT\|NEXT\|TODO\|WAITING\)\>'
-    for lnum in range(v:lnum - 1, 1, -1)
-      let heading = strlen(matchstr(
-            \ getline(lnum),
-            \ '^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)'))
-      if heading
-        return '>' . heading
-      endif
-    endfor
-    return '>1'
-  endif
-
   return '='
 endfunction
 
@@ -142,43 +130,3 @@ augroup markdown_folding
   autocmd FileType markdown setlocal foldlevel=0
   autocmd FileType markdown nnoremap <buffer> <C-d> za
 augroup END
-
-let s:states = ['CURRENT', 'NEXT', 'TODO', 'WAITING']
-
-function! s:CompareTasks(a, b) abort
-  return index(s:states, matchstr(a:a.text, '\C\<\w\+\>'))
-        \ - index(s:states, matchstr(a:b.text, '\C\<\w\+\>'))
-endfunction
-
-function! Actions() abort
-  let results = systemlist(
-        \ 'rg --vimgrep --glob "*.md" --glob "!archive.md" '
-        \ . shellescape('^\s*-\s+(CURRENT|NEXT|TODO|WAITING)\b')
-        \ . ' ' . shellescape(expand('~/.notes')))
-
-  if empty(results) | echo 'No actions' | return | endif
-
-  call setqflist([], 'r', {'lines': results, 'efm': '%f:%l:%c:%m'})
-  let items = getqflist()
-  call sort(items, function('s:CompareTasks'))
-  call setqflist(items, 'r')
-  copen
-endfunction
-
-nnoremap <C-u> :call Actions()<CR>
-
-function! QuickfixText(info) abort
-  let items = getqflist({'id': a:info.id, 'items': 1}).items
-  let lines = []
-
-  for idx in range(a:info.start_idx - 1, a:info.end_idx - 1)
-    let item = items[idx]
-    let path = pathshorten(fnamemodify(bufname(item.bufnr), ':.'))
-    call add(lines, printf('%-24.24s │ %s',
-          \ path . ':' . item.lnum, item.text))
-  endfor
-
-  return lines
-endfunction
-
-set quickfixtextfunc=QuickfixText

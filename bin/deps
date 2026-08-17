@@ -23,6 +23,7 @@ declare -A -r PACKAGES=(
     ['rg']='ripgrep'
     ['fd']='fd'
     ['shellcheck']=''
+    ['taskwarrior-tui']=''
     ['tmux']=''
     ['wget']=''
     ['yq']='go-yq yq'

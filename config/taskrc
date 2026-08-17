@@ -4,27 +4,50 @@
 data.location=~/.task
 news.version=3.5.0
 
+# ---------------------------------------------------------------------------
+# Custom reports
+# ---------------------------------------------------------------------------
+
+# All pending tasks, grouped by project.
+report.p.description=Pending tasks grouped by project
+report.p.columns=id,project,tags,scheduled.relative,due.relative,description,urgency
+report.p.labels=ID,Project,Tags,Scheduled,Due,Description,Urg
+report.p.sort=project+/,urgency-
+report.p.filter=status:pending
+
+# Tasks due within the next two weeks.
+report.fortnight.description=Tasks due within the next 14 days
+report.fortnight.columns=id,project,tags,due.relative,description,urgency
+report.fortnight.labels=ID,Project,Tags,Due,Description,Urg
+report.fortnight.sort=due+,urgency-
+report.fortnight.filter=status:pending due.before:2weeks
+
 # To use the default location of the XDG directories,
 # move this configuration file from ~/.taskrc to ~/.config/task/taskrc and update location config as follows:
 
 #data.location=~/.local/share/task
 #hooks.location=~/.config/task/hooks
 
-# Color theme (uncomment one to use)
-# include default.theme
-#include light-16.theme
-#include light-256.theme
-#include bubblegum-256.theme
-#include dark-16.theme
-#include dark-256.theme
-#include dark-red-256.theme
-#include dark-green-256.theme
-#include dark-blue-256.theme
-#include dark-violets-256.theme
-#include dark-yellow-green.theme
-#include dark-gray-256.theme
-#include dark-gray-blue-256.theme
-#include solarized-dark-256.theme
-#include solarized-light-256.theme
-#include no-color.theme
+# ---------------------------------------------------------------------------
+# Colours
+# ---------------------------------------------------------------------------
 
+color=on
+
+# State
+color.active=bold green
+color.overdue=bold red
+color.due.today=bold yellow
+color.scheduled=cyan
+color.blocked=gray
+color.completed=gray
+
+# Projects
+color.project.lvh=cyan
+color.project.hypalynx=magenta
+color.project.work=blue
+color.project.self=green
+color.project.home=yellow
+
+# Tags
+color.tag.docs=cyan
