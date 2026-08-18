@@ -51,7 +51,7 @@ nnoremap <C-q> :q<CR>
 nnoremap <C-g> :noh<CR>:redraw!<CR><C-g>
 nnoremap gd <C-]>
 nnoremap gi :e ~/.vimrc<CR>
-nnoremap gn :e ~/.notes/index.md<CR>
+nnoremap gn :call Selecta("fd -t f . ~/.notes/")<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gs :Grep<space>
 nnoremap gt /\CTODO\\|NEXT\\|CURRENT\\|DONE<CR>
@@ -92,7 +92,6 @@ function! Selecta(cmd)
 endfunction
 
 nnoremap <space> :call Selecta("fd -E '*_templ.go' -t f . .")<CR>
-nnoremap <A-o> :call Selecta("fd -t f . ~/.notes/")<CR>
 
 function! Format()
   update
@@ -109,8 +108,7 @@ function! s:MarkdownFold() abort
         \ '^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)'))
 
   if level == 1
-    " Level-one headings are section boundaries, not folds.
-    return 0
+    return 0 " Level-one headings are section boundaries, not folds.
   elseif level > 1
     return '>' . (level - 1)
   endif

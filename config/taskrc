@@ -4,16 +4,22 @@
 data.location=~/.task
 news.version=3.5.0
 
+report.next.labels=id,description,project,sch,due
+report.next.columns=id,description,project,scheduled,due
+report.next.dateformat=a D b
+
 # ---------------------------------------------------------------------------
 # Custom reports
 # ---------------------------------------------------------------------------
 
 # All pending tasks, grouped by project.
-report.p.description=Pending tasks grouped by project
-report.p.columns=id,project,tags,scheduled.relative,due.relative,description,urgency
-report.p.labels=ID,Project,Tags,Scheduled,Due,Description,Urg
-report.p.sort=project+/,urgency-
-report.p.filter=status:pending
+report.g.description=Pending tasks grouped by project
+report.g.labels=id,description,project,sch,due
+report.g.columns=id,description,project,scheduled,due
+# report.g.columns=id,project,tags,scheduled.relative,due.relative,description,urgency
+# report.g.labels=ID,Project,Tags,Scheduled,Due,Description,Urg
+report.g.sort=project+/,urgency-
+report.g.filter=status:pending
 
 # Tasks due within the next two weeks.
 report.fortnight.description=Tasks due within the next 14 days
