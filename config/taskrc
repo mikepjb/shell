@@ -6,7 +6,7 @@ news.version=3.5.0
 
 report.next.labels=id,description,project,sch,due
 report.next.columns=id,description,project,scheduled,due
-report.next.dateformat=a D b
+report.next.dateformat=a D b H:N
 
 # ---------------------------------------------------------------------------
 # Custom reports
