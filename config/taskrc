@@ -28,6 +28,11 @@ report.fortnight.labels=ID,Project,Tags,Due,Description,Urg
 report.fortnight.sort=due+,urgency-
 report.fortnight.filter=status:pending due.before:2weeks
 
+urgency.user.project.someday.coefficient=-6.0
+
+# Don't ask me when importing recurring tasks
+recurrence.confirmation=yes
+
 # To use the default location of the XDG directories,
 # move this configuration file from ~/.taskrc to ~/.config/task/taskrc and update location config as follows:
 
