@@ -21,12 +21,14 @@ done
 mkdir -p "$HOME"/.config/{clojure,ghostty,ctags}
 mkdir -p "$HOME"/.vim/{colors,spell}
 mkdir -p "$HOME/.vim/colors"
+mkdir -p "$HOME/.config/nvim"
 mkdir -p "$HOME/.config/ghostty/themes"
 
 ln -sfv "$sconf/tmux.conf" "$HOME/.config/tmux/tmux.conf"
 ln -sfv "$sconf/user.edn" "$HOME/.config/clojure/deps.edn"
 ln -sfv "$sconf/ghostty.conf" "$HOME/.config/ghostty/config"
 ln -sfv "$sconf/vimrc" "$HOME/.vimrc"
+ln -sfv "$sconf/init.lua" "$HOME/.config/nvim/init.lua"
 ln -sfv "$sconf/flow-theme.el" "$HOME/.emacs.d/flow-theme.el"
 ln -sfv "$sconf/ctags" "$HOME/.config/ctags/base.ctags"
 ln -sfv "$sconf/flow.vim" "$HOME/.vim/colors/flow.vim"
