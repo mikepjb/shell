@@ -217,6 +217,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
     lspmap("n", "gi", vim.lsp.buf.implementation, "Go to implementation")
     lspmap("n", "gr", vim.lsp.buf.references, "Find references")
     lspmap("n", "K", vim.lsp.buf.hover, "Hover documentation")
+    lspmap("n", "L", vim.diagnostic.open_float, "Show errors etc")
     lspmap("n", "\\ca", vim.lsp.buf.code_action, "Code action")
     lspmap("n", "\\cr", vim.lsp.buf.rename, "Rename symbol")
   end,
