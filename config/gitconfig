@@ -2,6 +2,13 @@
 [core]
   autocrlf = false
   excludesfile = ~/.gitignore
+
+[url "https://github.com/"]
+  insteadOf = gh:
+
+[url "https://codeberg.org/"]
+  insteadOf = cb:
+
 [alias]
   aa = add --all
   br = branch --sort=committerdate
