@@ -17,12 +17,12 @@ _Primarily_
 1. Go
 2. Javascript/Typescript
 3. Java
-4. Bash (yes bash is considered a first-class language)
+4. Python
+5. Bash (yes bash is considered a first-class language)
 
 _Secondarily_
 
-5. Clojure
-6. Python
+6. Clojure
 7. Ruby
 8. Rust
 

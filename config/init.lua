@@ -1,8 +1,5 @@
 -- Spartan Neovimrc - optimised for user flow
 
--- TODO maybe prefer default, we'll see.
-
--- Dependencies are provisioned by vim.pack, not by a third-party manager.
 vim.pack.add({
   "gh:nvim-lua/plenary.nvim",
   "gh:nvim-telescope/telescope.nvim",
@@ -227,6 +224,12 @@ if ok then
         prompt_title = 'Notes',
       })
     end, { desc = 'Find notes' })
+    vim.keymap.set('n', 'gI', function()
+      require('telescope.builtin').find_files({
+        cwd = vim.fn.expand('~/src/shell'),
+        prompt_title = 'Shell Configuration',
+      })
+    end, { desc = 'Find notes' })
 else
     vim.keymap.set('n', '<space>', ':find ')
 end
@@ -253,7 +256,6 @@ bind('n', 'ge', ':e <C-R>=fnamemodify(resolve(expand("%:p")), ":h") . "/"<CR>')
 bind('n', 'gc', ':!ctags -R .<CR>')
 bind('n', 'gr', ':read !snip<space>')
 bind('n', 'gR', ':Eval (user/restart)<CR>')
--- TODO manual format with gp?
 -- TODO gl to open/close quick fix menu
 bind('n', 'Q', '@q')
 bind('n', '<A-n>', ':cnext<CR>')
@@ -267,3 +269,5 @@ bind('n', '<A-t>', ':cexpr system("test-this " . expand("%"))<cr>')
 -- nnoremap <A-T> :cexpr system('test-this')<cr>
 -- nnoremap <A-r> :cexpr system('lint-this "' . expand('%') . '"')<cr>
 -- nnoremap <A-R> :cexpr system('lint-this "' . expand('%') . '" --fix')<cr>
+--
+-- TODO need markdown handling! and TODO/NEXt highlighting to match vim config
