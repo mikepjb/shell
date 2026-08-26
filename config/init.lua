@@ -7,9 +7,9 @@ vim.pack.add({
   "gh:tpope/vim-fugitive",
 }, { load = true })
 
--- bindings
 local opt = vim.opt
 opt.termguicolors = false
+vim.opt.shortmess:append("I") -- no startup message
 opt.guicursor = '' -- block cursor forever!
 opt.autoindent = true
 opt.autoread = true
@@ -62,14 +62,7 @@ opt.errorformat = "%f:%l:%c: %m,%f:%l: %m,%-G%.%#"
 vim.g.omni_sql_no_default_maps = 1
 vim.g.sh_noisk = 1
 vim.g.markdown_fenced_languages = {
-  "bash=sh",
-  "css",
-  "html",
-  "go",
-  "ruby",
-  "sql",
-  "yaml",
-  "java",
+  "bash=sh", "css", "html", "go", "ruby", "sql", "yaml", "java",
 }
 
 pcall(vim.cmd, 'colorscheme flow') -- Try colorscheme, fallback to default
