@@ -14,7 +14,7 @@ opt.guicursor = '' -- block cursor forever!
 opt.autoindent = true
 opt.autoread = true
 opt.backspace = { "indent", "eol", "start" }
-opt.formatoptions:remove("t")
+opt.formatoptions:append("t")
 opt.hlsearch = true
 opt.incsearch = true
 opt.ignorecase = true
@@ -61,8 +61,9 @@ end
 opt.errorformat = "%f:%l:%c: %m,%f:%l: %m,%-G%.%#"
 vim.g.omni_sql_no_default_maps = 1
 vim.g.sh_noisk = 1
+-- TODO fenced languages do not seem to get syntax highlighted in neovim.
 vim.g.markdown_fenced_languages = {
-  "bash=sh", "css", "html", "go", "ruby", "sql", "yaml", "java",
+  "bash=sh", "css", "html", "go", "ruby", "sql", "yaml", "java", "python"
 }
 
 pcall(vim.cmd, 'colorscheme flow') -- Try colorscheme, fallback to default
@@ -92,9 +93,49 @@ local function fmt(fn, ...)
     end
 end
 
+local function markdown_fold(lnum)
+  local line = vim.fn.getline(lnum)
+  local heading = vim.fn.matchstr(
+    line,
+    [[^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)]]
+  )
+  local level = #heading
+
+  if level == 1 then
+    return 0
+  elseif level > 1 then
+    return ">" .. (level - 1)
+  end
+
+  return "="
+end
+
+local function markdown_fold_text()
+  return vim.fn.getline(vim.v.foldstart) .. " "
+end
+
+-- foldexpr/foldtext are Vimscript expressions, so expose these callbacks to v:lua.
+_G.markdown_fold = markdown_fold
+_G.markdown_fold_text = markdown_fold_text
+
 -- autocmd
 local base = vim.api.nvim_create_augroup('base', { clear = true })
 local autocmd = vim.api.nvim_create_autocmd
+
+autocmd("FileType", {
+  pattern = "markdown",
+  group = base,
+  callback = function(ev)
+    vim.opt_local.foldmethod = "expr"
+    vim.opt_local.foldexpr = "v:lua.markdown_fold(v:lnum)"
+    vim.opt_local.foldtext = "v:lua.markdown_fold_text()"
+    vim.opt_local.foldlevel = 0
+    vim.keymap.set("n", "<C-d>", "za", {
+      buffer = ev.buf,
+      desc = "Toggle Markdown fold",
+    })
+  end,
+})
 
 autocmd("BufWritePre", {
   pattern = {"*.go"},
@@ -164,7 +205,7 @@ local function toggle_current_lsp()
   vim.notify(name .. (enabled and " disabled" or " enabled"))
 end
 
-vim.keymap.set("n", "<leader>l", toggle_current_lsp, {
+vim.keymap.set("n", "gL", toggle_current_lsp, {
   desc = "Toggle current filetype LSP",
 })
 
@@ -249,18 +290,38 @@ bind('n', 'ge', ':e <C-R>=fnamemodify(resolve(expand("%:p")), ":h") . "/"<CR>')
 bind('n', 'gc', ':!ctags -R .<CR>')
 bind('n', 'gr', ':read !snip<space>')
 bind('n', 'gR', ':Eval (user/restart)<CR>')
--- TODO gl to open/close quick fix menu
+local function toggle_quickfix()
+  if trouble_ok then
+    trouble.toggle("qflist")
+    return
+  end
+
+  local quickfix_windows = vim.tbl_filter(function(win)
+    return win.quickfix == 1
+  end, vim.fn.getwininfo())
+
+  vim.cmd(quickfix_windows[1] and "cclose" or "copen")
+end
+
+bind('n', 'gl', toggle_quickfix, { desc = "Toggle quickfix list" })
 bind('n', 'Q', '@q')
 bind('n', '<A-n>', ':cnext<CR>')
 bind('n', '<A-p>', ':cprevious<CR>')
--- TODO how to map expr?
--- nnoremap <expr> gl empty(filter(getwininfo(), 'v:val.quickfix')) ? ':copen<CR>' : ':cclose<CR>'
--- cnoremap <expr> <C-D> getcmdpos()>strlen(getcmdline())?"\<Lt>C-D>":"\<Lt>Del>"
--- cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
+vim.keymap.set('c', '<C-d>', function()
+  if vim.fn.getcmdpos() > #vim.fn.getcmdline() then
+    return '<C-d>'
+  end
+  return '<Del>'
+end, { expr = true, desc = 'Delete command-line character' })
+
+vim.keymap.set('c', '<C-f>', function()
+  if vim.fn.getcmdpos() > #vim.fn.getcmdline() then
+    return vim.o.cedit
+  end
+  return '<Right>'
+end, { expr = true, desc = 'Move through command line' })
 bind('n', '<C-t>', ':!go test ./...<cr>')
 bind('n', '<A-t>', ':cexpr system("test-this " . expand("%"))<cr>')
 -- nnoremap <A-T> :cexpr system('test-this')<cr>
 -- nnoremap <A-r> :cexpr system('lint-this "' . expand('%') . '"')<cr>
 -- nnoremap <A-R> :cexpr system('lint-this "' . expand('%') . '" --fix')<cr>
---
--- TODO need markdown handling! and TODO/NEXt highlighting to match vim config
