@@ -4,6 +4,18 @@ script_dir=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
 shell_repo_root=$(realpath "$script_dir/..")
 sconf="$shell_repo_root/config"
 local_bin_dir="$HOME/.local/bin"
+agent_config_dir="$shell_repo_root/agent"
+
+echo 'Symlinking agent configuration'
+
+mkdir -p "$HOME/.codex" "$HOME/.agents/skills"
+ln -sfv "$agent_config_dir/AGENTS.md" "$HOME/.codex/AGENTS.md"
+
+for skill_dir in "$agent_config_dir/skills/"*/; do
+    [ -d "$skill_dir" ] || continue
+    skill_name=$(basename "$skill_dir")
+    ln -sfnv "$skill_dir" "$HOME/.agents/skills/$skill_name"
+done
 
 echo 'Symlinking configurations'
 
