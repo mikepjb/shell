@@ -1,0 +1,75 @@
+FROM debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171
+
+ARG NODE_VERSION=22.19.0
+ARG CODEX_VERSION=0.153.4
+ARG PI_VERSION=0.85.0
+
+USER root
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV XDG_DATA_HOME=/home/agent/.local/share
+ENV FNM_DIR=/opt/fnm
+ENV PATH=/usr/local/bin:/opt/fnm/aliases/default/bin:/home/agent/.local/share/fnm:$PATH
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    bash-completion \
+    build-essential \
+    ca-certificates \
+    curl \
+    fd-find \
+    git \
+    git-lfs \
+    golang \
+    jq \
+    less \
+    openssh-client \
+    pkg-config \
+    procps \
+    python3 \
+    python3-pip \
+    python3-venv \
+    ripgrep \
+    shellcheck \
+    tmux \
+    tree \
+    unzip \
+    zip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --gid 1000 agent \
+    && useradd \
+        --uid 1000 \
+        --gid 1000 \
+        --create-home \
+        --shell /bin/bash \
+        agent
+
+RUN mkdir -p /opt/fnm \
+    && chown agent:agent /opt/fnm
+
+# Install fnm itself globally, but install Node versions as the agent user.
+RUN curl -fsSL https://fnm.vercel.app/install \
+    | bash -s -- --install-dir /usr/local/bin --skip-shell
+
+USER agent
+
+# Install the requested Node version and make it the default.
+RUN eval "$(fnm env --shell bash)" \
+    && fnm install "${NODE_VERSION}" \
+    && fnm default "${NODE_VERSION}" \
+    && npm install --global "@openai/codex@${CODEX_VERSION}" \
+    && npm install --global --ignore-scripts \
+        "@earendil-works/pi-coding-agent@${PI_VERSION}"
+
+# Initialize fnm for interactive shells.
+RUN printf '%s\n' \
+    'eval "$(fnm env --use-on-cd --shell bash)"' \
+    >> /home/agent/.bashrc
+
+WORKDIR /workspace
+
+# Initialize fnm even when Compose launches codex/pi directly.
+ENTRYPOINT ["/bin/bash", "-lc", "eval \"$(fnm env --shell bash)\" && exec \"$@\"", "--"]
+
+CMD ["bash"]

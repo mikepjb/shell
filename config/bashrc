@@ -72,8 +72,85 @@ alias gp='gh pr create --fill'
 alias gd='gh pr create --draft --fill'
 alias gw='gh pr view --web'
 alias cup='git -C ~/src/shell/ up && git -C ~/.notes up' # 'config up'
-alias p='cd ~/src/$(ls ~/src | selecta)'
 [[ $(command -v xdg-open) ]] && alias open=xdg-open
+
+AIENV_DIR=~/src/shell/agent
+
+ai-home-volume() {
+    local project_dir="${1:-$PWD}"
+    local canonical_dir
+    local project_key
+
+    canonical_dir=$(cd "$project_dir" 2>/dev/null && pwd -P) || {
+        echo "Cannot resolve project directory: $project_dir" >&2
+        return 1
+    }
+
+    if command -v sha256sum >/dev/null 2>&1; then
+        project_key=$(printf '%s' "$canonical_dir" | sha256sum | awk '{print substr($1, 1, 16)}')
+    elif command -v shasum >/dev/null 2>&1; then
+        project_key=$(printf '%s' "$canonical_dir" | shasum -a 256 | awk '{print substr($1, 1, 16)}')
+    else
+        echo "Cannot find a SHA-256 utility (sha256sum or shasum)" >&2
+        return 1
+    fi
+    printf 'agent-home-%s\n' "$project_key"
+}
+
+ai-ensure-home-volume() {
+    local project_dir="${1:-$PWD}"
+    local home_volume
+    home_volume=$(ai-home-volume "$project_dir") || return 1
+
+    docker volume inspect "$home_volume" >/dev/null 2>&1 ||
+        docker volume create "$home_volume" >/dev/null || return 1
+    printf '%s\n' "$home_volume"
+}
+
+ai-env() {
+    (
+        cd "$AIENV_DIR" &&
+        docker compose up -d proxy
+    )
+}
+
+o() {
+    local project_dir="$PWD"
+    local home_volume
+    home_volume=$(ai-ensure-home-volume "$project_dir") || return 1
+
+    (
+        cd "$AIENV_DIR" &&
+        AGENT_HOME_VOLUME="$home_volume" \
+        docker compose run --rm \
+            --volume "$project_dir:/workspace:rw" \
+            worker codex \
+            --sandbox danger-full-access \
+            --ask-for-approval never \
+            "$@"
+    )
+}
+
+p() {
+    local project_dir="$PWD"
+    local home_volume
+    home_volume=$(ai-ensure-home-volume "$project_dir") || return 1
+
+    (
+        cd "$AIENV_DIR" &&
+        AGENT_HOME_VOLUME="$home_volume" \
+        docker compose run --rm \
+            --volume "$project_dir:/workspace:rw" \
+            worker pi "$@"
+    )
+}
+
+ai-build() {
+    (
+        cd "$AIENV_DIR" &&
+        docker compose build proxy worker
+    )
+}
 
 vc() {
     [[ -f "$1" ]] || { echo "File not found: $1"; return 1; }
@@ -91,11 +168,9 @@ hiccup() {
 
 [[ -f $HOME/.bashrc.local ]] && . $HOME/.bashrc.local
 
-jobs_signal() { [[ $(jobs) != "" ]] && echo -e "\x01\033[0;36m\x02\$\x01\033[0m\x02" || echo -e "\$"; }
-PS1='\W($(git branch --show-current 2>/dev/null || echo "!")) $(jobs_signal) '
-
 if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
     source "$HOME/.sdkman/bin/sdkman-init.sh"
 fi
 
-. "$HOME/.cargo/env"
+jobs_signal() { [[ $(jobs) != "" ]] && echo -e "\x01\033[0;36m\x02\$\x01\033[0m\x02" || echo -e "\$"; }
+PS1='\W($(git branch --show-current 2>/dev/null || echo "!")) $(jobs_signal) '
