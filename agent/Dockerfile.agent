@@ -45,6 +45,16 @@ RUN groupadd --gid 1000 agent \
         --shell /bin/bash \
         agent
 
+# Keep bind-mount targets available for the host-managed agent configuration.
+RUN mkdir -p \
+        /home/agent/.agents/skills \
+        /home/agent/.codex \
+        /home/agent/.pi/agent \
+    && chown -R agent:agent \
+        /home/agent/.agents \
+        /home/agent/.codex \
+        /home/agent/.pi
+
 RUN mkdir -p /opt/fnm \
     && chown agent:agent /opt/fnm
 

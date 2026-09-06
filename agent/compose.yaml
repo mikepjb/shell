@@ -33,8 +33,6 @@ services:
       NO_PROXY: localhost,127.0.0.1,proxy
       GIT_TERMINAL_PROMPT: "0"
     working_dir: /workspace
-    volumes:
-      - agent-home:/home/agent
     cap_drop:
       - ALL
     security_opt:
@@ -56,8 +54,3 @@ networks:
 
   egress:
     driver: bridge
-
-volumes:
-  agent-home:
-    name: "${AGENT_HOME_VOLUME:-agent-home}"
-    external: true
