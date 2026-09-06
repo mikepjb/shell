@@ -33,6 +33,8 @@ services:
       NO_PROXY: localhost,127.0.0.1,proxy
       GIT_TERMINAL_PROMPT: "0"
     working_dir: /workspace
+    volumes:
+      - sdkman:/opt/sdkman
     cap_drop:
       - ALL
     security_opt:
@@ -54,3 +56,7 @@ networks:
 
   egress:
     driver: bridge
+
+volumes:
+  sdkman:
+    name: "${AGENT_SDKMAN_VOLUME:-agent-sdkman}"

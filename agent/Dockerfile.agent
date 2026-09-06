@@ -1,6 +1,10 @@
 FROM debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171
 
 ARG NODE_VERSION=22.19.0
+ARG GO_VERSION=1.27.1
+ARG GO_AMD64_SHA256=63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445
+ARG GO_ARM64_SHA256=3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec
+ARG GOPLS_VERSION=v0.23.0
 ARG CODEX_VERSION=0.153.4
 ARG PI_VERSION=0.85.0
 
@@ -9,7 +13,9 @@ USER root
 ENV DEBIAN_FRONTEND=noninteractive
 ENV XDG_DATA_HOME=/home/agent/.local/share
 ENV FNM_DIR=/opt/fnm
-ENV PATH=/usr/local/bin:/opt/fnm/aliases/default/bin:/home/agent/.local/share/fnm:$PATH
+ENV SDKMAN_DIR=/opt/sdkman
+ENV GOPATH=/home/agent/go
+ENV PATH=/usr/local/go/bin:/home/agent/go/bin:/opt/sdkman/candidates/java/current/bin:/usr/local/bin:/opt/fnm/aliases/default/bin:/home/agent/.local/share/fnm:$PATH
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
@@ -20,7 +26,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fd-find \
     git \
     git-lfs \
-    golang \
     jq \
     less \
     openssh-client \
@@ -36,6 +41,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     zip \
     && rm -rf /var/lib/apt/lists/*
+
+# Install the upstream Go toolchain instead of Debian Bookworm's old release.
+RUN set -eux; \
+    case "$(dpkg --print-architecture)" in \
+        amd64) GO_ARCH=amd64; GO_SHA256="${GO_AMD64_SHA256}" ;; \
+        arm64) GO_ARCH=arm64; GO_SHA256="${GO_ARM64_SHA256}" ;; \
+        *) echo "Unsupported architecture: $(dpkg --print-architecture)" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL --retry 3 \
+        -o /tmp/go.tar.gz \
+        "https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"; \
+    echo "${GO_SHA256}  /tmp/go.tar.gz" | sha256sum --check --strict; \
+    tar -C /usr/local -xzf /tmp/go.tar.gz; \
+    rm /tmp/go.tar.gz
 
 RUN groupadd --gid 1000 agent \
     && useradd \
@@ -56,7 +75,8 @@ RUN mkdir -p \
         /home/agent/.pi
 
 RUN mkdir -p /opt/fnm \
-    && chown agent:agent /opt/fnm
+    /opt/sdkman \
+    && chown -R agent:agent /opt/fnm /opt/sdkman
 
 # Install fnm itself globally, but install Node versions as the agent user.
 RUN curl -fsSL https://fnm.vercel.app/install \
@@ -65,21 +85,56 @@ RUN curl -fsSL https://fnm.vercel.app/install \
 USER agent
 
 # Install the requested Node version and make it the default.
-RUN eval "$(fnm env --shell bash)" \
-    && fnm install "${NODE_VERSION}" \
-    && fnm default "${NODE_VERSION}" \
+RUN eval "$(fnm env --shell bash --fnm-dir "${FNM_DIR}")" \
+    && fnm install "${NODE_VERSION}" --fnm-dir "${FNM_DIR}" \
+    && fnm default "${NODE_VERSION}" --fnm-dir "${FNM_DIR}" \
+    && corepack enable --install-directory "${FNM_DIR}/aliases/default/bin" \
     && npm install --global "@openai/codex@${CODEX_VERSION}" \
     && npm install --global --ignore-scripts \
-        "@earendil-works/pi-coding-agent@${PI_VERSION}"
+        "@earendil-works/pi-coding-agent@${PI_VERSION}" \
+    && npm cache clean --force
+
+USER root
+
+# Keep the default Node toolchain available when a persistent home volume has
+# an older shell setup or when a shell bypasses fnm initialization.
+RUN for command in node npm npx corepack pnpm pnpx; do \
+        test -e "/opt/fnm/aliases/default/bin/${command}"; \
+        ln -s "/opt/fnm/aliases/default/bin/${command}" "/usr/local/bin/${command}"; \
+    done
+
+# Install the Go language server into the image rather than the mounted home.
+RUN GOPATH=/tmp/go GOCACHE=/tmp/go-build GOBIN=/usr/local/bin \
+        go install "golang.org/x/tools/gopls@${GOPLS_VERSION}" \
+    && rm -rf /tmp/go /tmp/go-build
+
+USER agent
+
+# Install SDKMAN under /opt so a writable volume can add Java on demand
+# without hiding it behind the per-project agent home volume.
+RUN curl -fsSL https://get.sdkman.io | bash \
+    && test -s "${SDKMAN_DIR}/bin/sdkman-init.sh"
 
 # Initialize fnm for interactive shells.
 RUN printf '%s\n' \
-    'eval "$(fnm env --use-on-cd --shell bash)"' \
+    'eval "$(fnm env --use-on-cd --shell bash --fnm-dir "$FNM_DIR")"' \
+    'export SDKMAN_DIR=/opt/sdkman' \
+    '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' \
     >> /home/agent/.bashrc
+
+USER root
+
+# Also initialize SDKMAN for interactive shells using an existing home volume.
+RUN printf '%s\n' \
+    'export SDKMAN_DIR=/opt/sdkman' \
+    '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' \
+    >> /etc/bash.bashrc
+
+USER agent
 
 WORKDIR /workspace
 
 # Initialize fnm even when Compose launches codex/pi directly.
-ENTRYPOINT ["/bin/bash", "-lc", "eval \"$(fnm env --shell bash)\" && exec \"$@\"", "--"]
+ENTRYPOINT ["/bin/bash", "-lc", "eval \"$(fnm env --shell bash --fnm-dir \"$FNM_DIR\")\" && exec \"$@\"", "--"]
 
 CMD ["bash"]
