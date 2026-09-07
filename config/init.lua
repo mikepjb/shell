@@ -3,14 +3,14 @@
 vim.pack.add({
   "gh:nvim-lua/plenary.nvim",
   "gh:nvim-telescope/telescope.nvim",
-  "gh:folke/trouble.nvim",
   "gh:tpope/vim-fugitive",
 }, { load = true })
 
 local opt = vim.opt
+local bind = vim.keymap.set
 opt.termguicolors = false
-vim.opt.shortmess:append("I") -- no startup message
-opt.guicursor = '' -- block cursor forever!
+opt.shortmess:append("I") -- no startup message
+opt.guicursor = "" -- block cursor forever!
 opt.autoindent = true
 opt.autoread = true
 opt.backspace = { "indent", "eol", "start" }
@@ -48,9 +48,6 @@ opt.completeopt = { "menu", "menuone", "noselect" }
 opt.shell = "bash"
 opt.statusline = "%<%f%* (%{&ft}) %-4(%m%)%=%-19(%3l,%02c%03V%)"
 
-local undo_dir = "/tmp/.nvim-undo-dir"
-vim.fn.mkdir(undo_dir, "p", "0700")
-opt.undodir = undo_dir
 opt.undofile = true
 
 if vim.fn.executable("rg") == 1 then
@@ -63,44 +60,19 @@ vim.g.omni_sql_no_default_maps = 1
 vim.g.sh_noisk = 1
 -- TODO fenced languages do not seem to get syntax highlighted in neovim.
 vim.g.markdown_fenced_languages = {
-  "bash=sh", "css", "html", "go", "ruby", "sql", "yaml", "java", "python"
+  "bash=sh", "css", "html", "go", "ruby", "sql", "yaml", "java", "python",
 }
 
-pcall(vim.cmd, 'colorscheme flow') -- Try colorscheme, fallback to default
+pcall(vim.cmd, "colorscheme flow") -- Try colorscheme, fallback to default
 
--- functions
-local function fmt(fn, ...)
-    local args = {...}
-    return function()
-        if vim.fn.executable(fn) == 0 then
-            return vim.notify(fn .. " not found, cannot format the buffer")
-        end
-
-        local cmd, file = {fn}, vim.fn.expand("%:p")
-        for _, arg in ipairs(args) do table.insert(cmd, arg) end
-        table.insert(cmd, file)
-        vim.system(cmd, { text = true }, function(obj)
-            vim.schedule(function() -- reload but save view position
-                if obj.code == 0 then
-                    local view = vim.fn.winsaveview()
-                    vim.cmd('edit!')
-                    vim.fn.winrestview(view)
-                else
-                    vim.notify(obj.stdout .. obj.stderr, vim.log.levels.INFO)
-                end
-            end)
-        end)
-    end
-end
+local markdown_heading_pattern = [[^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)]]
 
 local function markdown_fold(lnum)
   local line = vim.fn.getline(lnum)
-  local heading = vim.fn.matchstr(
-    line,
-    [[^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)]]
-  )
+  local heading = vim.fn.matchstr(line, markdown_heading_pattern)
   local level = #heading
 
+  -- Level-one headings are section boundaries, not folds.
   if level == 1 then
     return 0
   elseif level > 1 then
@@ -119,7 +91,7 @@ _G.markdown_fold = markdown_fold
 _G.markdown_fold_text = markdown_fold_text
 
 -- autocmd
-local base = vim.api.nvim_create_augroup('base', { clear = true })
+local base = vim.api.nvim_create_augroup("base", { clear = true })
 local autocmd = vim.api.nvim_create_autocmd
 
 autocmd("FileType", {
@@ -130,17 +102,43 @@ autocmd("FileType", {
     vim.opt_local.foldexpr = "v:lua.markdown_fold(v:lnum)"
     vim.opt_local.foldtext = "v:lua.markdown_fold_text()"
     vim.opt_local.foldlevel = 0
-    vim.keymap.set("n", "<C-d>", "za", {
+    bind("n", "<C-d>", "za", {
       buffer = ev.buf,
       desc = "Toggle Markdown fold",
     })
   end,
 })
 
+local function fmt(fn, ...)
+  local args = { ... }
+  return function()
+    if vim.fn.executable(fn) == 0 then
+      return vim.notify(fn .. " not found, cannot format the buffer")
+    end
+
+    local cmd, file = { fn }, vim.fn.expand("%:p")
+    for _, arg in ipairs(args) do
+      table.insert(cmd, arg)
+    end
+    table.insert(cmd, file)
+    vim.system(cmd, { text = true }, function(obj)
+      vim.schedule(function()
+        if obj.code == 0 then
+          local view = vim.fn.winsaveview()
+          vim.cmd("edit!")
+          vim.fn.winrestview(view)
+        else
+          vim.notify(obj.stdout .. obj.stderr, vim.log.levels.INFO)
+        end
+      end)
+    end)
+  end
+end
+
 autocmd("BufWritePre", {
-  pattern = {"*.go"},
+  pattern = { "*.go" },
   group = base,
-  callback = fmt("goimports", "-w")
+  callback = fmt("goimports", "-w"),
 })
 
 -- lsp setup
@@ -173,22 +171,13 @@ local lsp_configs = {
   },
 }
 
+local server_by_filetype = {}
 for name, config in pairs(lsp_configs) do
   vim.lsp.config(name, config)
+  for _, filetype in ipairs(config.filetypes) do
+    server_by_filetype[filetype] = name
+  end
 end
-
-local server_by_filetype = {
-  java = "jdtls",
-  go = "gopls",
-  gomod = "gopls",
-  gowork = "gopls",
-  gotmpl = "gopls",
-  rust = "rust_analyzer",
-  javascript = "ts_ls",
-  javascriptreact = "ts_ls",
-  typescript = "ts_ls",
-  typescriptreact = "ts_ls",
-}
 
 local function toggle_current_lsp()
   local name = server_by_filetype[vim.bo.filetype]
@@ -205,123 +194,105 @@ local function toggle_current_lsp()
   vim.notify(name .. (enabled and " disabled" or " enabled"))
 end
 
-vim.keymap.set("n", "gL", toggle_current_lsp, {
+bind("n", "gL", toggle_current_lsp, {
   desc = "Toggle current filetype LSP",
 })
 
 -- Basic LSP keymaps
-vim.api.nvim_create_autocmd('LspAttach', {
-    group = base,
-    callback = function(ev)
-
-      vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
-        local opts = { buffer = ev.buf }
-        vim.keymap.set('n', 'ga', vim.lsp.buf.code_action, opts)
-        vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-        vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-        vim.keymap.set('n', 'K', function()
-            local diagnostics = vim.diagnostic.get(0, { lnum = vim.fn.line('.') - 1 })
-            if #diagnostics > 0 then
-                vim.diagnostic.open_float()
-            else
-                vim.lsp.buf.hover()
-            end
-        end, opts)
-    end,
+autocmd("LspAttach", {
+  group = base,
+  callback = function(ev)
+    vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
+    local opts = { buffer = ev.buf }
+    bind("n", "ga", vim.lsp.buf.code_action, opts)
+    bind("n", "gd", vim.lsp.buf.definition, opts)
+    bind("n", "gr", vim.lsp.buf.references, opts)
+    bind("n", "K", function()
+      local diagnostics = vim.diagnostic.get(0, { lnum = vim.fn.line(".") - 1 })
+      if #diagnostics > 0 then
+        vim.diagnostic.open_float()
+      else
+        vim.lsp.buf.hover()
+      end
+    end, opts)
+  end,
 })
 
 -- telescope
 local ok, telescope = pcall(require, "telescope")
 
 if ok then
-    local file_ignore_patterns = {
-      "^%.git/",
-      "/%.git/",
-      "^target/",
-      "/target/",
-    }
+  local file_ignore_patterns = {
+    "^%.git/",
+    "/%.git/",
+    "^target/",
+    "/target/",
+  }
 
-    telescope.setup({
-      pickers = {
-        find_files = {
-          hidden = true,
-          file_ignore_patterns = file_ignore_patterns,
-        },
+  telescope.setup({
+    pickers = {
+      find_files = {
+        hidden = true,
+        file_ignore_patterns = file_ignore_patterns,
       },
+    },
+  })
+  bind("n", "<space>", "<cmd>Telescope find_files<CR>")
+  bind("n", "gb", "<cmd>Telescope live_grep<CR>")
+  bind("n", "<M-b>", "<cmd>Telescope buffers<CR>")
+  bind("n", "gn", function()
+    require("telescope.builtin").find_files({
+      cwd = vim.fn.expand("~/.notes"),
+      prompt_title = "Notes",
     })
-    vim.keymap.set('n', '<space>', '<cmd>Telescope find_files<CR>')
-    vim.keymap.set('n', 'gb', '<cmd>Telescope live_grep<CR>')
-    vim.keymap.set('n', '<M-b>', '<cmd>Telescope buffers<CR>')
-    vim.keymap.set('n', 'gn', function()
-      require('telescope.builtin').find_files({
-        cwd = vim.fn.expand('~/.notes'),
-        prompt_title = 'Notes',
-      })
-    end, { desc = 'Find notes' })
-    vim.keymap.set('n', 'gI', function()
-      require('telescope.builtin').find_files({
-        cwd = vim.fn.expand('~/src/shell'),
-        prompt_title = 'Shell Configuration',
-      })
-    end, { desc = 'Find notes' })
+  end, { desc = "Find notes" })
+  bind("n", "gI", function()
+    require("telescope.builtin").find_files({
+      cwd = vim.fn.expand("~/src/shell"),
+      prompt_title = "Shell Configuration",
+    })
+  end, { desc = "Find shell configuration" })
 else
-    vim.keymap.set('n', '<space>', ':find ')
-end
-
-local trouble_ok, trouble = pcall(require, "trouble")
-if trouble_ok then
-    trouble.setup({})
+  bind("n", "<space>", ":find ")
 end
 
 -- Keybinds
-local bind = vim.keymap.set
-bind('n', 'Y', 'y$')
-bind('n', '<C-j>', '<C-w><C-j>')
-bind('n', '<C-k>', '<C-w><C-k>')
-bind('n', '<C-h>', '<C-w><C-h>')
-bind('n', '<C-l>', '<C-w><C-l>')
-bind('i', '<C-l>', '<space>=><space>')
-bind('i', '<C-c>', '<esc>')
-bind('n', 'S', '<C-^>')
-bind('n', '<C-q>', ':q<CR>')
-bind('n', '<C-g>', ':noh<CR>:redraw!<CR><C-g>')
-bind('n', 'gi', ':e ~/.config/nvim/init.lua<CR>')
-bind('n', 'ge', ':e <C-R>=fnamemodify(resolve(expand("%:p")), ":h") . "/"<CR>')
-bind('n', 'gc', ':!ctags -R .<CR>')
-bind('n', 'gr', ':read !snip<space>')
-bind('n', 'gR', ':Eval (user/restart)<CR>')
+bind("n", "Y", "y$")
+bind("n", "<C-j>", "<C-w><C-j>")
+bind("n", "<C-k>", "<C-w><C-k>")
+bind("n", "<C-h>", "<C-w><C-h>")
+bind("n", "<C-l>", "<C-w><C-l>")
+bind("i", "<C-l>", "<space>=><space>")
+bind("i", "<C-c>", "<esc>")
+bind("n", "S", "<C-^>")
+bind("n", "<C-q>", ":q<CR>")
+bind("n", "<C-g>", ":noh<CR>:redraw!<CR><C-g>")
+bind("n", "gi", ":e ~/.config/nvim/init.lua<CR>")
+bind("n", "ge", [[:e <C-R>=fnamemodify(resolve(expand("%:p")), ":h") . "/"<CR>]])
+bind("n", "gc", ":!ctags -R .<CR>")
+bind("n", "gs", ":read !snip<space>")
 local function toggle_quickfix()
-  if trouble_ok then
-    trouble.toggle("qflist")
-    return
-  end
-
-  local quickfix_windows = vim.tbl_filter(function(win)
-    return win.quickfix == 1
-  end, vim.fn.getwininfo())
-
-  vim.cmd(quickfix_windows[1] and "cclose" or "copen")
+  vim.cmd(vim.fn.getqflist({ winid = 0 }).winid ~= 0 and "cclose" or "copen")
 end
 
-bind('n', 'gl', toggle_quickfix, { desc = "Toggle quickfix list" })
-bind('n', 'Q', '@q')
-bind('n', '<A-n>', ':cnext<CR>')
-bind('n', '<A-p>', ':cprevious<CR>')
-vim.keymap.set('c', '<C-d>', function()
+bind("n", "gl", toggle_quickfix, { desc = "Toggle quickfix list" })
+bind("n", "Q", "@q")
+bind("n", "<A-n>", ":cnext<CR>")
+bind("n", "<A-p>", ":cprevious<CR>")
+bind("c", "<C-d>", function()
   if vim.fn.getcmdpos() > #vim.fn.getcmdline() then
-    return '<C-d>'
+    return "<C-d>"
   end
-  return '<Del>'
-end, { expr = true, desc = 'Delete command-line character' })
+  return "<Del>"
+end, { expr = true, desc = "Delete command-line character" })
 
-vim.keymap.set('c', '<C-f>', function()
+bind("c", "<C-f>", function()
   if vim.fn.getcmdpos() > #vim.fn.getcmdline() then
     return vim.o.cedit
   end
-  return '<Right>'
-end, { expr = true, desc = 'Move through command line' })
-bind('n', '<C-t>', ':!go test ./...<cr>')
-bind('n', '<A-t>', ':cexpr system("test-this " . expand("%"))<cr>')
--- nnoremap <A-T> :cexpr system('test-this')<cr>
--- nnoremap <A-r> :cexpr system('lint-this "' . expand('%') . '"')<cr>
--- nnoremap <A-R> :cexpr system('lint-this "' . expand('%') . '" --fix')<cr>
+  return "<Right>"
+end, { expr = true, desc = "Move through command line" })
+bind("n", "<C-t>", function()
+  vim.cmd("update")
+  vim.cmd("!test-this")
+end, { desc = "Run project tests" })
