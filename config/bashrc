@@ -48,6 +48,7 @@ alias e='emacsclient -n'
 alias t='task'
 alias te='task export | jq '\''sort_by(.uuid) | map(del(.id, .urgency))'\'' > ~/.notes/tasks.json'
 alias ti='task import ~/.notes/tasks.json'
+alias tc='task +next mod -next' # clears next in line tasks queued for the day
 alias c='consult'
 alias x='tmux attach -t x || tmux new -s x'
 alias k='kubectl'
@@ -119,11 +120,56 @@ ai-ensure-home-volume() {
 }
 
 ai-ensure-codex-volume() {
-    local codex_volume='agent-codex-auth'
+    local codex_volume="${AGENT_CODEX_VOLUME:-agent-codex-auth}"
 
     docker volume inspect "$codex_volume" >/dev/null 2>&1 ||
         docker volume create "$codex_volume" >/dev/null || return 1
     printf '%s\n' "$codex_volume"
+}
+
+ai-codex-auth-file() {
+    local codex_home="${CODEX_HOME:-$HOME/.codex}"
+    local auth_file="$codex_home/auth.json"
+
+    [[ -r "$auth_file" ]] || {
+        echo "Codex auth file is not readable: $auth_file" >&2
+        return 1
+    }
+    printf '%s\n' "$auth_file"
+}
+
+ai-codex-seed-auth() {
+    local auth_file
+    local codex_volume
+    auth_file=$(ai-codex-auth-file) || return 1
+    codex_volume=$(ai-ensure-codex-volume) || return 1
+
+    (
+        cd "$AIENV_DIR" &&
+        docker compose run --rm --no-deps \
+            --user root \
+            --cap-add DAC_OVERRIDE \
+            --cap-add CHOWN \
+            --entrypoint /bin/bash \
+            --volume "$codex_volume:/home/agent/.codex" \
+            --volume "$auth_file:/staging/auth.json:ro" \
+            worker \
+            -lc \
+            'rm -f /home/agent/.codex/auth.json && install -m 600 /staging/auth.json /home/agent/.codex/auth.json && chown 1000:1000 /home/agent/.codex/auth.json'
+    )
+}
+
+ai-codex-status() {
+    local codex_volume
+    codex_volume=$(ai-ensure-codex-volume) || return 1
+
+    (
+        cd "$AIENV_DIR" &&
+        docker compose run --rm \
+            --entrypoint /bin/bash \
+            --volume "$codex_volume:/home/agent/.codex" \
+            worker -c 'exec codex login status'
+    )
 }
 
 ai-env() {
@@ -182,6 +228,23 @@ p() {
             --volume "$AIENV_DIR/skills:/home/agent/.agents/skills:ro" \
             --volume "$AIENV_DIR/AGENTS.md:/home/agent/.pi/agent/AGENTS.md:ro" \
             worker pi "$@"
+    )
+}
+
+b() {
+    local project_dir="$PWD"
+    local container_project_dir
+    local home_volume
+    container_project_dir=$(ai-container-project-dir "$project_dir") || return 1
+    home_volume=$(ai-ensure-home-volume "$project_dir") || return 1
+
+    (
+        cd "$AIENV_DIR" &&
+        docker compose run --rm \
+            --workdir "$container_project_dir" \
+            --volume "$home_volume:/home/agent" \
+            --volume "$project_dir:$container_project_dir:rw" \
+            worker bash
     )
 }
 
