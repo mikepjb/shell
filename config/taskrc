@@ -66,4 +66,4 @@ color.project.home=yellow
 
 # Tags
 color.tag.docs=cyan
-color.tag.next=bold green
+color.tag.next=rgb440
