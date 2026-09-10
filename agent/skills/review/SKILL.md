@@ -28,7 +28,9 @@ approved plan, or explicit working agreement. Do not propose unrelated
 refactors.
 
 Return `APPROVED` only when there are no concrete findings and the validation
-evidence is credible. Otherwise return `CHANGES REQUIRED`, ordered by impact.
-After fixes, review the complete resulting diff again rather than assuming a
-local fix is sufficient. If two or three focused implementation/review cycles
-do not converge, recommend a re-plan with the new evidence.
+evidence is credible. On `APPROVED`, confirm or regenerate the suggested commit
+message from the complete resulting diff. Otherwise return `CHANGES REQUIRED`,
+ordered by impact, without treating any commit message as final. After fixes,
+review the complete resulting diff again rather than assuming a local fix is
+sufficient. If two or three focused implementation/review cycles do not
+converge, recommend a re-plan with the new evidence.

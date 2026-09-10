@@ -32,6 +32,9 @@ Handoff with:
 - files or symbols touched;
 - validation run and results;
 - known limitations, risks, or follow-up questions.
+- a concise, imperative suggested commit message based on the current diff;
+  treat it as provisional if review changes the implementation and refresh it
+  from the complete resulting diff.
 
 The next phase is an independent `/review`; implementation is not complete
 until review and verification pass.

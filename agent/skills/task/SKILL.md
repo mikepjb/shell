@@ -25,7 +25,9 @@ Run this lifecycle:
    then review the complete diff again. Allow roughly two or three cycles;
    recommend a re-plan when the work is not converging.
 7. **Verify** — run the agreed checks and report the result, remaining risks,
-   and exact scope.
+   and exact scope. When the task is complete, end the final `DONE` response
+   with a concise suggested commit message based on the complete reviewed and
+   verified diff.
 
 Do not skip analysis, planning, approval, or strict review because the change
 looks small; compress the evidence and plan instead. If the user invokes
