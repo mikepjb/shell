@@ -227,6 +227,7 @@ if ok then
     "/%.git/",
     "^target/",
     "/target/",
+    "node_modules",
   }
 
   telescope.setup({
