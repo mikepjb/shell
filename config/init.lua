@@ -141,6 +141,12 @@ autocmd("BufWritePre", {
   callback = fmt("goimports", "-w"),
 })
 
+autocmd("BufWritePre", {
+  pattern = { "*.js", "*.jsx", "*.ts", "*.tsx" },
+  group = base,
+  callback = fmt("prettier", "-w"),
+})
+
 -- lsp setup
 -- Configurations are defined here but deliberately start only when toggled.
 local lsp_configs = {
