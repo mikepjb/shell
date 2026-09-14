@@ -272,6 +272,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 EOM
 
+
+read -r -d '' snip_media << EOM
+@media (max-width: 768px) {
+}
+EOM
+
 case "$1" in
     html) echo "$snip_html";;
     css) echo "$snip_css";;
@@ -282,5 +288,6 @@ case "$1" in
     core) echo "$snip_core";;
     user) echo "$snip_user";;
     mit) echo "$snip_mit";;
+    m) echo "$snip_media";;
     *) echo "No snip for '$1' was found";;
 esac
