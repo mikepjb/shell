@@ -7,6 +7,9 @@ news.version=3.5.0
 alias.d=done
 alias.b=burndown
 alias.bd=burndown.daily
+alias.h=proj:hypalynx
+alias.l=proj:lvh
+alias.o=proj:home or proj:self or proj:work
 
 report.next.labels=id,description,project,sch,due
 report.next.columns=id,description,project,scheduled,due

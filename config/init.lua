@@ -4,6 +4,7 @@ vim.pack.add({
   "gh:nvim-lua/plenary.nvim",
   "gh:nvim-telescope/telescope.nvim",
   "gh:tpope/vim-fugitive",
+  "gh:joerdav/templ.vim",
 }, { load = true })
 
 local opt = vim.opt
@@ -142,6 +143,12 @@ autocmd("BufWritePre", {
 })
 
 autocmd("BufWritePre", {
+  pattern = { "*.templ" },
+  group = base,
+  callback = fmt("templ", "fmt"),
+})
+
+autocmd("BufWritePre", {
   pattern = { "*.js", "*.jsx", "*.ts", "*.tsx" },
   group = base,
   callback = fmt("prettier", "-w"),
@@ -234,6 +241,7 @@ if ok then
     "^target/",
     "/target/",
     "node_modules",
+    "_templ.go$",
   }
 
   telescope.setup({
