@@ -9,7 +9,7 @@ agent_config_dir="$shell_repo_root/agent"
 echo 'Symlinking agent configuration'
 
 mkdir -p "$HOME/.codex" "$HOME/.agents/skills"
-ln -sfv "$agent_config_dir/AGENTS.md" "$HOME/.codex/AGENTS.md"
+ln -sfv "$agent_config_dir/CODEX.md" "$HOME/.codex/AGENTS.md"
 ln -sfv "$agent_config_dir/AGENTS.md" "$HOME/.agents/AGENTS.md"
 
 for skill_dir in "$agent_config_dir/skills/"*/; do
