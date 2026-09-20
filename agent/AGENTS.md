@@ -16,6 +16,12 @@ each phase:
 `/review` are also available independently. If a code-change request does not
 name a phase, begin with analysis and a plan rather than editing immediately.
 
+Keep repository exploration bounded. Start with one inventory or status check,
+then inspect the entrypoint and the smallest relevant slice. Do not read every
+file returned by an inventory tool. Read callers and tests when they answer a
+specific question, not automatically. State what was not inspected and expand
+to an exhaustive audit only when the user explicitly asks for one.
+
 Use `/grill-me` only when I explicitly ask for it. It is an interview for
 resolving important ambiguity, not a default ritual. Use `/longplan` for larger
 work that needs independently useful phases; each phase should normally become
@@ -35,11 +41,10 @@ the task.
 
 ## Context and delegation
 
-Prefer a fresh, bounded worker context for analysis, implementation, and
-review when the harness supports it. Delegate focused questions or vertical
-slices, pass only the relevant paths, constraints, acceptance criteria, and
-output format, then synthesize the result in the parent context. Do not run
-parallel writers against the same working tree unless they are isolated.
+Use a fresh, bounded worker context for analysis, implementation, or review
+only when the harness actually provides one and the split is useful. Give a
+worker one focused question or slice with only the relevant paths and
+acceptance criteria. Do not run parallel writers against the same working tree.
 
 Keep the active context comfortably below 100k tokens. Summarize handoffs and
 restart or delegate before context accumulation makes reasoning less reliable.
@@ -62,6 +67,9 @@ restart or delegate before context accumulation makes reasoning less reliable.
 
 These are biases, not excuses to ignore local conventions, security, safety,
 or explicit requirements.
+
+Prefer concrete instructions and short explanations when working with smaller
+models. Make the next action, stopping condition, and uncertainty explicit.
 
 ## Strict review
 

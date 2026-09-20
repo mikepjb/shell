@@ -1,21 +1,6 @@
 #!/usr/bin/env bash
 #
-# Current primary is Qwen 3.5 4B (Q5).
-#
-# The 4B Q5 model is around 50-60% faster than 9B on my 780M machine AND the Q5
-# vs Q3 makes a really big difference on Clojure related questions, theory here
-# is that less well trained data gets cracked first, where previously I had
-# assumed that Clojure just wasn't in the dataset vs. Go/Javascript knowledge.
-#
-# Previous models:
-# - Qwen 3.5 2B (Q3) :: hallucenates too much (i.e thinks lucene-clojure exists)
-# - Qwen 3.5 4B (Q3) :: good balance speed/quality, limited to stdlib/core knowledge
-# - Qwen 3.5 9B (Q5) :: 40tps, good results but will sometimes hang
-# - Gemma 4 12B (Q5) :: Good on M3 Max (~30tps) does not load on my 780M
-# - Theorised Qwen 3.5 2B with finetuning (Clojure open source?), for my
-# particular use case this could be gold!
-# - Returning to Qwen 3.5 2B and focusing primarily on Golang + Typescript (+
-# secondarily Java) to see if this smaller model can still work
+# Current primary is Qwen 3.5 2B (Q5).
 #
 # Quantisation:
 # - Q5 > Q3, at least on 780M is only like 10-15% slower but the quality of the
@@ -23,31 +8,40 @@
 # compensate.
 
 model_size="2B"
-quantisation="UD-Q5_K_XL"
-model_file="$HOME/models/Qwen3.5-$model_size-$quantisation.gguf"
+quantisation="Q4_K_M"
+model_filename="MiniCPM5-$model_size-$quantisation.gguf"
+# model_filename="Qwen3.5-$model_size-$quantisation.gguf"
+# model_filename="gemma-4-$model_size-$quantisation.gguf"
+model_file="$HOME/models/$model_filename"
 
 if [ ! -f $model_file ]; then
     hf download \
-        "unsloth/Qwen3.5-$model_size-GGUF" \
-        "Qwen3.5-$model_size-$quantisation.gguf" \
+        "openbmb/MiniCPM5-$model_size-GGUF" \
+        "$model_filename" \
         --local-dir ~/models
+
+        # "unsloth/gemma-4-$model_size-GGUF" \
+        # "unsloth/Qwen3.5-$model_size-GGUF" \
+        # "bartowski/MiniCPM5-$model_size-GGUF" \
 fi
 
 args=(
     -m "$model_file"       # Path to the model file
     # --spec-type draft-mtp  # Use MTP for faster inference
     # --spec-draft-n-max 4
-    # --jinja                # Required for Gemma 4 12B, otherwise prefer --no-jinja
+    --jinja                # Required for Gemma 4 12B, otherwise prefer --no-jinja
     --host 127.0.0.1
     --port 7777
-    -c 8096                # Context size (tokens)
+    # 129536
+    -c 64768               # Context size (tokens)
     --cache-prompt         # Cache the prompt to speed up requests
     --metrics              # Show tps etc in llama-server's logs
     -ngl -1                # Offload all layers to GPU (-1)
     -np 1                  # Number of parallel slots/users
-    --temp 0.6             # LLM temperature (creativity) (1 for Gemma, 0.6 Qwen)
+    --temp 1               # LLM temperature (creativity) (1 for Gemma/MiniCPM, 0.6 Qwen)
     --top-p 0.95           # Top-p sampling
-    --top-k 20             # Top-k sampling (64 for Gemma, 20 for Qwen)
+    --min-p 0.0            # default is 0.05 but openbmb recommend 0 for MiniCPM5 2B
+    # --top-k 20             # Top-k sampling (64 for Gemma, 20 for Qwen)
     --flash-attn on        # Enable Flash Attention for speed
     --repeat-penalty 1.0   # 1.0 == disabled
     --presence-penalty 0.0 # 0.0 == disabled

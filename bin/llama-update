@@ -4,7 +4,7 @@
 
 src_url="https://github.com/ggml-org/llama.cpp.git"
 src_dir="$HOME/src/llama.cpp"
-release_version="b9534"
+release_version="v0.4.1"
 extra_build_params=""
 
 if [[ ! -d "$src_dir" ]]; then

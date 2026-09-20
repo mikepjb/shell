@@ -10,17 +10,17 @@ edit the target repository, create project documentation, or make external
 changes.
 
 Start from the user’s objective and locate the smallest useful slice of the
-repository. Inspect existing behavior, adjacent tests, configuration, naming,
-callers, and the architecture that the change must fit. Record evidence with
-paths and symbols rather than dumping unrelated files. Identify constraints,
-unknowns, likely failure modes, compatibility concerns, and the simplest
-plausible approaches.
+repository. Begin with one inventory or status check, then inspect the
+entrypoint, primary orchestration path, and directly relevant boundaries.
+Record evidence with paths and symbols rather than dumping unrelated files.
+Read callers, configuration, and tests only when they answer a specific
+uncertainty. Do not read every path returned by Glob or perform an exhaustive
+repository audit by default. State what was not inspected and expand scope only
+when the user explicitly asks for it or the evidence requires it.
 
-When the harness supports workers, use bounded fresh contexts by default for
-independent questions such as current behavior, architecture fit, and test or
-operational risk. Give each worker a narrow question and relevant paths; ask
-for a concise evidence-based conclusion. Synthesize the results yourself and
-call out disagreements or missing evidence.
+Use workers only when the harness actually provides them and a focused split is
+useful. Give each worker one narrow question and only the relevant paths; ask
+for a concise evidence-based conclusion.
 
 Return a compact analysis containing:
 
@@ -32,4 +32,6 @@ Return a compact analysis containing:
 - recommended direction and what the plan must validate.
 
 Do not write an implementation plan in place of analysis, and do not treat an
-unverified assumption as a repository fact. The next phase is `/plan`.
+unverified assumption as a repository fact. If the request is an architecture
+overview rather than a change investigation, prioritize components and data
+flow over exhaustive change-readiness review.
