@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Current primary is Qwen 3.5 2B (Q5).
+# Current primary is MiniCPM5 2B (Q4)
+# Alternate to consider is Qwen 3.5 2B (Q5).
 #
 # Quantisation:
 # - Q5 > Q3, at least on 780M is only like 10-15% slower but the quality of the
@@ -29,7 +30,7 @@ args=(
     -m "$model_file"       # Path to the model file
     # --spec-type draft-mtp  # Use MTP for faster inference
     # --spec-draft-n-max 4
-    --jinja                # Required for Gemma 4 12B, otherwise prefer --no-jinja
+    --jinja                # Required for MiniCPM5/Gemma 4 12B, otherwise prefer --no-jinja
     --host 127.0.0.1
     --port 7777
     # 129536
