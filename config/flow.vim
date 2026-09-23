@@ -22,6 +22,7 @@ hi TabLine      ctermbg=0    cterm=NONE term=NONE
 hi TabLineFill  ctermbg=0    cterm=NONE term=NONE
 hi TabLineSel   ctermbg=8    cterm=NONE term=NONE
 hi VertSplit    ctermfg=8    cterm=NONE term=NONE
+hi WinSeparator ctermfg=8    cterm=NONE term=NONE
 hi Directory    ctermfg=4
 hi WildMenu     ctermfg=0    ctermbg=7
 hi Visual       ctermbg=14
