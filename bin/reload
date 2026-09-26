@@ -8,8 +8,8 @@ agent_config_dir="$shell_repo_root/agent"
 
 echo 'Symlinking agent configuration'
 
-mkdir -p "$HOME/.codex" "$HOME/.agents/skills" "$HOME/.codex/skills"
-ln -sfv "$agent_config_dir/CODEX.md" "$HOME/.codex/AGENTS.md"
+mkdir -p "$HOME/.codex"
+ln -sfv "$agent_config_dir/AGENTS.md" "$HOME/.codex/AGENTS.md"
 ln -sfv "$agent_config_dir/AGENTS.md" "$HOME/.agents/AGENTS.md"
 
 for skill_dir in "$agent_config_dir/skills/codex/"*/; do
@@ -64,5 +64,7 @@ for bin_file in "$shell_repo_root/bin/"*; do
 done
 
 echo 'Reloading all configurations'
+
+tmux source-file ~/.config/tmux/tmux.conf
 
 . ~/.bashrc
