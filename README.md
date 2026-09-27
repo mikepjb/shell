@@ -10,6 +10,28 @@ _A collection of tools I use for development work._
   and Arch Linux. This symlinks all the bin/config files so you can run
   `reload` in future.
 
+# LLM usage
+
+Using LLMs largely divides into two groups:
+
+1. Small/local models (Qwen 3.5 2B/4B/9B or even 27B)
+    - Primarily for assisting human development.
+    - Helps get unstuck, querying about API usage or debugging using a library.
+    - Essentially like a pair programmer
+    - Review final code created by human
+    - Primary mode of operation, where code quality and system understanding are
+      a priority. In my assessments there isn't a huge speed difference when
+      factoring in time waiting for fully-agentic workflows, corrections and
+      review of larger PRs.
+2. Frontier models (Sol High, GLM 5.3, Kimi K3)
+    - Fully agentic, with few prompt blocks (i.e restrict to the project but
+      allow everything)
+    - Very little direction in AGENTS.md (important for mid-2026 frontier)
+    - The expectation is to set a goal and have the agent/LLM work towards it.
+    - Secondary mode of operation, where you do not care about the code quality
+      but on the result. That result also has a pretty wide acceptance criteria.
+    - Something like, creating a dashboard.
+
 # Languages supported
 
 _Primarily_
