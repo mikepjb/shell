@@ -8,6 +8,7 @@
 # output means this is a very good trade as there is little speed up to
 # compensate.
 
+# model_size="0.8B"
 model_size="2B"
 quantisation="Q4_K_M"
 # model_filename="MiniCPM5-$model_size-$quantisation.gguf"

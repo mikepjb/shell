@@ -10,6 +10,37 @@ echo 'Symlinking agent configuration'
 
 mkdir -p "$HOME/.codex"
 ln -sfv "$agent_config_dir/AGENTS.md" "$HOME/.codex/AGENTS.md"
+
+codex_config_file="$HOME/.codex/config.toml"
+
+if [[ -L "$codex_config_file" ]]; then
+    echo "Expected a local Codex config file, found a symlink at $codex_config_file" >&2
+    exit 1
+elif [[ ! -e "$codex_config_file" ]]; then
+    touch "$codex_config_file" || exit 1
+fi
+
+if ! command -v toml >/dev/null 2>&1; then
+    echo "toml-cli is missing; install it with: pipx install toml-cli" >&2
+    exit 1
+fi
+
+codex_config() {
+    toml "$@" --toml-path "$codex_config_file" || exit 1
+}
+
+codex_config set approval_policy on-request
+codex_config set approvals_reviewer auto_review
+codex_config set sandbox_mode workspace-write
+codex_config set model gpt-6-luna
+codex_config set model_reasoning_effort high
+codex_config add_section tui
+codex_config add_section tui.model_availability_nux
+codex_config set tui.screen_reader_detection_done true --to-bool
+codex_config set tui.model_availability_nux.gpt-6-astra 3 --to-int
+codex_config add_section sandbox_workspace_write
+codex_config set sandbox_workspace_write.network_access false --to-bool
+
 ln -sfv "$agent_config_dir/AGENTS.md" "$HOME/.agents/AGENTS.md"
 
 for skill_dir in "$agent_config_dir/skills/codex/"*/; do

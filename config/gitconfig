@@ -18,7 +18,9 @@
   co = checkout
   ci = commit --verbose
   di = diff
+  dis = diff --stat
   dc = diff --cached
+  dcs = diff --cached --stat
   dd = diff --stat origin/develop HEAD
   dn = diff --name-status
   mt = mergetool

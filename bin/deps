@@ -81,6 +81,16 @@ else
     fi
 fi
 
+if command -v pipx >/dev/null 2>&1; then
+    if pipx list --short | awk '$1 == "toml-cli" { found = 1 } END { exit !found }'; then
+        echo "toml-cli is already installed with pipx. Skipping..."
+    else
+        pipx install toml-cli
+    fi
+else
+    echo "pipx is required to install toml-cli; install pipx and rerun deps." >&2
+fi
+
 echo "--------------------------"
 
 emacs_base="$HOME/.emacs.d/external"
