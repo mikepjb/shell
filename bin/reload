@@ -37,6 +37,7 @@ codex_config set model_reasoning_effort high
 codex_config add_section tui
 codex_config add_section tui.model_availability_nux
 codex_config set tui.screen_reader_detection_done true --to-bool
+codex_config set tui.status_line '["model-with-reasoning", "current-dir", "used-tokens"]' --to-array
 codex_config set tui.model_availability_nux.gpt-6-astra 3 --to-int
 codex_config add_section sandbox_workspace_write
 codex_config set sandbox_workspace_write.network_access false --to-bool
