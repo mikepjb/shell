@@ -1,0 +1,317 @@
+#!/usr/bin/env bash
+# Browse offline language and package documentation.
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage:
+  doc list <go|java|node|ts|python> [std|project|modules|cache]
+  doc members <go|java|node|ts|python> <package-or-class>
+  doc show <go|java|node|ts|python> <package-or-class> [symbol]
+  doc search <go|java|node|ts|python> <pattern> [std|project|cache]
+
+Lists print one entry per line and can be piped to rg, less, or Vim.
+
+Scopes:
+  Go:     std, project, modules, cache
+  Java:   modules, packages, cache
+  Node:   std, project, cache
+  TS:     project, std (requires a global TypeScript install)
+  Python: std, project
+
+Java packages list exported JDK packages; selecting a package lists its
+classes, and selecting a class lists public signatures. Python help and Node
+member inspection import the selected module, which runs its initialization code.
+EOF
+}
+
+fail() { printf 'doc: %s\n' "$*" >&2; exit 2; }
+need() { command -v "$1" >/dev/null 2>&1 || fail "required command not found: $1"; }
+
+go_list() {
+    case "${1:-std}" in
+        std) go list std ;;
+        project) go list all ;;
+        modules) go list -m all ;;
+        cache) find "$(go env GOMODCACHE)" -name go.mod -type f -print 2>/dev/null | sed 's#/go.mod$##' | sort -u ;;
+        *) fail "Go scope must be std, project, modules, or cache" ;;
+    esac
+}
+
+java_home() {
+    if [[ -n "${JAVA_HOME:-}" && -d "$JAVA_HOME" ]]; then
+        printf '%s\n' "$JAVA_HOME"
+    else
+        dirname "$(dirname "$(readlink -f "$(command -v java)")")"
+    fi
+}
+
+java_packages() {
+    local home src
+    home=$(java_home)
+    src="$home/lib/src.zip"
+    [[ -f "$src" ]] || fail "JDK source archive not found: $src"
+    zipgrep -n '^[[:space:]]*exports ' "$src" '*/module-info.java' 2>/dev/null \
+        | sed -E 's/^[^:]+:[0-9]+:[[:space:]]*exports[[:space:]]+([^ ;]+).*/\1/' \
+        | sort -u
+}
+
+java_cached_artifacts() {
+    local root file
+    for root in "$HOME/.m2/repository" "$HOME/.gradle/caches/modules-2/files-2.1"; do
+        [[ -d "$root" ]] || continue
+        find "$root" -type f \( -name '*.jar' -o -name '*-javadoc.jar' -o -name '*-sources.jar' \) -print 2>/dev/null
+    done | sort -u
+}
+
+node_project_packages() {
+    npm ls --all --json 2>/dev/null | node -e '
+        let s=""; process.stdin.on("data",x=>s+=x).on("end",()=>{
+          try {
+            const root=JSON.parse(s), seen=new Set();
+            function visit(deps={}) {
+              for (const [name,pkg] of Object.entries(deps)) {
+                const v=pkg.version ? `@${pkg.version}` : "";
+                seen.add(`${name}${v}`); visit(pkg.dependencies);
+              }
+            }
+            visit(root.dependencies);
+            for (const name of [...seen].sort()) console.log(name);
+          } catch { process.exitCode=1; }
+        });'
+}
+
+python_cmd() {
+    if command -v python >/dev/null 2>&1; then command -v python; else command -v python3; fi
+}
+
+python_list() {
+    case "${1:-std}" in
+        std) "$(python_cmd)" -c 'import sys; print("\n".join(sorted(sys.stdlib_module_names)))' ;;
+        project) "$(python_cmd)" -m pip list --format=freeze ;;
+        *) fail "Python scope must be std or project" ;;
+    esac
+}
+
+list_entries() {
+    local lang="$1" scope="${2:-std}"
+    case "$lang" in
+        go) need go; go_list "$scope" ;;
+        java)
+            need java
+            case "$scope" in
+                std|modules) java --list-modules | sed 's/@.*//' ;;
+                packages) java_packages ;;
+                cache) java_cached_artifacts ;;
+                *) fail "Java scope must be modules, packages, or cache" ;;
+            esac
+            ;;
+        node|javascript)
+            need node
+            case "$scope" in
+                std) node -e 'console.log(require("node:module").builtinModules.slice().sort().join("\n"))' ;;
+                project) need npm; node_project_packages ;;
+                cache) need npm; npm cache ls ;;
+                *) fail "Node scope must be std, project, or cache" ;;
+            esac
+            ;;
+        ts|typescript)
+            need npm
+            case "$scope" in
+                project) node_project_packages ;;
+                std)
+                    local tsdir
+                    tsdir=$(npm root -g)/typescript/lib
+                    [[ -d "$tsdir" ]] || fail "TypeScript isn't installed globally; use project scope or install it in a project"
+                    find "$tsdir" -maxdepth 1 -name 'lib.*.d.ts' -printf '%f\n' | sort
+                    ;;
+                *) fail "TypeScript scope must be std or project" ;;
+            esac
+            ;;
+        python|py) need "$(python_cmd)"; python_list "$scope" ;;
+        *) fail "unsupported language: $lang" ;;
+    esac
+}
+
+java_members() {
+    local entry="$1" home src package_path module_file module rel stem
+    home=$(java_home)
+    if [[ "${entry##*.}" =~ ^[A-Z] ]]; then
+        javap -public "$entry"
+        return
+    fi
+    src="$home/lib/src.zip"
+    [[ -f "$src" ]] || fail "JDK source archive not found: $src"
+    package_path=${entry//.//}
+    unzip -Z1 "$src" | awk -F/ -v p="$package_path" '$0 ~ ("^[^/]+/" p "/[^/]+[.]java$") && $0 !~ "/(module-info|package-info)[.]java$" {n=$NF; sub(/[.]java$/, "", n); q=p; gsub("/", ".", q); print q "." n}' | sort -u
+}
+
+members() {
+    local lang="$1" entry="$2"
+    case "$lang" in
+        go) go doc -short "$entry" ;;
+        java) java_members "$entry" ;;
+        node|javascript)
+            node --input-type=module - "$entry" <<'NODE'
+import { builtinModules } from 'node:module';
+const name = process.argv[2];
+const specifier = name.startsWith('node:') || name.startsWith('.') || name.startsWith('/') || builtinModules.includes(name)
+  ? (builtinModules.includes(name) && !name.startsWith('node:') ? `node:${name}` : name)
+  : name;
+try {
+  const api = await import(specifier);
+  console.log(Object.keys(api).sort().join('\n'));
+} catch (error) {
+  console.error(`doc: could not load ${specifier}: ${error.message}`);
+  process.exitCode = 1;
+}
+NODE
+            ;;
+        ts|typescript)
+            local package_dir
+            package_dir="$(pwd)/node_modules/$entry"
+            [[ -d "$package_dir" ]] || fail "package directory not found: $package_dir"
+            rg -n --glob '*.d.ts' '^\s*export\b|^\s*declare module\b' "$package_dir" || true
+            ;;
+        python|py)
+            "$(python_cmd)" - "$entry" <<'PY'
+import importlib
+import sys
+module = importlib.import_module(sys.argv[1])
+print("\n".join(name for name in dir(module) if not name.startswith("_")))
+PY
+            ;;
+        *) fail "unsupported language: $lang" ;;
+    esac
+}
+
+show_doc() {
+    local lang="$1" entry="$2" symbol="${3:-}" home src pkg class module
+    case "$lang" in
+        go)
+            if [[ -n "$symbol" ]]; then go doc "$entry" "$symbol"; else go doc -all "$entry"; fi
+            ;;
+        java)
+            if [[ -n "$symbol" ]]; then
+                if [[ "${entry##*.}" =~ ^[A-Z] ]]; then
+                    javap -public "$entry" | rg -- "$symbol"
+                else
+                    javap -public "$entry.$symbol"
+                fi
+                return
+            fi
+            if [[ "${entry##*.}" =~ ^[A-Z] ]]; then
+                home=$(java_home); src="$home/lib/src.zip"
+                pkg=${entry%.*}; class=${entry##*.}; class=${class%%\$*}
+                module=$(unzip -Z1 "$src" | awk -F/ -v p="${pkg//.//}" -v c="$class.java" '$0 ~ ("^[^/]+/" p "/" c "$") {print $1; exit}')
+                [[ -n "$module" ]] || fail "source for $entry not found in $src"
+                unzip -p "$src" "$module/${pkg//.//}/$class.java"
+            else
+                java_members "$entry"
+            fi
+            ;;
+        node|javascript)
+            local node_docs="${NODE_SOURCE_DIR:-$HOME/.local/src/node}/doc/api"
+            local doc_name="${entry#node:}"
+            doc_name=${doc_name//\//_}
+            if [[ ! -f "$node_docs/$doc_name.md" && "$doc_name" == *_* ]]; then
+                doc_name=${doc_name%%_*}
+            fi
+            [[ -f "$node_docs/$doc_name.md" ]] || fail "Node API markdown not found: $node_docs/$doc_name.md (set NODE_SOURCE_DIR to a matching Node source checkout)"
+            cat "$node_docs/$doc_name.md"
+            ;;
+        ts|typescript)
+            local package_dir="$(pwd)/node_modules/$entry"
+            [[ -d "$package_dir" ]] || fail "package directory not found: $package_dir"
+            rg -n --glob '*.d.ts' "${symbol:-export}" "$package_dir" || true
+            ;;
+        python|py)
+            if [[ -n "$symbol" ]]; then "$(python_cmd)" -m pydoc "$entry.$symbol"; else "$(python_cmd)" -m pydoc "$entry"; fi
+            ;;
+        *) fail "unsupported language: $lang" ;;
+    esac
+}
+
+search_docs() {
+    local lang="$1" pattern="$2" scope="${3:-std}" root
+    case "$lang" in
+        go)
+            case "$scope" in
+                std) root=$(go env GOROOT)/src ;;
+                project) root=$(pwd) ;;
+                cache) root=$(go env GOMODCACHE) ;;
+                *) fail "Go search scope must be std, project, or cache" ;;
+            esac
+            rg -n -i --glob '*.go' --glob '!**/*_test.go' -- "$pattern" "$root"
+            ;;
+        java)
+            local home; home=$(java_home)
+            if [[ "$scope" == std ]]; then
+                "$(python_cmd)" - "$home/lib/src.zip" "$pattern" <<'PY'
+import re
+import sys
+import zipfile
+
+archive_path, pattern = sys.argv[1:]
+matcher = re.compile(pattern, re.IGNORECASE)
+with zipfile.ZipFile(archive_path) as archive:
+    for name in archive.namelist():
+        if not name.endswith(".java"):
+            continue
+        try:
+            source = archive.read(name).decode("utf-8", errors="replace")
+        except (KeyError, OSError, RuntimeError):
+            continue
+        for line_number, line in enumerate(source.splitlines(), 1):
+            if matcher.search(line):
+                print(f"{name}:{line_number}:{line}")
+PY
+            elif [[ "$scope" == cache ]]; then
+                rg -n -i --glob '*.java' --glob '*.md' -- "$pattern" "$HOME/.m2/repository" "$HOME/.gradle/caches/modules-2/files-2.1"
+            else
+                fail "Java search supports std or cache; project source search isn't configured yet"
+            fi
+            ;;
+        node|javascript)
+            root="${NODE_SOURCE_DIR:-$HOME/.local/src/node}"
+            if [[ "$scope" == project ]]; then root=$(pwd); fi
+            rg -n -i --glob '*.md' --glob '*.js' --glob '!**/test/**' -- "$pattern" "$root"
+            ;;
+        ts|typescript)
+            root="$(pwd)/node_modules"
+            rg -n -i --glob '*.d.ts' -- "$pattern" "$root"
+            ;;
+        python|py)
+            if [[ "$scope" == project ]]; then root=$(pwd); else root=$("$(python_cmd)" -c 'import sysconfig; print(sysconfig.get_paths()["stdlib"])'); fi
+            rg -n -i --glob '*.py' --glob '!**/test/**' -- "$pattern" "$root"
+            ;;
+        *) fail "unsupported language: $lang" ;;
+    esac
+}
+
+main() {
+    [[ $# -gt 0 ]] || { usage; exit 2; }
+    local action="$1"; shift
+    case "$action" in
+        help|-h|--help) usage ;;
+        list)
+            [[ $# -ge 1 && $# -le 2 ]] || fail 'usage: doc list <language> [scope]'
+            list_entries "$@"
+            ;;
+        members)
+            [[ $# == 2 ]] || fail 'usage: doc members <language> <package-or-class>'
+            members "$@"
+            ;;
+        show)
+            [[ $# -ge 2 && $# -le 3 ]] || fail 'usage: doc show <language> <package-or-class> [symbol]'
+            show_doc "$@"
+            ;;
+        search)
+            [[ $# -ge 2 && $# -le 3 ]] || fail 'usage: doc search <language> <pattern> [scope]'
+            search_docs "$@"
+            ;;
+        *) fail "unknown command: $action (try 'doc help')" ;;
+    esac
+}
+
+main "$@"

@@ -64,6 +64,27 @@ You can use `:tags /search_term` to search your tags file inside vim.
 
 - `:grep` inside vim is super useful, i.e `:grep TODO %` to list and move between all TODOs in the current file.
 
+## Offline language docs
+
+`doc` exposes local language and package documentation as streamable commands:
+
+```sh
+doc list go std | rg 'io|file'
+doc members go io/fs | less
+doc show go io/fs WalkDir | less
+doc search java 'Files\.walk' std | less
+```
+
+Use `doc help` for commands and scopes. `list` defaults to the standard
+library where available; use `project`, `modules`, `packages`, or `cache` to
+change scope. Go and Python use the active project environment. Java API
+members are shown one level at a time (package classes, then class signatures).
+Python help and Node export inspection import the selected package, which runs
+that package's initialization code. Node API Markdown is read from
+`~/.local/src/node`; set `NODE_SOURCE_DIR` to another Node source checkout to
+use its docs. The checkout currently on this machine is Node 27.0.0 while the
+installed runtime is Node 25.8.0, so some local Node docs may describe newer APIs.
+
 # Scratch!
 
 setting up bare env vim, ideally no tmux (why?)
