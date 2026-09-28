@@ -31,6 +31,8 @@ declare -A -r PACKAGES=(
     ['docker-compose']=''
     ['cwebp']='libwebp-utils'
     ['clojure']=''
+    ['chawan']=''
+    ['lynx']=''
 )
 
 OS="$(uname)"
