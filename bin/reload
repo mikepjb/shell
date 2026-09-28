@@ -4,12 +4,11 @@ script_dir=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
 shell_repo_root=$(realpath "$script_dir/..")
 sconf="$shell_repo_root/config"
 local_bin_dir="$HOME/.local/bin"
-agent_config_dir="$shell_repo_root/agent"
 
 echo 'Symlinking agent configuration'
 
 mkdir -p "$HOME/.codex"
-ln -sfv "$agent_config_dir/AGENTS.md" "$HOME/.codex/AGENTS.md"
+ln -sfv "$sconf/AGENTS.md" "$HOME/.codex/AGENTS.md"
 
 codex_config_file="$HOME/.codex/config.toml"
 
@@ -42,18 +41,12 @@ codex_config set tui.model_availability_nux.gpt-6-astra 3 --to-int
 codex_config add_section sandbox_workspace_write
 codex_config set sandbox_workspace_write.network_access false --to-bool
 
-ln -sfv "$agent_config_dir/AGENTS.md" "$HOME/.agents/AGENTS.md"
+ln -sfv "$sconf/AGENTS.md" "$HOME/.agents/AGENTS.md"
 
-for skill_dir in "$agent_config_dir/skills/codex/"*/; do
+for skill_dir in "$sconf/skills/"*/; do
     [ -d "$skill_dir" ] || continue
     skill_name=$(basename "$skill_dir")
     ln -sfnv "$skill_dir" "$HOME/.codex/skills/$skill_name"
-done
-
-for skill_dir in "$agent_config_dir/skills/spark/"*/; do
-    [ -d "$skill_dir" ] || continue
-    skill_name=$(basename "$skill_dir")
-    ln -sfnv "$skill_dir" "$HOME/.agents/skills/$skill_name"
 done
 
 echo 'Symlinking configurations'
