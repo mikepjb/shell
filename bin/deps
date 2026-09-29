@@ -152,9 +152,7 @@ mkdir -p $pkg_base/start $pkg_base/opt
 
 echo 'Ensuring vim plugins and selecta are available'
 
-plugin "tpope/vim-fireplace" # "opt"
 plugin "tpope/vim-fugitive"
-plugin "tpope/vim-dadbod"
 plugin "godlygeek/tabular"
 
 if [[ ! -f $local_bin/selecta ]]; then
@@ -169,6 +167,12 @@ if [[ ! -d "$HOME/.local/src/node" ]]; then
     git clone https://github.com/nodejs/node.git \
         "$HOME/.local/src/node" --depth=1
 fi
+
+mdn_dir="$HOME/.local/src/mdn-content"
+if [[ ! -d "$mdn_dir" ]]; then
+    git clone --depth=1 --filter=blob:none --sparse https://github.com/mdn/content.git "$mdn_dir" || exit 1
+fi
+git -C "$mdn_dir" sparse-checkout set files/en-us/web/javascript files/en-us/web/api || exit 1
 
 mkdir -p "$HOME/.local/jars"
 

@@ -34,19 +34,26 @@ Using LLMs largely divides into two groups:
 
 # Languages supported
 
-_Primarily_
-
 1. Go
 2. Javascript/Typescript
-3. Java
-4. Python
-5. Bash (yes bash is considered a first-class language)
+3. Python
+4. Bash (yes bash is considered a first-class language)
+5. Java
 
-_Secondarily_
+## Offline Documentation
 
-6. Clojure
-7. Ruby
-8. Rust
+### Golang
+
+- `go list std` - lists all stdlib packages
+- `go list -m all` - lists all modules in a project
+- `go doc x` - list all methods for `x` package
+- `go doc -all x` - list all methods with documentation for `x` package
+
+### Python
+
+- `python -m pydoc` or `pydoc`
+- `pydoc modules` shows all modules
+- `pydoc x` shows docs for that specific module
 
 # Ctags
 
