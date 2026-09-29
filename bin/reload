@@ -43,6 +43,12 @@ codex_config set sandbox_workspace_write.network_access false --to-bool
 
 ln -sfv "$sconf/AGENTS.md" "$HOME/.agents/AGENTS.md"
 
+# Link only managed Pi config; keep auth.json, sessions, and other local state untouched.
+mkdir -p "$HOME/.pi/agent/extensions"
+ln -sfnv "$sconf/pi/settings.json" "$HOME/.pi/agent/settings.json"
+ln -sfnv "$sconf/pi/presets.json" "$HOME/.pi/agent/presets.json"
+ln -sfnv "$sconf/pi/extensions/presets.ts" "$HOME/.pi/agent/extensions/presets.ts"
+
 for skill_dir in "$sconf/skills/"*/; do
     [ -d "$skill_dir" ] || continue
     skill_name=$(basename "$skill_dir")

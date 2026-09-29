@@ -12,6 +12,12 @@ _A collection of tools I use for development work._
 
 # LLM usage
 
+Pi's managed settings, presets, and extension live in `config/pi/` and are linked
+individually into `~/.pi/agent/` by `bin/reload`. Credentials (`auth.json`) and
+sessions stay local. Start with `pi-frontier` or `pi-local`, and switch with
+`/preset frontier` or `/preset local-llm` inside Pi. The local preset discovers
+the current llama.cpp model at `127.0.0.1:7777` when selected.
+
 Using LLMs largely divides into two groups:
 
 1. Small/local models (Qwen 3.5 2B/4B/9B or even 27B)

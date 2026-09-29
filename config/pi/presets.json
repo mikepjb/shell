@@ -1,0 +1,14 @@
+{
+  "frontier": {
+    "provider": "openai-codex",
+    "model": "gpt-5.5",
+    "tools": ["read", "bash", "edit", "write"],
+    "thinkingLevel": "medium"
+  },
+  "local-llm": {
+    "provider": "local-llm",
+    "model": "$current",
+    "tools": ["read", "grep", "find", "ls"],
+    "thinkingLevel": "off"
+  }
+}
