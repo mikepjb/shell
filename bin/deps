@@ -93,6 +93,24 @@ else
     echo "pipx is required to install toml-cli; install pipx and rerun deps." >&2
 fi
 
+pi_package() {
+    local source="$1"
+
+    if ! command -v pi >/dev/null 2>&1; then
+        echo "pi is required to install $source; install Pi and rerun deps." >&2
+        return 1
+    fi
+
+    if pi list --no-approve | grep -Fq -- "$source"; then
+        echo "$source is already installed with Pi. Skipping..."
+    else
+        echo "Installing Pi package $source..."
+        pi install "$source"
+    fi
+}
+
+pi_package "npm:pi-web-search"
+
 echo "--------------------------"
 
 emacs_base="$HOME/.emacs.d/external"

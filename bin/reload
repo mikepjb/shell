@@ -8,7 +8,9 @@ local_bin_dir="$HOME/.local/bin"
 echo 'Symlinking agent configuration'
 
 mkdir -p "$HOME/.codex"
+mkdir -p "$HOME/.pi/agent"
 ln -sfv "$sconf/AGENTS.md" "$HOME/.codex/AGENTS.md"
+ln -sfv "$sconf/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 
 codex_config_file="$HOME/.codex/config.toml"
 

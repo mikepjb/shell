@@ -4,5 +4,8 @@
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
   "defaultProjectTrust": "ask",
-  "enableInstallTelemetry": false
+  "enableInstallTelemetry": false,
+  "packages": [
+    "npm:pi-web-search"
+  ]
 }

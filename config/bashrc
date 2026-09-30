@@ -45,8 +45,9 @@ eval "$(fnm env --use-on-cd --shell bash)"
 
 # Pi: no automatic catalog/version/telemetry requests; model requests still work.
 export PI_OFFLINE=1 PI_SKIP_VERSION_CHECK=1 PI_TELEMETRY=0
-alias pi-frontier='pi --preset frontier'
-alias pi-local='pi --preset local-llm'
+alias pc='pi --preset codex'
+alias pf='pi --preset glm-flash'
+alias pl='pi --preset local-llm'
 
 alias vi='nvim'
 alias e='emacsclient -n'
