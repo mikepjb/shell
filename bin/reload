@@ -47,6 +47,8 @@ ln -sfv "$sconf/AGENTS.md" "$HOME/.agents/AGENTS.md"
 
 # Link only managed Pi config; keep auth.json, sessions, and other local state untouched.
 mkdir -p "$HOME/.pi/agent/extensions"
+mkdir -p "$HOME/.pi/agent/skills"
+
 ln -sfnv "$sconf/pi/settings.json" "$HOME/.pi/agent/settings.json"
 ln -sfnv "$sconf/pi/presets.json" "$HOME/.pi/agent/presets.json"
 ln -sfnv "$sconf/pi/extensions/presets.ts" "$HOME/.pi/agent/extensions/presets.ts"
@@ -54,7 +56,7 @@ ln -sfnv "$sconf/pi/extensions/presets.ts" "$HOME/.pi/agent/extensions/presets.t
 for skill_dir in "$sconf/skills/"*/; do
     [ -d "$skill_dir" ] || continue
     skill_name=$(basename "$skill_dir")
-    ln -sfnv "$skill_dir" "$HOME/.codex/skills/$skill_name"
+    ln -sfnv "$skill_dir" "$HOME/.pi/agent/skills/$skill_name"
 done
 
 echo 'Symlinking configurations'
