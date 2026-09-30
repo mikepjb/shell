@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""Archive Proton Mail messages matching a small list of rules.
+
+Proton Bridge must be running. Set PROTON_BRIDGE_USER and optionally
+PROTON_BRIDGE_PASSWORD, then edit RULES below. The script is a dry run unless
+--apply is supplied.
+"""
+
+import argparse
+import fnmatch
+import getpass
+import imaplib
+import os
+import ssl
+import sys
+from email import policy
+from email.parser import BytesParser
+from email.utils import getaddresses
+
+
+# A message is selected when any rule matches. Sender patterns are
+# case-insensitive shell wildcards; subject patterns are case-insensitive
+# substrings.
+RULES = [
+    # {"sender": "*@amazon.co.uk"},
+    # {"sender": "orders@example.com"},
+    # {"subject": "delivery"},
+]
+
+
+def decoded_headers(raw_headers):
+    message = BytesParser(policy=policy.default).parsebytes(raw_headers)
+    senders = [address for _, address in getaddresses(message.get_all("from", []))]
+    return senders, str(message.get("subject", ""))
+
+
+def matching_rule(senders, subject, rules):
+    lowered_senders = [sender.casefold() for sender in senders]
+    lowered_subject = subject.casefold()
+
+    for rule in rules:
+        if set(rule) == {"sender"}:
+            pattern = rule["sender"].casefold()
+            if any(fnmatch.fnmatchcase(sender, pattern) for sender in lowered_senders):
+                return rule
+        elif set(rule) == {"subject"}:
+            if rule["subject"].casefold() in lowered_subject:
+                return rule
+        else:
+            raise ValueError(f"invalid rule {rule!r}: use exactly one of 'sender' or 'subject'")
+
+    return None
+
+
+def check(response, operation):
+    status, data = response
+    if status != "OK":
+        detail = data[0].decode(errors="replace") if data else "unknown error"
+        raise RuntimeError(f"IMAP {operation} failed: {detail}")
+    return data
+
+
+def connect(host, port, username, password):
+    # Bridge uses a locally generated certificate. Restrict this exception to a
+    # loopback connection so credentials cannot accidentally leave the machine.
+    if host not in {"127.0.0.1", "localhost", "::1"}:
+        raise ValueError("the Proton Bridge host must be a loopback address")
+
+    client = imaplib.IMAP4(host, port)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    check(client.starttls(ssl_context=context), "STARTTLS")
+    check(client.login(username, password), "login")
+    return client
+
+
+def header_bytes(fetch_data):
+    for item in fetch_data:
+        if isinstance(item, tuple) and isinstance(item[1], bytes):
+            return item[1]
+    raise RuntimeError("IMAP FETCH returned no message headers")
+
+
+def archive_matches(client, rules, apply):
+    check(client.select("INBOX"), "select INBOX")
+    ids_data = check(client.uid("SEARCH", None, "ALL"), "search")
+    uids = ids_data[0].split() if ids_data and ids_data[0] else []
+    matches = 0
+
+    for uid in uids:
+        fetch_data = check(
+            client.uid("FETCH", uid, "(BODY.PEEK[HEADER.FIELDS (FROM SUBJECT)])"),
+            f"fetch UID {uid.decode()}",
+        )
+        senders, subject = decoded_headers(header_bytes(fetch_data))
+        rule = matching_rule(senders, subject, rules)
+        if rule is None:
+            continue
+
+        matches += 1
+        sender = ", ".join(senders) or "(unknown sender)"
+        print(f"{uid.decode()}: {sender} — {subject} [matched {rule}]")
+        if apply:
+            check(client.uid("MOVE", uid, "Archive"), f"archive UID {uid.decode()}")
+
+    return matches
+
+
+def arguments():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="archive matching messages (without this flag, only list them)",
+    )
+    parser.add_argument("--host", default=os.environ.get("PROTON_BRIDGE_HOST", "127.0.0.1"))
+    parser.add_argument(
+        "--port", type=int, default=int(os.environ.get("PROTON_BRIDGE_PORT", "1143"))
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = arguments()
+    if not RULES:
+        print("No rules configured; edit RULES near the top of this script.", file=sys.stderr)
+        return 2
+
+    username = os.environ.get("PROTON_BRIDGE_USER") or input("Bridge username: ")
+    password = os.environ.get("PROTON_BRIDGE_PASSWORD") or getpass.getpass(
+        "Bridge password: "
+    )
+
+    client = connect(args.host, args.port, username, password)
+    try:
+        count = archive_matches(client, RULES, args.apply)
+        action = "Archived" if args.apply else "Would archive"
+        print(f"{action} {count} message(s).")
+    finally:
+        try:
+            client.logout()
+        except imaplib.IMAP4.error:
+            pass
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

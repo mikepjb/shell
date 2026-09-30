@@ -55,6 +55,7 @@ ln -sfnv "$sconf/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
 ln -sfnv "$sconf/pi/presets.json" "$HOME/.pi/agent/presets.json"
 ln -sfnv "$sconf/pi/extensions/presets.ts" "$HOME/.pi/agent/extensions/presets.ts"
 ln -sfnv "$sconf/pi/extensions/statusline.ts" "$HOME/.pi/agent/extensions/statusline.ts"
+ln -sfnv "$sconf/pi/extensions/hardware-cursor.ts" "$HOME/.pi/agent/extensions/hardware-cursor.ts"
 ln -sfnv "$sconf/pi/themes/carbonfox.json" "$HOME/.pi/agent/themes/carbonfox.json"
 
 for skill_dir in "$sconf/skills/"*/; do
