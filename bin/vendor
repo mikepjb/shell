@@ -1,0 +1,8 @@
+#!bin/bash
+# vendor downloads commonly used JS libraries so you can use them quickly
+
+set +e
+
+# htmx
+# alpine
+# react.js

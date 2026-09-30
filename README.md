@@ -16,7 +16,9 @@ Pi's managed settings, presets, and extension live in `config/pi/` and are linke
 individually into `~/.pi/agent/` by `bin/reload`. Credentials (`auth.json`) and
 sessions stay local. Start with `pi-frontier` or `pi-local`, and switch with
 `/preset frontier` or `/preset local-llm` inside Pi. The local preset discovers
-the current llama.cpp model at `127.0.0.1:7777` when selected.
+the current llama.cpp model and context window at `127.0.0.1:7777` when
+selected. Set `PI_LOCAL_CONTEXT_WINDOW` to a positive integer to override the
+context window reported by llama.cpp.
 
 Using LLMs largely divides into two groups:
 

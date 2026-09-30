@@ -1,8 +1,8 @@
 {
   "lastChangelogVersion": "0.87.1",
-  "theme": "dark",
+  "theme": "carbonfox",
   "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.5",
+  "defaultModel": "gpt-6-luna",
   "defaultProjectTrust": "ask",
   "enableInstallTelemetry": false,
   "packages": [

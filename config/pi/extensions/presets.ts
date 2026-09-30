@@ -5,8 +5,25 @@ import { getAgentDir } from "@earendil-works/pi-coding-agent";
 
 const LOCAL_URL = "http://127.0.0.1:7777";
 const LOCAL_PROVIDER = "local-llm";
+const LOCAL_CONTEXT_WINDOW_ENV = "PI_LOCAL_CONTEXT_WINDOW";
 
 type Preset = { provider: string; model: string; tools: string[]; thinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" };
+type LocalModel = { id?: string; meta?: { n_ctx?: number } };
+
+function getLocalContextWindow(model: LocalModel): number {
+  const override = process.env[LOCAL_CONTEXT_WINDOW_ENV];
+  if (override !== undefined) {
+    const value = Number(override);
+    if (!Number.isSafeInteger(value) || value <= 0) {
+      throw new Error(`${LOCAL_CONTEXT_WINDOW_ENV} must be a positive integer`);
+    }
+    return value;
+  }
+
+  const discovered = model.meta?.n_ctx;
+  if (typeof discovered === "number" && Number.isSafeInteger(discovered) && discovered > 0) return discovered;
+  throw new Error(`llama.cpp did not report meta.n_ctx; set ${LOCAL_CONTEXT_WINDOW_ENV}`);
+}
 
 export default function (pi: ExtensionAPI) {
   pi.registerFlag("preset", { description: "Start with a named preset", type: "string" });
@@ -19,9 +36,11 @@ export default function (pi: ExtensionAPI) {
   async function discoverLocalModel(): Promise<string> {
     const response = await fetch(`${LOCAL_URL}/v1/models`, { signal: AbortSignal.timeout(3000) });
     if (!response.ok) throw new Error(`Local model discovery returned HTTP ${response.status}`);
-    const body = await response.json() as { data?: Array<{ id?: string }> };
-    const id = body.data?.find((item) => typeof item.id === "string" && item.id.length > 0)?.id;
-    if (!id) throw new Error("No model ID returned by the local /v1/models endpoint");
+    const body = await response.json() as { data?: LocalModel[] };
+    const model = body.data?.find((item) => typeof item.id === "string" && item.id.length > 0);
+    if (!model?.id) throw new Error("No model ID returned by the local /v1/models endpoint");
+    const id = model.id;
+    const contextWindow = getLocalContextWindow(model);
 
     pi.registerProvider(LOCAL_PROVIDER, {
       name: "Local llama.cpp",
@@ -34,8 +53,7 @@ export default function (pi: ExtensionAPI) {
         reasoning: false,
         input: ["text"],
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        // Conservative defaults; adjust to match llama-server's configured context.
-        contextWindow: 8192,
+        contextWindow,
         maxTokens: 2048,
       }],
     });

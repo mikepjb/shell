@@ -48,10 +48,14 @@ ln -sfv "$sconf/AGENTS.md" "$HOME/.agents/AGENTS.md"
 # Link only managed Pi config; keep auth.json, sessions, and other local state untouched.
 mkdir -p "$HOME/.pi/agent/extensions"
 mkdir -p "$HOME/.pi/agent/skills"
+mkdir -p "$HOME/.pi/agent/themes"
 
 ln -sfnv "$sconf/pi/settings.json" "$HOME/.pi/agent/settings.json"
+ln -sfnv "$sconf/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
 ln -sfnv "$sconf/pi/presets.json" "$HOME/.pi/agent/presets.json"
 ln -sfnv "$sconf/pi/extensions/presets.ts" "$HOME/.pi/agent/extensions/presets.ts"
+ln -sfnv "$sconf/pi/extensions/statusline.ts" "$HOME/.pi/agent/extensions/statusline.ts"
+ln -sfnv "$sconf/pi/themes/carbonfox.json" "$HOME/.pi/agent/themes/carbonfox.json"
 
 for skill_dir in "$sconf/skills/"*/; do
     [ -d "$skill_dir" ] || continue
