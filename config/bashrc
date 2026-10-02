@@ -52,6 +52,7 @@ alias pl='pi --preset local-llm'
 alias vi='nvim'
 alias e='emacsclient -n'
 alias t='task'
+alias ta='task add'
 alias te='task export | jq '\''sort_by(.uuid) | map(del(.id, .urgency))'\'' > ~/.notes/tasks.json'
 alias ti='task import ~/.notes/tasks.json'
 alias tc='task +next mod -next' # clears next in line tasks queued for the day
