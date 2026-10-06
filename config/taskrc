@@ -32,8 +32,11 @@ report.g.filter=status:pending
 report.t.description=Pending tasks grouped by tags
 report.t.labels=id,description,project,tags,sch,due
 report.t.columns=id,description,project,tags,scheduled,due
-report.t.sort=tags+/,urgency-
+report.t.sort=tags-/,urgency-
 report.t.filter=status:pending
+
+default.command=t
+# `task next` is the original default command
 
 # Tasks due within the next two weeks.
 report.fortnight.description=Tasks due within the next 14 days
