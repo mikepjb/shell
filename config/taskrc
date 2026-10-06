@@ -4,12 +4,13 @@
 data.location=~/.task
 news.version=3.5.0
 
-alias.d=done
+# alias.d=done
 alias.b=burndown
 alias.bd=burndown.daily
 alias.h=proj:hypalynx
 alias.l=proj:lvh
 alias.o=proj:home or proj:self or proj:work
+alias.cleartags=modify -next -train -night
 
 report.next.labels=id,description,project,sch,due
 report.next.columns=id,description,project,scheduled,due
@@ -27,6 +28,12 @@ report.g.columns=id,description,project,scheduled,due
 # report.g.labels=ID,Project,Tags,Scheduled,Due,Description,Urg
 report.g.sort=project+/,urgency-
 report.g.filter=status:pending
+
+report.t.description=Pending tasks grouped by tags
+report.t.labels=id,description,project,tags,sch,due
+report.t.columns=id,description,project,tags,scheduled,due
+report.t.sort=tags+/,urgency-
+report.t.filter=status:pending
 
 # Tasks due within the next two weeks.
 report.fortnight.description=Tasks due within the next 14 days
@@ -70,3 +77,5 @@ color.project.home=yellow
 # Tags
 color.tag.docs=cyan
 color.tag.next=rgb440
+color.tag.night=rgb114
+color.tag.train=rgb225
