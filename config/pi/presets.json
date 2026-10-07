@@ -1,7 +1,7 @@
 {
   "codex": {
     "provider": "openai-codex",
-    "model": "gpt-5.6-sol",
+    "model": "gpt-6-sol",
     "tools": ["read", "bash", "edit", "write"],
     "thinkingLevel": "medium"
   },
