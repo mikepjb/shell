@@ -1,3 +1,4 @@
 {
-  "app.exit": "ctrl+q"
+  "app.exit": "ctrl+q",
+  "app.message.copy": []
 }
