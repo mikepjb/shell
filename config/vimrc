@@ -50,6 +50,7 @@ nnoremap S <C-^>
 nnoremap <C-q> :q<CR>
 nnoremap <C-g> :noh<CR>:redraw!<CR><C-g>
 nnoremap gd <C-]>
+nnoremap gy :let @+ = expand('%:p') . ':' . line('.') . ':' . col('.')<CR>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :call Selecta("fd -t f . ~/.notes/")<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>

@@ -293,6 +293,15 @@ bind("i", "<C-c>", "<esc>")
 bind("n", "S", "<C-^>")
 bind("n", "<C-q>", ":q<CR>")
 bind("n", "<C-g>", ":noh<CR>:redraw!<CR><C-g>")
+bind("n", "gy", function()
+  local location = string.format(
+    "%s:%d:%d",
+    vim.fn.expand("%:p"),
+    vim.fn.line("."),
+    vim.fn.col(".")
+  )
+  vim.fn.setreg("+", location)
+end, { desc = "Copy file location" })
 bind("n", "gi", ":e ~/.config/nvim/init.lua<CR>")
 bind("n", "ge", [[:e <C-R>=fnamemodify(resolve(expand("%:p")), ":h") . "/"<CR>]])
 bind("n", "gc", ":!ctags -R .<CR>")
