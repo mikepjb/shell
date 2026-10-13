@@ -1,36 +1,49 @@
 #!/usr/bin/env bash
 #
-# Current primary is MiniCPM5 2B (Q4)
-# Alternate to consider is Qwen 3.5 2B (Q5).
-#
-# Quantisation:
-# - Q5 > Q3, at least on 780M is only like 10-15% slower but the quality of the
-# output means this is a very good trade as there is little speed up to
-# compensate.
+# Usage: llm [qwen|gemma]
+# The argument takes precedence over LLM_MODEL; Qwen is the default.
+profile=${1:-${LLM_MODEL:-qwen}}
 
-model_name="gemma-4"
-model_size="E2B"
-quantisation="UD-Q5_K_XL"
-suffix="-it-GGUF"
+case "$profile" in
+    qwen)
+        model_ref="qwen35-2b"
+        model_repo="unsloth/Qwen3.5-2B-GGUF"
+        model_filename="Qwen3.5-2B-UD-Q5_K_XL.gguf"
+        sampling_args=(
+            --temp 1.0
+            --top-p 1.0
+            --min-p 0.0
+            --top-k 20
+            --repeat-penalty 1.0
+            --presence-penalty 2.0
+        )
+        ;;
+    gemma)
+        model_ref="gemma-4-e2b"
+        model_repo="unsloth/gemma-4-E2B-it-GGUF"
+        model_filename="gemma-4-E2B-it-UD-Q5_K_XL.gguf"
+        sampling_args=(
+            --temp 1.0
+            --top-p 0.95
+            --min-p 0.0
+            --top-k 64
+            --repeat-penalty 1.0
+            --presence-penalty 0.0
+        )
+        ;;
+    *)
+        echo "Unknown model: $profile (available: qwen, gemma)" >&2
+        exit 2
+        ;;
+esac
 
-# model_name="Qwen3.5"
-# model_size="4B"
-# quantisation="UD-Q5_K_XL"
-# suffix="-GGUF"
-
-model_filename="$model_name-$model_size-$quantisation.gguf"
 model_file="$HOME/models/$model_filename"
-model_ref=$(echo "$model_name-$model_size" | sed -e 's/\.//' | tr '[:upper:]' '[:lower:]')
 
-if [ ! -f $model_file ]; then
+if [ ! -f "$model_file" ]; then
     hf download \
-        "unsloth/$model_name-$model_size$suffix" \
+        "$model_repo" \
         "$model_filename" \
-        --local-dir ~/models
-
-        # "openbmb/MiniCPM5-$model_size-GGUF" \
-        # "unsloth/gemma-4-$model_size-GGUF" \
-        # "bartowski/MiniCPM5-$model_size-GGUF" \
+        --local-dir "$HOME/models"
 fi
 
 args=(
@@ -38,7 +51,7 @@ args=(
     -m "$model_file"       # Path to the model file
     # --spec-type draft-mtp  # Use MTP for faster inference
     # --spec-draft-n-max 4
-    --jinja                # Required for MiniCPM5/Gemma 4 12B, otherwise prefer --no-jinja
+    --jinja                # Enables the chat-template arguments used by consult
     --host 127.0.0.1
     --port 7777
     # 129536
@@ -47,14 +60,9 @@ args=(
     --metrics              # Show tps etc in llama-server's logs
     -ngl -1                # Offload all layers to GPU (-1)
     -np 1                  # Number of parallel slots/users
-    --temp 1               # LLM temperature (creativity) (1 for Gemma/MiniCPM, 0.6 Qwen)
-    --top-p 0.95           # Top-p sampling
-    --min-p 0.0            # default is 0.05 but openbmb recommend 0 for MiniCPM5 2B
-    # --top-k 20             # Top-k sampling (64 for Gemma, 20 for Qwen)
     --flash-attn on        # Enable Flash Attention for speed
-    --repeat-penalty 1.0   # 1.0 == disabled
-    --presence-penalty 0.0 # 0.0 == disabled
+    "${sampling_args[@]}"
 )
 
-echo "llama-server ${args[@]}" # print args out incase we need to debug
+echo "llama-server ${args[*]}" # print args out in case we need to debug
 llama-server "${args[@]}"

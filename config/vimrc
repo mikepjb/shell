@@ -99,6 +99,36 @@ function! Format()
   if v:shell_error | echoerr out | else | checktime | redraw! | endif
 endfunction
 
+function! Consult(mode) abort
+  if !executable('consult')
+    echoerr 'consult not found'
+    return
+  endif
+
+  let file = expand('%:p')
+  if empty(file)
+    echoerr 'Save the buffer before consulting it'
+    return
+  endif
+
+  let question = input('Consult: ')
+  if empty(question) | return | endif
+
+  update
+  let target = a:mode ==# 'file'
+        \ ? ['-f', file]
+        \ : ['--at', printf('%s:%d:%d', file, line('.'), col('.'))]
+  botright new
+  call term_start(['consult'] + target + ['-p', question], {
+        \ 'curwin': 1,
+        \ 'term_finish': 'noclose',
+        \ 'term_name': 'consult',
+        \ })
+endfunction
+
+command! ConsultAt call Consult('at')
+command! ConsultFile call Consult('file')
+
 nnoremap gp :call Format()<CR>
 
 function! s:MarkdownFold() abort
