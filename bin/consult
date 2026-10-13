@@ -126,8 +126,15 @@ footer=$(printf \
     "$duration_sec" "$tps" "$completion_tokens")
 
 if [ -t 1 ] && command -v glow &> /dev/null; then
-    (echo "$response"; echo "$footer") | glow
+    if [ -n "${PAGER:-}" ]; then
+        # Glow detects the pipe as a non-terminal; force it to emit colors.
+        # less needs -R for colors and -X to keep the output on screen after quitting.
+        (printf '%s\n%s\n' "$response" "$footer") |
+            CLICOLOR_FORCE=1 glow --style "${GLOW_STYLE:-dark}" |
+            LESS="${LESS:+$LESS }-R -X" bash -c "$PAGER"
+    else
+        (printf '%s\n%s\n' "$response" "$footer") | glow
+    fi
 else
-    echo "$response"
-    echo "$footer"
+    printf '%s\n%s\n' "$response" "$footer"
 fi

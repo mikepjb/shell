@@ -19,9 +19,9 @@ case "$profile" in
         )
         ;;
     gemma)
-        model_ref="gemma-4-e2b"
-        model_repo="unsloth/gemma-4-E2B-it-GGUF"
-        model_filename="gemma-4-E2B-it-UD-Q5_K_XL.gguf"
+        model_ref="gemma-4-e4b"
+        model_repo="unsloth/gemma-4-E4B-it-GGUF"
+        model_filename="gemma-4-E4B-it-UD-Q5_K_XL.gguf"
         sampling_args=(
             --temp 1.0
             --top-p 0.95
