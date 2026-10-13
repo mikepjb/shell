@@ -13,12 +13,7 @@ export HISTSIZE=50000
 export HISTFILESIZE=50000
 export HISTCONTROL=ignoreboth
 export CDPATH=.:$HOME/src
-
-if [ -n "$INSIDE_EMACS" ]; then
-    export EDITOR='emacsclient'
-else
-    export EDITOR='nvim'
-fi
+export EDITOR='vim'
 
 shopt -s histappend
 
@@ -49,8 +44,7 @@ alias pc='pi --preset codex'
 alias pf='pi --preset glm-flash'
 alias pl='pi --preset local-llm'
 
-alias vi='nvim'
-alias e='emacsclient -n'
+alias vi='vim'
 alias t='task'
 alias ta='task add'
 alias te='task export | jq '\''sort_by(.uuid) | map(del(.id, .urgency))'\'' > ~/.notes/tasks.json'

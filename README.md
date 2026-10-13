@@ -12,33 +12,10 @@ _A collection of tools I use for development work._
 
 # LLM usage
 
-Pi's managed settings, presets, and extension live in `config/pi/` and are linked
-individually into `~/.pi/agent/` by `bin/reload`. Credentials (`auth.json`) and
-sessions stay local. Start with `pi-frontier` or `pi-local`, and switch with
-`/preset frontier` or `/preset local-llm` inside Pi. The local preset discovers
-the current llama.cpp model and context window at `127.0.0.1:7777` when
-selected. Set `PI_LOCAL_CONTEXT_WINDOW` to a positive integer to override the
-context window reported by llama.cpp.
-
-Using LLMs largely divides into two groups:
-
-1. Small/local models (Qwen 3.5 2B/4B/9B or even 27B)
-    - Primarily for assisting human development.
-    - Helps get unstuck, querying about API usage or debugging using a library.
-    - Essentially like a pair programmer
-    - Review final code created by human
-    - Primary mode of operation, where code quality and system understanding are
-      a priority. In my assessments there isn't a huge speed difference when
-      factoring in time waiting for fully-agentic workflows, corrections and
-      review of larger PRs.
-2. Frontier models (Sol High, GLM 5.3, Kimi K3)
-    - Fully agentic, with few prompt blocks (i.e restrict to the project but
-      allow everything)
-    - Very little direction in AGENTS.md (important for mid-2026 frontier)
-    - The expectation is to set a goal and have the agent/LLM work towards it.
-    - Secondary mode of operation, where you do not care about the code quality
-      but on the result. That result also has a pretty wide acceptance criteria.
-    - Something like, creating a dashboard.
+- Primarily Local LLMs are used for their speed to help a human programmer get
+  unstuck, providing useful analysis & feedback via the `./bin/consult` script.
+- For agentic work, `pi` harness with Sol/GLM 5.3/Kimi K3 with minimal AGENTS.md
+  direction (post mid-2026 less is more it seems)
 
 # Languages supported
 
@@ -47,6 +24,7 @@ Using LLMs largely divides into two groups:
 3. Python
 4. Bash (yes bash is considered a first-class language)
 5. Java
+6. Zig
 
 ## Offline Documentation
 
@@ -79,43 +57,24 @@ You can use `:tags /search_term` to search your tags file inside vim.
 
 - `:grep` inside vim is super useful, i.e `:grep TODO %` to list and move between all TODOs in the current file.
 
-## Offline language docs
+## Deeper Detail & Reasoning
 
-`doc` exposes local language and package documentation as streamable commands:
+### Avoid multiplexing
 
-```sh
-doc list go std | rg 'io|file'
-doc members go io/fs | less
-doc show go io/fs WalkDir | less
-doc search java 'Files\.walk' std | less
-```
+- Tmux is an excellent tool but should be used sparingly, we highlight it with a
+  red status bar to denote it being a danger zone.
+- It's great for running multiple processes, ocassionally it's needed when
+  running multiple processes (think multiple microservices).
 
-Use `doc help` for commands and scopes. `list` defaults to the standard
-library where available; use `project`, `modules`, `packages`, or `cache` to
-change scope. Go and Python use the active project environment. Java API
-members are shown one level at a time (package classes, then class signatures).
-Python help and Node export inspection import the selected package, which runs
-that package's initialization code. Node API Markdown is read from
-`~/.local/src/node`; set `NODE_SOURCE_DIR` to another Node source checkout to
-use its docs. The checkout currently on this machine is Node 27.0.0 while the
-installed runtime is Node 25.8.0, so some local Node docs may describe newer APIs.
+### Editors
 
-# Scratch!
+- Despite Emacs offering many alluring reasons to choose it (mainly org-mode
+  being the killer application), Vim is the choice I keep coming back to:
+  - Very portable (available everywhere) and very compatible (no meta/special
+    keys that sometimes do not work with terminal emulators).
+  - The most important thing here is relying on tools that don't break.
 
-setting up bare env vim, ideally no tmux (why?)
-
-Working with Clojure REPL
-other REPLs
-
-vim only really..
-
-ability to run test suite and compile projects
-
-also ability to run multiple processes at the same time (think LVH stack)
-
----
-
-## Why no tmux?
+### Why no tmux?
 
 tmux is great but overkill and leads spiralling complexity.
 
@@ -126,7 +85,7 @@ work in theory should be the most effective approach.
 Plan here is to keep to just a single window (bg services can still be used with
 PM) - if we going to multitask let's be honest and keep it all in the front view
 
-## Vim syntax not working? Typescript slow?
+### Vim syntax not working? Typescript slow?
 
 I recently removed some old lines that I am not sure are needed anymore:
 
