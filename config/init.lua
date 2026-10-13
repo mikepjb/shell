@@ -282,35 +282,6 @@ else
   bind("n", "<space>", ":find ")
 end
 
-local function consult(mode)
-  if vim.fn.executable("consult") == 0 then
-    return vim.notify("consult not found", vim.log.levels.ERROR)
-  end
-
-  local file = vim.api.nvim_buf_get_name(0)
-  if file == "" then
-    return vim.notify("Save the buffer before consulting it", vim.log.levels.ERROR)
-  end
-
-  local question = vim.fn.input("Consult: ")
-  if question == "" then
-    return
-  end
-
-  vim.cmd("update")
-  local target = mode == "file"
-      and { "-f", file }
-      or { "--at", string.format("%s:%d:%d", file, vim.fn.line("."), vim.fn.col(".")) }
-
-  vim.cmd("botright new")
-  vim.fn.jobstart({ "consult", target[1], target[2], "-p", question }, {
-    term = true,
-  })
-end
-
-vim.api.nvim_create_user_command("ConsultAt", function() consult("at") end, {})
-vim.api.nvim_create_user_command("ConsultFile", function() consult("file") end, {})
-
 -- Keybinds
 bind("n", "Y", "y$")
 bind("n", "<C-j>", "<C-w><C-j>")
