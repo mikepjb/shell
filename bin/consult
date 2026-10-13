@@ -5,6 +5,8 @@
 #
 # Usage:
 # - `cat src/core.clj | consult -p "review this file"`
+# - `consult -f src/core.clj -p "review this file"`
+# - `consult --at src/core.clj:42:15 -p "explain this code"`
 # - `cat src/core.clj | consult` (Opens Vim to write instructions)
 
 endpoint="http://127.0.0.1:7777/v1/chat/completions"
@@ -21,16 +23,32 @@ CRITICAL DIRECTIVES:
 2. Be direct, dense, and objective. Strip out conversational filler, introductions, greetings, and concluding remarks.
 3. Deliver answers optimized for a terminal UI: prioritize clean code blocks over long prose explanations."
 
-# pull in stdin if provided i.e `cat file.md | consult -p 'review this'`
+files=()
+at=""
+unset prompt
+
+while (($#)); do
+    case "$1" in
+        -p) (($# > 1)) || { echo "Missing prompt" >&2; exit 2; }; prompt="$2"; shift 2 ;;
+        -f) (($# > 1)) || { echo "Missing file" >&2; exit 2; }; files+=("$2"); shift 2 ;;
+        --at) (($# > 1)) || { echo "Missing location" >&2; exit 2; }; at="$2"; shift 2 ;;
+        *) echo "Unknown argument: $1" >&2; exit 2 ;;
+    esac
+done
+
 context=""
+add_context() {
+    local source="$1" content="$2"
+    printf -v context '%s\n\n## Context: %s\n\n%s' "$context" "$source" "$content"
+}
+
+# Pull in stdin if provided i.e. `cat file.md | consult -p 'review this'`.
 if [ ! -t 0 ]; then
-    context=$(cat -)
+    add_context "stdin" "$(cat -)"
 fi
 
-# check if prompt was provided as a parameter, otherwise open vim to write it.
-if [[ "$1" == "-p" ]]; then
-    prompt="$2"
-else
+# Open Vim when no prompt was provided.
+if [[ -z ${prompt+x} ]]; then
     tmp_file=$(mktemp /tmp/consult_prompt.XXXXXX)
     trap 'rm -f "$tmp_file"' EXIT
     vim "$tmp_file" < /dev/tty > /dev/tty
@@ -44,9 +62,32 @@ else
     echo "$prompt" # print prompt if it was input for vim so it's in bash history.
 fi
 
-# include context if this was provided via stdin
+for file in "${files[@]}"; do
+    [ -r "$file" ] && [ -f "$file" ] || { echo "Not a readable file: $file" >&2; exit 2; }
+    add_context "$file" "$(cat -- "$file")"
+done
+
+# Include a small window around the selected source line.
+if [ -n "$at" ]; then
+    file=${at%:*}
+    line=${at##*:}
+    if [[ "$file" =~ :[0-9]+$ ]]; then
+        file=${file%:*}
+        line=${at%:*}; line=${line##*:}
+    fi
+    [ -r "$file" ] && [ -f "$file" ] || { echo "Not a readable file: $file" >&2; exit 2; }
+    [[ "$line" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid location: $at" >&2; exit 2; }
+    excerpt=$(awk -v line="$line" '
+        NR >= line - 20 && NR <= line + 20 {
+            printf "%s %5d | %s\n", NR == line ? ">" : " ", NR, $0
+        }
+    ' "$file")
+    add_context "$at" "$excerpt"
+fi
+
+# Use real newlines rather than appending literal "\n" text.
 if [ -n "$context" ]; then
-    prompt="$prompt\n\n\n$context"
+    printf -v prompt '%s%s' "$prompt" "$context"
 fi
 
 payload=$(jq -n \
