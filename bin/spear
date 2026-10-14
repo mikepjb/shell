@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+import sys
+
+def read_choices():
+    return [line.strip() for line in sys.stdin if line.strip()]
+
+def main():
+    choices = read_choices()
+    if choices:
+        print(choices[0])
+
+if __name__ == '__main__':
+    main()
