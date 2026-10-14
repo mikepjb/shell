@@ -70,7 +70,8 @@ cnoremap        <C-B> <Left>
 cnoremap <expr> <C-D> getcmdpos()>strlen(getcmdline())?"\<Lt>C-D>":"\<Lt>Del>"
 cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
 nnoremap Z :echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')<CR>
-nnoremap <C-t> :!go test ./...<cr>
+nnoremap <C-t> :!test-this %<cr>
+nnoremap g<C-t> :!test-this<cr>
 
 " at least on mac this is slow to work with
 " nnoremap <A-t> :cexpr system('test-this ' . expand('%'))<cr>
