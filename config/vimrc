@@ -54,10 +54,10 @@ nnoremap gy :let @+ = expand('%:p') . ':' . line('.') . ':' . col('.')<CR>
 nnoremap gi :e ~/.vimrc<CR>
 nnoremap gn :call Selecta("fd -t f . ~/.notes/")<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
-nnoremap gs :Grep<space>
+nnoremap gr :Grep<space>
 nnoremap gt /\CTODO\\|NEXT\\|CURRENT\\|DONE<CR>
 nnoremap gc :!ctags -R .<CR>
-nnoremap gr :read !snip<space>
+nnoremap gs :read !snip<space>
 nnoremap gR :Eval (user/restart)<CR>
 nnoremap g<space> :cd %:h \| pwd<CR>
 nnoremap gp :call Format()<CR>
