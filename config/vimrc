@@ -86,7 +86,7 @@ augroup END
 
 function! Selecta(cmd)
   try
-    let file = trim(system(a:cmd . ' | selecta'))
+    let file = trim(system(a:cmd . ' | spear'))
     redraw!
     if !empty(file) | execute 'edit' fnameescape(file) | endif
   catch /Vim:Interrupt/ | redraw! | endtry
