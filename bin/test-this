@@ -29,9 +29,7 @@ elif [[ -f "go.mod" ]]; then
     if [[ -n "$all_tests" ]]; then
         go test ./...
     else
-        echo 'single-file Go tests are not supported; run test-this without arguments' >&2
-        echo "args: $1"
-        exit 1
+        go test "$(dirname $1)/..."
     fi
 elif [[ -f "Makefile" ]]; then
     make test
