@@ -25,6 +25,11 @@ let &l:errorformat = '%f:%l:%c:\ %m,%f:%l:\ %m,%-G%.%#'
 let [g:omni_sql_no_default_maps, g:sh_noisk] = [1, 1] " prevent remaps
 let g:markdown_fenced_languages=['bash=sh', 'css', 'html', 'go', 'ruby', 'sql', 'yaml', 'java']
 
+" Built-in netrw file tree: toggle the sidebar with <leader>e (\e by default).
+let g:netrw_liststyle = 3       " tree view
+let g:netrw_banner = 0          " leave more room for files
+let g:netrw_winsize = -30       " 30-column sidebar
+
 set undodir=/tmp/.vim-undo-dir undofile
 if !isdirectory(&undodir)
   call mkdir(&undodir, "", 0700)
@@ -40,6 +45,7 @@ colorscheme flow
 command! -nargs=+ -complete=file Grep silent grep! <args> | redraw!
 
 nnoremap Y y$
+nnoremap g<space> :Lexplore<CR>
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
@@ -59,7 +65,7 @@ nnoremap gt /\CTODO\\|NEXT\\|CURRENT\\|DONE<CR>
 nnoremap gc :!ctags -R .<CR>
 nnoremap gs :read !snip<space>
 nnoremap gR :Eval (user/restart)<CR>
-nnoremap g<space> :cd %:h \| pwd<CR>
+" nnoremap g<space> :cd %:h \| pwd<CR>
 nnoremap gp :call Format()<CR>
 nnoremap <expr> gl empty(filter(getwininfo(), 'v:val.quickfix')) ? ':copen<CR>' : ':cclose<CR>'
 nnoremap Q @q
