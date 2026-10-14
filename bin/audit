@@ -14,7 +14,12 @@ get_line_counts() {
 }
 
 get_pace() {
-    git log --format='%ad' --date=format:'%Y-%m' | sort | uniq -c | sort -k2 -r | head -n "$TOP_N" | awk '{ printf "%-8s %s\n", $1, $2 }'
+    git log --format='%ad' --date=format:'%Y-%m' \
+        | sort \
+        | uniq -c \
+        | sort -k2 -r \
+        | head -n "$TOP_N" \
+        | awk '{ printf "%-8s %s\n", $1, $2 }'
 }
 
 condense_path() {
