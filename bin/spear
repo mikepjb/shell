@@ -246,7 +246,7 @@ def run(terminal, choices, initial_query, requested_height):
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-s", "--search", default="", help="initial query")
-    parser.add_argument("--height", default="12", help="UI height (at least 2) or full")
+    parser.add_argument("--height", default="18", help="UI height (at least 2) or full")
     parser.add_argument("--version", action="version", version=VERSION)
     args = parser.parse_args(argv)
     if args.height != "full" and (not args.height.isdecimal() or int(args.height) < 2):
