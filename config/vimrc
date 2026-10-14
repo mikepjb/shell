@@ -71,10 +71,12 @@ cnoremap <expr> <C-D> getcmdpos()>strlen(getcmdline())?"\<Lt>C-D>":"\<Lt>Del>"
 cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
 nnoremap Z :echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')<CR>
 nnoremap <C-t> :!go test ./...<cr>
-nnoremap <A-t> :cexpr system('test-this ' . expand('%'))<cr>
-nnoremap <A-T> :cexpr system('test-this')<cr>
-nnoremap <A-r> :cexpr system('lint-this "' . expand('%') . '"')<cr>
-nnoremap <A-R> :cexpr system('lint-this "' . expand('%') . '" --fix')<cr>
+
+" at least on mac this is slow to work with
+" nnoremap <A-t> :cexpr system('test-this ' . expand('%'))<cr>
+" nnoremap <A-T> :cexpr system('test-this')<cr>
+" nnoremap <A-r> :cexpr system('lint-this "' . expand('%') . '"')<cr>
+" nnoremap <A-R> :cexpr system('lint-this "' . expand('%') . '" --fix')<cr>
 
 augroup base
   autocmd!
