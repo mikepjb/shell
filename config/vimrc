@@ -85,6 +85,8 @@ augroup base
   autocmd FileType markdown setlocal formatoptions+=t " wrap lines in .md
   autocmd FileType go,java,rust,sh setl ts=4 sw=4 sts=4
   autocmd FileType qf setlocal statusline=Quickfix\ [%{len(getqflist())}]
+  " TS syntax has a perf bug in 9.1.x and lower versions, this fixes that
+  autocmd Syntax typescript,typescriptreact syntax clear typescriptArrowFuncDef
 augroup END
 
 function! Selecta(cmd)
