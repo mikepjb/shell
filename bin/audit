@@ -14,7 +14,7 @@ get_line_counts() {
 }
 
 get_pace() {
-    git log --format='%ad' --date=format:'%Y-%m' \
+    git log --format='%ad' --date=format:'%Y-%m' -- . \
         | sort \
         | uniq -c \
         | sort -k2 -r \
@@ -34,21 +34,21 @@ condense_path() {
 }
 
 get_file_changes() {
-    git log --format=format: --name-only --since="1 year ago" | grep -v '^$' \
+    git log --relative --format=format: --name-only --since="1 year ago" -- . | grep -v '^$' \
         | sort | uniq -c | sort -nr | head -n "$TOP_N" \
         | condense_path
 }
 
 get_hotspots() {
-    git log -i -E --grep="revert|hotfix|emergency|rollback|fix|bug|broken" \
-        --name-only --format='' | grep -v '^$' \
+    git log --relative -i -E --grep="revert|hotfix|emergency|rollback|fix|bug|broken" \
+        --name-only --format='' -- . | grep -v '^$' \
         | sort | uniq -c | sort -nr | head -n "$TOP_N" \
         | condense_path
 }
 
 get_authors() {
     local since=$1
-    git shortlog -sn --no-merges ${since:+--since="$since"} | head -n "$TOP_N" \
+    git shortlog -sn --no-merges ${since:+--since="$since"} HEAD -- . | head -n "$TOP_N" \
         | awk '{ count=$1; $1=""; printf "%-8s %s\n", count, $0 }'
 }
 
