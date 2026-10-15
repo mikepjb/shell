@@ -3,5 +3,33 @@
 # lint-this will find an appropriate linter and formatter for a given file and
 # optionally apply fixes to it if "--fix" is also passed as a second argument.
 
-# there is only shellcheck
-shellcheck $1
+if [[ -z "$1" ]]; then
+    echo "No argument given, requires a file to lint"
+    exit 1
+fi
+
+file=$1
+
+
+case "$file" in
+    *.go)    goimports -w "$file" ;;
+    *.templ) go tool templ fmt "$file" ;;
+    *.js|*.jsx|*.ts|*.tsx)
+        if find-up deno.json deno.jsonc >/dev/null 2>&1; then
+            deno fmt "$file"
+        else
+            npx prettier --write "$file"
+        fi
+        ;;
+    *.sh)
+        shellcheck "$file"
+        ;;
+    *)
+        if head -1 "$file" | grep bash -q; then
+            shellcheck "$file"
+        else
+            echo "No formatter configured for: $file" >&2
+            exit 1
+        fi
+        ;;
+esac
