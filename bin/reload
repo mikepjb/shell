@@ -5,21 +5,16 @@ shell_repo_root=$(realpath "$script_dir/..")
 sconf="$shell_repo_root/config"
 local_bin_dir="$HOME/.local/bin"
 
+# ------------------------------------------------------------------------------
 echo 'Symlinking agent configuration'
 
-mkdir -p "$HOME/.pi/agent"
-ln -sfv "$sconf/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
-
-if ! command -v toml >/dev/null 2>&1; then
-    echo "toml-cli is missing; install it with: pipx install toml-cli" >&2
-    exit 1
-fi
-
-# Link only managed Pi config; keep auth.json, sessions, and other local state untouched.
+# Link only managed Pi config; keep auth.json, sessions, and other local state
+# untouched.
 mkdir -p "$HOME/.pi/agent/extensions"
 mkdir -p "$HOME/.pi/agent/skills"
 mkdir -p "$HOME/.pi/agent/themes"
 
+ln -sfv "$sconf/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 ln -sfnv "$sconf/pi/settings.json" "$HOME/.pi/agent/settings.json"
 ln -sfnv "$sconf/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
 ln -sfnv "$sconf/pi/presets.json" "$HOME/.pi/agent/presets.json"
@@ -35,6 +30,7 @@ for skill_dir in "$sconf/skills/"*/; do
     ln -sfnv "$skill_dir" "$HOME/.pi/agent/skills/$skill_name"
 done
 
+# ------------------------------------------------------------------------------
 echo 'Symlinking configurations'
 
 mkdir -p "$local_bin_dir"
@@ -65,6 +61,7 @@ if [[ -f "$HOME/.notes/spell.utf-8.add" ]]; then
     ln -sfv "$HOME/.notes/spell.utf-8.add" "$HOME/.vim/spell/spell.utf-8.add"
 fi
 
+# ------------------------------------------------------------------------------
 echo 'Symlinking scripts from ./bin'
 
 for bin_file in "$shell_repo_root/bin/"*; do
@@ -77,6 +74,13 @@ if [[ -n "${TMUX:-}" ]]; then
     tmux source-file ~/.config/tmux/tmux.conf
 fi
 
-# aim here is for ensure to replace deps script in a much tighter fashion
-ensure() {
-}
+# ------------------------------------------------------------------------------
+echo 'ensuring cli tools are available'
+
+required_tools=(
+    curl
+    git
+    gopls
+)
+
+echo "${required_tools[@]}"

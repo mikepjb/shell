@@ -76,7 +76,7 @@ alias tt='test-this'
 alias gp='gh pr create --fill'
 alias gd='gh pr create --draft --fill'
 alias gw='gh pr view --web'
-alias cup='git -C ~/src/shell/ up && git -C ~/.notes up' # 'config up'
+alias gpm='cd "${GOPATH:-$HOME/go}/pkg/mod"'
 [[ $(command -v xdg-open) ]] && alias open=xdg-open
 
 AIENV_DIR=~/src/shell/agent
