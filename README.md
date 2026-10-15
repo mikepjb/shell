@@ -10,6 +10,13 @@ _A collection of tools I use for development work._
   and Arch Linux. This symlinks all the bin/config files so you can run
   `reload` in future.
 
+## Shell Reference
+
+
+- `find . | grep org$ | xargs -o vi` opens a bunch of files in vim (you can
+  flick through the with :next). `-o` is the key ingredient here which
+  reconnects Vim's stdin back to the terminal.
+
 # LLM usage
 
 - Primarily Local LLMs are used for their speed to help a human programmer get
