@@ -5,8 +5,12 @@ shell_repo_root=$(realpath "$script_dir/..")
 sconf="$shell_repo_root/config"
 local_bin_dir="$HOME/.local/bin"
 
+section() {
+    printf '\033[34m%s\033[0m\n' "$1"
+}
+
 # ------------------------------------------------------------------------------
-echo 'Symlinking agent configuration'
+section 'Symlinking agent configuration'
 
 # Link only managed Pi config; keep auth.json, sessions, and other local state
 # untouched.
@@ -31,7 +35,7 @@ for skill_dir in "$sconf/skills/"*/; do
 done
 
 # ------------------------------------------------------------------------------
-echo 'Symlinking configurations'
+section 'Symlinking configurations'
 
 mkdir -p "$local_bin_dir"
 
@@ -62,25 +66,77 @@ if [[ -f "$HOME/.notes/spell.utf-8.add" ]]; then
 fi
 
 # ------------------------------------------------------------------------------
-echo 'Symlinking scripts from ./bin'
+section 'Symlinking scripts from ./bin'
 
 for bin_file in "$shell_repo_root/bin/"*; do
-  ln -sfv "$bin_file" "$local_bin_dir/$(basename $bin_file)"
+  ln -sfv "$bin_file" "$local_bin_dir/$(basename "$bin_file")"
 done
 
-echo 'Reloading all configurations'
+section 'Reloading all configurations'
 
 if [[ -n "${TMUX:-}" ]]; then
     tmux source-file ~/.config/tmux/tmux.conf
 fi
 
 # ------------------------------------------------------------------------------
-echo 'ensuring cli tools are available'
+section 'ensuring cli tools are available'
 
 required_tools=(
+    # essentials
+    vim
+    make
     curl
+    wget
     git
+
+    # language specific
+    pip
+    pipx
+    python3
+    go
+    node
+    shellcheck
+
+    # extras
+    kubectl
+    docker
+    rg
+    tmux
+    glow # Markdown syntax highlighter
+    hf # hugging face cli
+    cwebp
+    jq
+    yq
+    fd
+
+    # lsps
     gopls
 )
 
-echo "${required_tools[@]}"
+for tool in "${required_tools[@]}"; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        printf '\033[31mMissing CLI tool: %s\033[0m\n' "$tool"
+    fi
+done
+
+# ------------------------------------------------------------------------------
+section 'ensuring vim plugins are available'
+
+pkg_base="$HOME/.vim/pack/base"
+
+plugin() {
+    local slug="$1"
+    local sub_dir="${2:-start}"
+    local repo_name="${slug#*/}"
+    local target_dir="$pkg_base/$sub_dir/$repo_name"
+
+    if [[ ! -d "$target_dir" ]]; then
+        echo "cloning $slug into $sub_dir..."
+        git clone "https://github.com/$slug.git" "$target_dir" --depth=1
+    else
+        echo "$repo_name already exists in $sub_dir. skipping."
+    fi
+}
+
+plugin "tpope/vim-fugitive"
+plugin "godlygeek/tabular"
