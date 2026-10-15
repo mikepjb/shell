@@ -76,3 +76,7 @@ echo 'Reloading all configurations'
 if [[ -n "${TMUX:-}" ]]; then
     tmux source-file ~/.config/tmux/tmux.conf
 fi
+
+# aim here is for ensure to replace deps script in a much tighter fashion
+ensure() {
+}

@@ -57,6 +57,11 @@ You can use `:tags /search_term` to search your tags file inside vim.
 
 - `:grep` inside vim is super useful, i.e `:grep TODO %` to list and move between all TODOs in the current file.
 
+- `tv` runs tree and less together to give a view of the current project
+  filesystem.
+- `C-;` in Vim opens and toggles Netrw for a similar filesystem view but this
+  isn't fully expanded. Still it's good to navigate smaller areas.
+
 ## Deeper Detail & Reasoning
 
 ### Avoid multiplexing

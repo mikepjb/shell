@@ -12,7 +12,7 @@ set formatoptions-=t              " Don't add line-breaks for lines over 'textwi
 set hlsearch incsearch ignorecase " highlight matches live + ignore case matching
 set nonumber
 set nostartofline nowrap
-set showmatch gdefault            " gdefault replaces all matches, not just the first
+set noshowmatch gdefault          " gdefault replaces all matches, not just the first
 set textwidth=80 colorcolumn=+1   " 80 column width + highlight
 set fillchars=vert:│,fold:\ 
 set belloff=all
