@@ -113,7 +113,7 @@ def display(text, width, start=None, end=None):
             break
         matched = start is not None and start <= index <= end
         if matched != highlighting:
-            parts.append("\x1b[31m" if matched else "\x1b[39m")
+            parts.append("\x1b[34m" if matched else "\x1b[39m")
             highlighting = matched
         parts.append(safe)
         used += size
