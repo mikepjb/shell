@@ -5,9 +5,9 @@
     "tools": ["read", "bash", "edit", "write"],
     "thinkingLevel": "medium"
   },
-  "glm-flash": {
+  "deepseek-flash": {
     "provider": "fireworks",
-    "model": "glm-5p3-flash",
+    "model": "accounts/fireworks/models/deepseek-v4p1-flash",
     "tools": ["read", "bash", "edit", "write"],
     "thinkingLevel": "medium"
   },

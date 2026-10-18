@@ -3,14 +3,50 @@
 # test-this is a script that will either run a single test file or the entire
 # test suite of your project.
 #
-# This depends on whether test-this is given an argument, which will be assumed
-# to be the filepath for a test file to run.
+# With a file argument, lint that file (when supported) and run its tests.
+# Without an argument, run the project's test suite.
 
 if [[ -n $1 ]]; then
     echo 'running single file'
 else
     echo 'running test suite'
     all_tests='true'
+fi
+
+lint_status=0
+if [[ -n $1 ]]; then
+    if [[ ! -f $1 ]]; then
+        printf 'File not found: %s\n' "$1" >&2
+        exit 1
+    fi
+
+    case $1 in
+        *.sh|*.bash) filetype=shell ;;
+        *.py) filetype=python ;;
+        *.js|*.jsx|*.ts|*.tsx) filetype=javascript ;;
+        *.go) filetype=go ;;
+        *)
+            IFS= read -r shebang < "$1" || :
+            case $shebang in
+                '#!'*bash*|'#!'*/sh*|'#!'*' sh'*) filetype=shell ;;
+                '#!'*python*) filetype=python ;;
+            esac
+            ;;
+    esac
+
+    case $filetype in
+        shell) tool=shellcheck; args=(-- "$1") ;;
+        python) tool=ruff; args=(check -- "$1") ;;
+        javascript) tool=eslint; args=(-- "$1") ;;
+        go) tool=golangci-lint; args=(run "$(dirname "$1")/...") ;;
+    esac
+    if [[ -n $tool ]]; then
+        if command -v "$tool" >/dev/null 2>&1; then
+            "$tool" "${args[@]}" || lint_status=$?
+        else
+            printf '%s not installed; skipping lint for %s\n' "$tool" "$1" >&2
+        fi
+    fi
 fi
 
 if [[ -f "mvnw" ]]; then
@@ -29,10 +65,16 @@ elif [[ -f "go.mod" ]]; then
     if [[ -n "$all_tests" ]]; then
         go test ./...
     else
-        go test "$(dirname $1)/..."
+        go test "$(dirname "$1")/..."
     fi
 elif [[ -f "Makefile" ]]; then
     make test
 else
     echo 'could not detect any tests to run'
 fi
+
+test_status=$?
+if (( lint_status != 0 )); then
+    exit "$lint_status"
+fi
+exit "$test_status"

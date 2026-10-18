@@ -71,6 +71,34 @@ You can use `:tags /search_term` to search your tags file inside vim.
 
 ## Deeper Detail & Reasoning
 
+### REPLs == fast feedback loops
+
+- Whether you have a REPL or not, the ideal here is to have something to be able
+  to evaluate your code quickly.
+- This doesn't have to be something like Clojure's REPL but can be unit tests.
+- Really the focus here is "fast feedback loops are king", a REPL is just one
+  variant of this solution.
+
+#### More REPL detail
+
+- REPLs are powerful because they provide the ability to test theory.
+- IMO there are many variations to this, for example being able to run tests
+  quickly in vim is another form of REPL.
+- While there is value is having a "proper" REPL, meaning something that can
+  accept/read input and provide a result, (fast!) test suites can also provide
+  the same thing.
+- Conclusion here is that you don't always need a real REPL, but having the
+  ability to run the current file instantly in vim or to run a test suite (and
+  the execution of that test suite is also very fast) covers enough of the
+  benefits and avoids certain drawbacks (i.e maintaining mutable state).
+- So this is what I optimise for.
+- When you are using a new library, a REPL can be really good for figuring out
+  how to work with it. On the other hand, a single file script can also work
+  well.
+- For Golang, it compiles so fast unit tests work well. Same for JUnit and Java.
+- Bash scripts & unit tests can be saved for future reference. The state of a
+  REPL is ephemeral.
+
 ### Avoid multiplexing
 
 - Tmux is an excellent tool but should be used sparingly, we highlight it with a

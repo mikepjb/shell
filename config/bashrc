@@ -39,10 +39,12 @@ eval "$(fnm env --use-on-cd --shell bash)"
 
 # WIP binding
 # bind -x '"\C-g": "cd ~/src/$(ls ~/src | spear)"'
+bind '"\C-g": "\C-a\C-kcd ~/src/\"$(ls ~/src | spear)\"\C-m"'
 
 # Pi: no automatic catalog/version/telemetry requests; model requests still work.
 export PI_OFFLINE=1 PI_SKIP_VERSION_CHECK=1 PI_TELEMETRY=0
 alias pc='pi --preset codex'
+alias pd='pi --preset deepseek-flash'
 
 alias vi='vim'
 alias t='task'

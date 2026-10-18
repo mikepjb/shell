@@ -73,6 +73,7 @@ cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
 nnoremap Z :echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')<CR>
 nnoremap <C-t> :!test-this %<cr>
 nnoremap g<C-t> :!test-this<cr>
+nnoremap <CR> :update<CR>:!run-this %<CR>
 
 let g:netrw_liststyle = 3       " tree view
 let g:netrw_banner = 0          " leave more room for files
