@@ -13,6 +13,30 @@ else
     all_tests='true'
 fi
 
+# alternative lint implementation
+# case "$file" in
+#     *.go)    goimports -w "$file" ;;
+#     *.templ) go tool templ fmt "$file" ;;
+#     *.js|*.jsx|*.ts|*.tsx)
+#         if find-up deno.json deno.jsonc >/dev/null 2>&1; then
+#             deno fmt "$file"
+#         else
+#             npx prettier --write "$file"
+#         fi
+#         ;;
+#     *.sh)
+#         shellcheck "$file"
+#         ;;
+#     *)
+#         if head -1 "$file" | grep bash -q; then
+#             shellcheck "$file"
+#         else
+#             echo "No formatter configured for: $file" >&2
+#             exit 1
+#         fi
+#         ;;
+# esac
+
 lint_status=0
 if [[ -n $1 ]]; then
     if [[ ! -f $1 ]]; then
