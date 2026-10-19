@@ -30,7 +30,12 @@ if [[ -n $1 ]]; then
     esac
 
     case $filetype in
-        python) tool=python3; args=(-i "$1") ;;
+        python)
+            tool=python3
+            directory=$(dirname -- "$file")
+            module=$(basename -- "$file" .py)
+            args=(-i -c "import $module")
+            ;;
     esac
     if [[ -n $tool ]]; then
         if command -v "$tool" >/dev/null 2>&1; then
