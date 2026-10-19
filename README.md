@@ -17,6 +17,10 @@ _A collection of tools I use for development work._
   flick through the with :next). `-o` is the key ingredient here which
   reconnects Vim's stdin back to the terminal.
 
+## Devtools Reference
+
+- Settings (cog icon) => Preferences => Elements => Rulers on hover
+
 # LLM usage
 
 - Primarily Local LLMs are used for their speed to help a human programmer get
