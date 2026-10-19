@@ -17,6 +17,7 @@
   ff = pull --ff-only
   co = checkout
   ci = commit --verbose
+  cl = clean -fd # removes untracked files
   di = diff
   dis = diff --stat
   dc = diff --cached
