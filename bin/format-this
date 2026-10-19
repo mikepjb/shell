@@ -4,6 +4,7 @@ file=$1
 
 case "$file" in
   *.go)    goimports -w "$file" ;;
+  *.py)    black "$file" ;;
   *.templ) go tool templ fmt "$file" ;;
   *.js|*.jsx|*.ts|*.tsx)
     if find-up deno.json deno.jsonc >/dev/null 2>&1; then
