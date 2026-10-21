@@ -10,7 +10,7 @@ alias.bd=burndown.daily
 alias.h=proj:hypalynx
 alias.l=proj:lvh
 alias.o=proj:home or proj:self or proj:work
-alias.cleartags=modify -next -train -night
+alias.cleartags=modify -next -train -night -lunch
 
 report.next.labels=id,description,project,sch,due
 report.next.columns=id,description,project,scheduled,due
@@ -80,5 +80,6 @@ color.project.home=yellow
 # Tags
 color.tag.docs=cyan
 color.tag.next=rgb440
+color.tag.lunch=rgb145
 color.tag.night=rgb114
 color.tag.train=rgb225
