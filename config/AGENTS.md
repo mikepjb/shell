@@ -10,6 +10,10 @@
   and abstractions. Keep related behavior together and handle expected errors
   explicitly.
 
+- Keep functions to at most 70 lines. When one grows past that, extract cohesive
+  helpers while keeping the main control flow easy to follow; avoid tiny wrappers
+  created only to make a function shorter.
+
 - Bound untrusted input and resource use where relevant. Use assertions for
   programmer errors, not expected failures.
 
