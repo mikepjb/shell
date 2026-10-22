@@ -1,14 +1,30 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+# Usage:
+#   llm [qwen|gemma]
 #
-# Usage: llm [qwen|gemma]
-# The argument takes precedence over LLM_MODEL; Qwen is the default.
+# Examples:
+#   llm gemma
+#   LLM_MTP=0 llm gemma
+#   LLM_DRAFT_MAX=4 llm gemma
+#   LLM_CONTEXT=32768 llm gemma
+#
+# Requires: hf, recent Vulkan-enabled llama-server
+
 profile=${1:-${LLM_MODEL:-qwen}}
+models_dir=${LLM_MODELS_DIR:-"$HOME/models"}
+context=${LLM_CONTEXT:-16384}
+port=${LLM_PORT:-7777}
+draft_filename=""
+mtp_args=()
 
 case "$profile" in
     qwen)
         model_ref="qwen35-2b"
         model_repo="unsloth/Qwen3.5-2B-GGUF"
         model_filename="Qwen3.5-2B-UD-Q5_K_XL.gguf"
+
         sampling_args=(
             --temp 1.0
             --top-p 1.0
@@ -19,9 +35,11 @@ case "$profile" in
         )
         ;;
     gemma)
-        model_ref="gemma-4-e4b"
-        model_repo="unsloth/gemma-4-E4B-it-GGUF"
-        model_filename="gemma-4-E4B-it-UD-Q5_K_XL.gguf"
+        model_ref="gemma-4-12b-qat"
+        model_repo="unsloth/gemma-4-12B-it-qat-GGUF"
+        model_filename="gemma-4-12B-it-qat-UD-Q4_K_XL.gguf"
+        draft_filename="mtp-gemma-4-12B-it.gguf"
+
         sampling_args=(
             --temp 1.0
             --top-p 0.95
@@ -37,32 +55,69 @@ case "$profile" in
         ;;
 esac
 
-model_file="$HOME/models/$model_filename"
+command -v llama-server >/dev/null || {
+    echo "Required command not found: llama-server" >&2
+    exit 1
+}
 
-if [ ! -f "$model_file" ]; then
-    hf download \
-        "$model_repo" \
-        "$model_filename" \
-        --local-dir "$HOME/models"
+# Separate profiles to avoid collisions between QAT/non-QAT drafters.
+model_dir="$models_dir/$model_ref"
+mkdir -p "$model_dir"
+
+download_file() {
+    local filename=$1
+
+    if [[ ! -s "$model_dir/$filename" ]]; then
+        command -v hf >/dev/null || {
+            echo "Required command not found: hf" >&2
+            exit 1
+        }
+
+        hf download \
+            "$model_repo" \
+            "$filename" \
+            --local-dir "$model_dir"
+    fi
+}
+
+model_file="$model_dir/$model_filename"
+
+# Reuse an existing download from the original script's flat directory.
+if [[ -s "$models_dir/$model_filename" ]]; then
+    model_file="$models_dir/$model_filename"
+else
+    download_file "$model_filename"
+fi
+
+if [[ -n "$draft_filename" && "${LLM_MTP:-1}" == "1" ]]; then
+    download_file "$draft_filename"
+
+    mtp_args=(
+        --model-draft "$model_dir/$draft_filename"
+        --spec-type draft-mtp
+        --spec-draft-n-max "${LLM_DRAFT_MAX:-2}"
+        -ngld 99
+    )
 fi
 
 args=(
     --alias "$model_ref"
-    -m "$model_file"       # Path to the model file
-    # --spec-type draft-mtp  # Use MTP for faster inference
-    # --spec-draft-n-max 4
-    --jinja                # Enables the chat-template arguments used by consult
+    -m "$model_file"
+    "${mtp_args[@]}"
+    --jinja
     --host 127.0.0.1
-    --port 7777
-    # 129536
-    -c 64768               # Context size (tokens)
-    --cache-prompt         # Cache the prompt to speed up requests
-    --metrics              # Show tps etc in llama-server's logs
-    -ngl -1                # Offload all layers to GPU (-1)
-    -np 1                  # Number of parallel slots/users
-    --flash-attn on        # Enable Flash Attention for speed
+    --port "$port"
+    -c "$context"
+    --metrics
+    --perf
+    -ngl 99
+    -np 1
+    --flash-attn on
     "${sampling_args[@]}"
 )
 
-echo "llama-server ${args[*]}" # print args out in case we need to debug
-llama-server "${args[@]}"
+printf 'Starting: llama-server'
+printf ' %q' "${args[@]}"
+printf '\n'
+
+exec llama-server "${args[@]}"
