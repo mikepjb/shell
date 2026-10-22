@@ -1,8 +1,61 @@
-#!bin/bash
-# vendor downloads commonly used JS libraries so you can use them quickly
+#!/usr/bin/env bash
+# Download pinned browser assets to ./vendor (or --dir DIR).
+set -euo pipefail
 
-set +e
+files() {
+    case $1 in
+        htmx) echo 'htmx.min.js htmx.org@2.0.4/dist/htmx.min.js' ;;
+        alpine) echo 'alpine.min.js alpinejs@3.14.9/dist/cdn.min.js' ;;
+        jquery) echo 'jquery.min.js jquery@3.7.1/dist/jquery.min.js' ;;
+        openprops) echo 'open-props.min.css open-props@1.7.23/open-props.min.css' ;;
+        sortable) echo 'sortable.min.js sortablejs@1.15.6/Sortable.min.js' ;;
+        chartjs) echo 'chart.umd.js chart.js@4.4.8/dist/chart.umd.js' ;;
+        hyperscript) echo '_hyperscript.min.js hyperscript.org@0.9.14/dist/_hyperscript.min.js' ;;
+        phosphor)
+            for file in style.css Phosphor.woff2 Phosphor.woff Phosphor.ttf Phosphor.svg; do
+                printf 'phosphor/%s @phosphor-icons/web@2.1.2/src/regular/%s\n' "$file" "$file"
+            done ;;
+        react)
+            echo 'react.production.min.js react@18.3.1/umd/react.production.min.js'
+            echo 'react-dom.production.min.js react-dom@18.3.1/umd/react-dom.production.min.js' ;;
+        *) return 1 ;;
+    esac
+}
 
-# htmx
-# alpine
-# react.js
+usage='Usage: vendor [--dir DIR] LIBRARY... (try vendor --list)'
+dir=vendor
+if [[ ${1:-} == --dir ]]; then
+    if [[ -z ${2:-} ]]; then echo 'vendor: --dir requires a directory' >&2; exit 2; fi
+    dir=$2; shift 2
+fi
+if [[ ${1:-} == --list || ${1:-} == --help ]]; then
+    echo "$usage"
+    echo 'Libraries: htmx alpine jquery react phosphor sortable chartjs hyperscript openprops'
+    exit 0
+fi
+if (($# == 0)); then echo "$usage" >&2; exit 2; fi
+for library in "$@"; do
+    if ! files "$library" >/dev/null; then
+        printf 'vendor: unknown library: %s\n' "$library" >&2
+        exit 2
+    fi
+done
+command -v curl >/dev/null || { echo 'vendor: curl is required' >&2; exit 1; }
+mkdir -p "$dir"
+
+for library in "$@"; do
+    while read -r filename package; do
+        target=$dir/$filename
+        if [[ -e $target ]]; then echo "Already exists: $target"; continue; fi
+        mkdir -p "$(dirname "$target")"
+        temp=$(mktemp "$dir/.vendor.XXXXXXXX")
+        if ! curl -fLsS --retry 2 --connect-timeout 10 --max-time 120 \
+            -o "$temp" "https://cdn.jsdelivr.net/npm/$package" || [[ ! -s $temp ]]; then
+            rm -f "$temp"
+            printf 'vendor: failed to download %s\n' "$package" >&2
+            exit 1
+        fi
+        mv "$temp" "$target"
+        echo "Downloaded: $target"
+    done < <(files "$library")
+done

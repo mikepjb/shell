@@ -10,6 +10,18 @@ _A collection of tools I use for development work._
   and Arch Linux. This symlinks all the bin/config files so you can run
   `reload` in future.
 
+## Vendor browser assets
+
+Run `vendor htmx alpine` from a project directory to download pinned, browser-ready
+assets into `./vendor/` (no npm needed). Use `vendor --list` to see the supported
+libraries, or `vendor --dir static/js htmx jquery react` to choose a directory.
+Also available: `sortable`, `chartjs`, `hyperscript`, `phosphor`, and `openprops`.
+`openprops` downloads `open-props.min.css` (design tokens, not a styled UI).
+Phosphor vendors the regular icon font and its CSS; include `phosphor/style.css`
+in your page. React downloads both React and ReactDOM (version 18 UMD builds); load React
+before ReactDOM. Files already present are not overwritten. Delete a file before
+running `vendor` again to replace it. Requires `curl`.
+
 ## Shell Reference
 
 
