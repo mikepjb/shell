@@ -66,6 +66,11 @@ hi Identifier  ctermfg=2
 hi Added       ctermfg=2
 hi Removed     ctermfg=1
 
+" Markdown links to these HTML groups; hi clear removes their text attributes.
+hi htmlBold       term=bold        cterm=bold        gui=bold
+hi htmlItalic     term=italic      cterm=italic      gui=italic
+hi htmlBoldItalic term=bold,italic cterm=bold,italic gui=bold,italic
+
 hi link SpecialComment Comment
 hi link gitcommitBranch String
 hi link markdownCode Type
