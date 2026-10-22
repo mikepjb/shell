@@ -13,6 +13,11 @@
 - Bound untrusted input and resource use where relevant. Use assertions for
   programmer errors, not expected failures.
 
+- For code, push ifs up and fors down. Conditionals should be at the top level
+  of an application forming a centralised control plane, where operations on
+  entities should be pushed down where they can be batches and controlled more
+  efficiently.
+
 - For bugs, establish a reproduction when feasible. Test observable behavior
   and important failure paths.
 
