@@ -45,6 +45,7 @@ bind '"\C-g": "\C-a\C-kcd ~/src/\"$(ls ~/src | spear)\"\C-m"'
 export PI_OFFLINE=1 PI_SKIP_VERSION_CHECK=1 PI_TELEMETRY=0
 alias pc='pi --preset codex'
 alias pd='pi --preset deepseek-flash'
+alias pl='pi --preset local-llm'
 alias pu='unset PI_OFFLINE PI_SKIP_VERSION_CHECK && pi update pi'
 
 alias vi='vim'
