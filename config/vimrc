@@ -19,7 +19,7 @@ set belloff=all
 set clipboard=unnamed,unnamedplus
 set nowritebackup noswapfile      " no temporary files please, git covers saves
 set laststatus=2
-set tabstop=2 softtabstop=2 shiftwidth=2 expandtab " 2-width, prefer spaces > tab
+set tabstop=4 softtabstop=4 shiftwidth=4 expandtab " 4-width, prefer spaces > tab
 set statusline=%<%f%*\ (%{&ft})\ %-4(%m%)%=%-19(%3l,%02c%03V%)
 let &l:errorformat = '%f:%l:%c:\ %m,%f:%l:\ %m,%-G%.%#'
 let [g:omni_sql_no_default_maps, g:sh_noisk] = [1, 1] " prevent remaps
@@ -27,12 +27,12 @@ let g:markdown_fenced_languages=['bash=sh', 'css', 'html', 'go', 'ruby', 'sql', 
 
 set undodir=/tmp/.vim-undo-dir undofile
 if !isdirectory(&undodir)
-  call mkdir(&undodir, "", 0700)
+    call mkdir(&undodir, "", 0700)
 endif
 
 if executable('rg') " N.B ripgrep searches all files by default
-  set grepprg=rg\ --vimgrep\ --smart-case\ $*
-  set grepformat=%f:%l:%c:%m,%f:%l:%m
+    set grepprg=rg\ --vimgrep\ --smart-case\ $*
+    set grepformat=%f:%l:%c:%m,%f:%l:%m
 endif
 
 colorscheme flow
@@ -82,58 +82,72 @@ let g:netrw_usetab = 1
 nmap <C-;> <Plug>NetrwShrink
 
 augroup base
-  autocmd!
-  autocmd QuickFixCmdPost [^l]* nested cwindow
-  autocmd FileType markdown setlocal formatoptions+=t " wrap lines in .md
-  autocmd FileType go,java,rust,zig,sh setl ts=4 sw=4 sts=4
-  autocmd FileType qf setlocal statusline=Quickfix\ [%{len(getqflist())}]
-  " TS syntax has a perf bug in 9.1.x and lower versions, this fixes that
-  autocmd Syntax typescript,typescriptreact syntax clear typescriptArrowFuncDef
+    autocmd!
+    autocmd QuickFixCmdPost [^l]* nested cwindow
+    autocmd FileType markdown setlocal formatoptions+=t " wrap lines in .md
+    autocmd FileType clojure setl ts=2 sw=2 sts=4
+    autocmd FileType qf setlocal statusline=Quickfix\ [%{len(getqflist())}]
+    " TS syntax has a perf bug in 9.1.x and lower versions, this fixes that
+    autocmd Syntax typescript,typescriptreact syntax clear typescriptArrowFuncDef
 augroup END
 
 function! Selecta(cmd)
-  try
-    let file = trim(system(a:cmd . ' | spear'))
-    redraw!
-    if !empty(file) | execute 'edit' fnameescape(file) | endif
-  catch /Vim:Interrupt/ | redraw! | endtry
+    try
+        let file = trim(system(a:cmd . ' | spear'))
+        redraw!
+        if !empty(file) | execute 'edit' fnameescape(file) | endif
+    catch /Vim:Interrupt/ | redraw! | endtry
 endfunction
 
 nnoremap <space> :call Selecta("fd -E '*_templ.go' -t f . .")<CR>
 
+function! TreeView() abort
+  topleft 35vnew
+  setlocal winfixwidth
+  call term_start('tree -Cd .', {
+        \ 'curwin': 1,
+        \ 'term_name': 'Tree',
+        \ 'cwd': getcwd()
+        \ })
+endfunction
+
+nnoremap <silent> <C-s> :call TreeView()<CR>
+
+nnoremap <C-s> :call TreeView()<CR>
+
 function! Format()
-  update
-  let out = system('format-this ' . shellescape(expand('%')))
-  if v:shell_error | echoerr out | else | checktime | redraw! | endif
+    update
+    let out = system('format-this ' . shellescape(expand('%')))
+    if v:shell_error | echoerr out | else | checktime | redraw! | endif
 endfunction
 
 nnoremap gp :call Format()<CR>
 nnoremap gP :cexpr system('lint-this "' . expand('%') . '"')<CR>
 
 function! s:MarkdownFold() abort
-  let line = getline(v:lnum)
-  let level = strlen(matchstr(
-        \ line,
-        \ '^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)'))
+    let line = getline(v:lnum)
+    let level = strlen(matchstr(
+                \ line,
+                \ '^\s\{0,3}\zs#\{1,6}\ze\%(\s\|$\)'))
 
-  if level == 1
-    return 0 " Level-one headings are section boundaries, not folds.
-  elseif level > 1
-    return '>' . (level - 1)
-  endif
+    if level == 1
+        return 0 " Level-one headings are section boundaries, not folds.
+    elseif level > 1
+        return '>' . (level - 1)
+    endif
 
-  return '='
+    return '='
 endfunction
 
 function! s:MarkdownFoldFormat()
-  return getline(v:foldstart) . ' '
+    return getline(v:foldstart) . ' '
 endfunction
 
 augroup markdown_folding
-  autocmd!
-  autocmd FileType markdown setlocal foldmethod=expr
-  autocmd FileType markdown setlocal foldexpr=<SID>MarkdownFold()
-  autocmd FileType markdown setlocal foldtext=<SID>MarkdownFoldFormat()
-  autocmd FileType markdown setlocal foldlevel=0
-  autocmd FileType markdown nnoremap <buffer> <C-d> za
+    autocmd!
+    autocmd FileType markdown setlocal foldmethod=expr
+    autocmd FileType markdown setlocal foldexpr=<SID>MarkdownFold()
+    autocmd FileType markdown setlocal foldtext=<SID>MarkdownFoldFormat()
+    autocmd FileType markdown setlocal foldlevel=0
+    autocmd FileType markdown nnoremap <buffer> <C-d> za
 augroup END

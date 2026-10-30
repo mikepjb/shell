@@ -9,37 +9,39 @@ endif
 let colors_name = "flow"
 
 " Standard UI elements
-hi Normal       ctermfg=NONE ctermbg=NONE
-hi NonText      ctermfg=NONE ctermbg=NONE
-hi CursorLine   ctermfg=NONE ctermbg=0  cterm=NONE
-hi CursorColumn ctermfg=NONE ctermbg=0  cterm=NONE
-hi ColorColumn  ctermfg=NONE ctermbg=0  cterm=NONE
-hi LineNr       ctermfg=8
-hi CursorLineNr ctermfg=8    ctermbg=0  cterm=NONE
-hi StatusLine   ctermbg=0    cterm=NONE term=NONE
-hi StatusLineNC ctermbg=0    cterm=NONE term=NONE
-hi TabLine      ctermbg=0    cterm=NONE term=NONE
-hi TabLineFill  ctermbg=0    cterm=NONE term=NONE
-hi TabLineSel   ctermbg=8    cterm=NONE term=NONE
-hi VertSplit    ctermfg=8    cterm=NONE term=NONE
-hi WinSeparator ctermfg=8    cterm=NONE term=NONE
-hi Directory    ctermfg=4
-hi WildMenu     ctermfg=0    ctermbg=7
-hi Visual       ctermbg=14
-hi Search       ctermbg=14
-hi IncSearch    ctermbg=6
-hi Folded       ctermbg=NONE ctermfg=6
-hi FoldColumn   ctermbg=0 ctermfg=NONE
-hi Pmenu        ctermfg=7 ctermbg=0
-hi PmenuSel     ctermfg=9 ctermbg=8
-hi MatchParen   ctermfg=9 ctermbg=NONE
-hi Error        ctermfg=1 ctermbg=NONE
-hi ErrorMsg     ctermfg=1 ctermbg=NONE
-hi WarningMsg   ctermfg=3 ctermbg=NONE
-hi MoreMsg      ctermfg=4 ctermbg=NONE
-hi Question     ctermfg=4 ctermbg=NONE
-hi QuickFixLine ctermbg=0
-hi qfLineNr     ctermfg=3
+hi Normal           ctermfg=NONE ctermbg=NONE
+hi NonText          ctermfg=NONE ctermbg=NONE
+hi CursorLine       ctermfg=NONE ctermbg=0  cterm=NONE
+hi CursorColumn     ctermfg=NONE ctermbg=0  cterm=NONE
+hi ColorColumn      ctermfg=NONE ctermbg=0  cterm=NONE
+hi LineNr           ctermfg=8
+hi CursorLineNr     ctermfg=8    ctermbg=0  cterm=NONE
+hi StatusLine       ctermbg=0    cterm=NONE term=NONE
+hi StatusLineNC     ctermbg=0    cterm=NONE term=NONE
+hi StatusLineTerm   ctermbg=0    cterm=NONE term=NONE
+hi StatusLineTermNC ctermbg=0    cterm=NONE term=NONE
+hi TabLine          ctermbg=0    cterm=NONE term=NONE
+hi TabLineFill      ctermbg=0    cterm=NONE term=NONE
+hi TabLineSel       ctermbg=8    cterm=NONE term=NONE
+hi VertSplit        ctermfg=8    cterm=NONE term=NONE
+hi WinSeparator     ctermfg=8    cterm=NONE term=NONE
+hi Directory        ctermfg=4
+hi WildMenu         ctermfg=0    ctermbg=7
+hi Visual           ctermbg=14
+hi Search           ctermbg=14
+hi IncSearch        ctermbg=6
+hi Folded           ctermbg=NONE ctermfg=6
+hi FoldColumn       ctermbg=0 ctermfg=NONE
+hi Pmenu            ctermfg=7 ctermbg=0
+hi PmenuSel         ctermfg=9 ctermbg=8
+hi MatchParen       ctermfg=9 ctermbg=NONE
+hi Error            ctermfg=1 ctermbg=NONE
+hi ErrorMsg         ctermfg=1 ctermbg=NONE
+hi WarningMsg       ctermfg=3 ctermbg=NONE
+hi MoreMsg          ctermfg=4 ctermbg=NONE
+hi Question         ctermfg=4 ctermbg=NONE
+hi QuickFixLine     ctermbg=0
+hi qfLineNr         ctermfg=3
 
 " Syntax
 hi Comment     ctermfg=8
