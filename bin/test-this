@@ -47,6 +47,7 @@ if [[ -n $1 ]]; then
     case $1 in
         *.sh|*.bash) filetype=shell ;;
         *.py) filetype=python ;;
+        *.zig) filetype=zig ;;
         *.js|*.jsx|*.ts|*.tsx) filetype=javascript ;;
         *.go) filetype=go ;;
         *)
@@ -61,6 +62,7 @@ if [[ -n $1 ]]; then
     case $filetype in
         shell) tool=shellcheck; args=(-- "$1") ;;
         python) tool=ruff; args=(check -- "$1") ;;
+        zig) tool=zig; args=(test "$1") ;;
         javascript) tool=eslint; args=(-- "$1") ;;
         go) tool=golangci-lint; args=(run "$(dirname "$1")/...") ;;
     esac
