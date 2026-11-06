@@ -11,8 +11,11 @@ set -euo pipefail
 #   LLM_CONTEXT=32768 llm gemma
 #
 # Requires: hf, recent Vulkan-enabled llama-server
+#
+# N.B: Gemma 12B > Qwen 3.5 9B, tends to use fewer tokens to answer a question
+# so ends up being faster in practice.
 
-profile=${1:-${LLM_MODEL:-qwen}}
+profile=${1:-${LLM_MODEL:-gemma}}
 models_dir=${LLM_MODELS_DIR:-"$HOME/models"}
 context=${LLM_CONTEXT:-16384}
 port=${LLM_PORT:-7777}
