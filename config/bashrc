@@ -26,6 +26,7 @@ path_collection=(
     "$HOME/.npm/bin"
     "/bin"
     "/sbin" # Mac OS puts some binaries in here like `lsof`
+    "/usr/sbin" # Mac OS puts some binaries in here like `sysctl`
     "/usr/local/bin"
     "/usr/bin"
     "/usr/local/sbin"
