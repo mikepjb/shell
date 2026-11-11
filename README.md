@@ -10,6 +10,12 @@ _A collection of tools I use for development work._
   and Arch Linux. This symlinks all the bin/config files so you can run
   `reload` in future.
 
+A key principle that underlies this setup is, prefer operational reliability >
+automation. A good example here is preferring `:!test-this` > `:make test-this`
+which would collect the test script output and populate a quickfix window.
+Rather than maintain the quickfix format, it is simpler to just read and
+remember the important part of the output and fuzzy find/navigate myself.
+
 ## Vendor browser assets
 
 Run `vendor htmx alpine` from a project directory to download pinned, browser-ready

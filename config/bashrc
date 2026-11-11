@@ -73,6 +73,7 @@ alias td='tree -Cd | less -R'
 alias cljx='clj -M:repl:dev'
 alias tree='tree -I node_modules -I ./target -I ./dist'
 # alias ks='kill -9 $(lsof -ti:8080)'
+alias ks="lsof -nP -iTCP -sTCP:LISTEN | tail -n +2 | spear | awk '{print $2}' | xargs -r kill -TERM"
 alias gp='gh pr create --fill'
 alias gd='gh pr create --draft --fill'
 alias gw='gh pr view --web'
@@ -84,10 +85,6 @@ viw() { vim $(which "$1"); }
 
 encrypt() {
   tar czf - "$1" | openssl enc -aes-256-cbc -salt -out "${1}.tar.gz.enc"
-}
-
-hiccup() {
-  bb -d hickory -i "(import '[hickory.core :refer [parse as-hiccup]]) (-> *input* doall first parse as-hiccup println)"
 }
 
 [[ -f $HOME/.bashrc.local ]] && . $HOME/.bashrc.local
