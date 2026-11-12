@@ -36,6 +36,10 @@ path_collection=(
 join_array() { local IFS=':'; printf '%s' "$*"; }
 export PATH="$(join_array "${path_collection[@]}")"
 
+if [[ $- == *i* && -z ${TMUX:-} ]] && command -v tmux >/dev/null 2>&1; then
+    exec tmux new-session -A -s x
+fi
+
 eval "$(fnm env --use-on-cd --shell bash)"
 
 bind '"\C-g": "\C-a\C-kcd ~/src/\"$(ls ~/src | spear)\"\C-m"'

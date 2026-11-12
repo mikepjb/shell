@@ -6,6 +6,9 @@ _A collection of tools I use for development work._
   developing software that solves problems.
 - This setup was created with a spartan mindset driving it.
   Constraints enforce deeper engagement.
+- Fast editing matters more to me than deep language support. Every pause to
+  work around a tool risks breaking my train of thought, especially when I'm
+  several layers into a problem.
 - To get started, download this repo and run `./bin/reload`. This supports Mac OS
   and Arch Linux. This symlinks all the bin/config files so you can run
   `reload` in future.
@@ -15,6 +18,17 @@ automation. A good example here is preferring `:!test-this` > `:make test-this`
 which would collect the test script output and populate a quickfix window.
 Rather than maintain the quickfix format, it is simpler to just read and
 remember the important part of the output and fuzzy find/navigate myself.
+
+Emacs still draws me in, but even a vanilla, low-maintenance setup gives up
+Vim's editing speed and leaves plenty of integration work. I suspect VS Code
+and IntelliJ involve a similar tradeoff: deeper language support that can
+break, versus fast editing and navigation with Vim and ctags.
+
+Finally, we have to mention LLMs. Our relationship with AI tools is constantly
+evolving and I think there are largely 3 schools of thought here:
+- No AI
+- Minimal reasoning, fast models, tight human control
+- Frontier models with light or no human control
 
 ## Vendor browser assets
 
@@ -30,23 +44,22 @@ running `vendor` again to replace it. Requires `curl`.
 
 ## Shell Reference
 
-
 - `find . | grep org$ | xargs -o vi` opens a bunch of files in vim (you can
-  flick through the with :next). `-o` is the key ingredient here which
+  flick through them with `:next`). `-o` is the key ingredient here which
   reconnects Vim's stdin back to the terminal.
 
 ## Devtools Reference
 
 - Settings (cog icon) => Preferences => Elements => Rulers on hover
 
-# LLM usage
+## LLM usage
 
 - Primarily Local LLMs are used for their speed to help a human programmer get
   unstuck, providing useful analysis & feedback via the `./bin/consult` script.
 - For agentic work, `pi` harness with Sol/GLM 5.3/Kimi K3 with minimal AGENTS.md
   direction (post mid-2026 less is more it seems)
 
-# Languages supported
+## Languages supported
 
 1. Go
 2. Javascript/Typescript
@@ -70,7 +83,7 @@ running `vendor` again to replace it. Requires `curl`.
 - `pydoc modules` shows all modules
 - `pydoc x` shows docs for that specific module
 
-# Ctags
+## Ctags
 
 A tool used to index projects and make it easier to navigate. Like Vim, the more I understand this tool, the better leverage I'm going to get out of it.
 
@@ -80,7 +93,7 @@ So running `ctags -R .` without config on a node project is going to get me a ta
 
 You can use `:tags /search_term` to search your tags file inside vim.
 
-# Navigation
+## Navigation
 
 - `:grep` will grep and populate the results in a quickfix list. Remember to use `%` for the current file and `-r` and `.` if you want to do a project wide search.
 
@@ -93,40 +106,21 @@ You can use `:tags /search_term` to search your tags file inside vim.
 
 ## Deeper Detail & Reasoning
 
-### REPLs == fast feedback loops
+### Fast feedback loops
 
-- Whether you have a REPL or not, the ideal here is to have something to be able
-  to evaluate your code quickly.
-- This doesn't have to be something like Clojure's REPL but can be unit tests.
-- Really the focus here is "fast feedback loops are king", a REPL is just one
-  variant of this solution.
+A REPL is useful for testing ideas and exploring unfamiliar libraries, but the
+important thing is getting feedback quickly. Running the current file in Vim,
+a fast test suite (Go or JUnit, for example), or a small Bash script can serve
+the same purpose without maintaining mutable REPL state. Tests and scripts also
+leave behind a reusable record of what worked.
 
-#### More REPL detail
+### Keep tmux focused
 
-- REPLs are powerful because they provide the ability to test theory.
-- IMO there are many variations to this, for example being able to run tests
-  quickly in vim is another form of REPL.
-- While there is value is having a "proper" REPL, meaning something that can
-  accept/read input and provide a result, (fast!) test suites can also provide
-  the same thing.
-- Conclusion here is that you don't always need a real REPL, but having the
-  ability to run the current file instantly in vim or to run a test suite (and
-  the execution of that test suite is also very fast) covers enough of the
-  benefits and avoids certain drawbacks (i.e maintaining mutable state).
-- So this is what I optimise for.
-- When you are using a new library, a REPL can be really good for figuring out
-  how to work with it. On the other hand, a single file script can also work
-  well.
-- For Golang, it compiles so fast unit tests work well. Same for JUnit and Java.
-- Bash scripts & unit tests can be saved for future reference. The state of a
-  REPL is ephemeral.
-
-### Avoid multiplexing
-
-- Tmux is an excellent tool but should be used sparingly, we highlight it with a
-  red status bar to denote it being a danger zone.
-- It's great for running multiple processes, ocassionally it's needed when
-  running multiple processes (think multiple microservices).
+Bash starts in tmux so agents and other long-running work can keep running. The
+working view is one window with at most two visible panes: `M-o` splits it or
+switches between panes, and `M-i` toggles a persistent session in a popup for
+background work. Avoid accumulating windows and panes just because tmux makes
+it easy; keep the work you're doing in view.
 
 ### Editors
 
@@ -135,17 +129,6 @@ You can use `:tags /search_term` to search your tags file inside vim.
   - Very portable (available everywhere) and very compatible (no meta/special
     keys that sometimes do not work with terminal emulators).
   - The most important thing here is relying on tools that don't break.
-
-### Why no tmux?
-
-tmux is great but overkill and leads spiralling complexity.
-
-[experiment] bringing back tmux but not by default, this is so I can run agents
-in the background and do multitasking which in principal I am against as focused
-work in theory should be the most effective approach.
-
-Plan here is to keep to just a single window (bg services can still be used with
-PM) - if we going to multitask let's be honest and keep it all in the front view
 
 ### Vim syntax not working? Typescript slow?
 
@@ -156,8 +139,3 @@ autocmd BufEnter * :syntax sync fromstart " syntax highlights from the beginning
 of the file, sometimes syntax would be broken without it.
 set re=2 " forces newer NFA syntax engine
 ```
-
-## Also Consider
-
-- neomutt
-- tmux

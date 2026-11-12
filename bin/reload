@@ -80,6 +80,15 @@ fi
 # ------------------------------------------------------------------------------
 section 'ensuring cli tools are available'
 
+if (( BASH_VERSINFO[0] < 5 )); then
+    printf '\033[31mBash 5+ required (running %s).\033[0m\n' "$BASH_VERSION"
+    printf '%s\n' \
+        'On macOS, install Homebrew Bash and set it as your login shell:' \
+        '  brew install bash' \
+        '  grep -Fxq /opt/homebrew/bin/bash /etc/shells || echo /opt/homebrew/bin/bash | sudo tee -a /etc/shells' \
+        '  chsh -s /opt/homebrew/bin/bash'
+fi
+
 required_tools=(
     # essentials
     vim
