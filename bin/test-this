@@ -1,57 +1,73 @@
 #!/usr/bin/env bash
 #
-# test-this is a script that will either run a single test file or the entire
-# test suite of your project.
-#
 # With a file argument, lint that file (when supported) and run its tests.
-# Without an argument, run the project's test suite.
+# Without an argument, lint the project and run its test suite.
 
-if [[ -n $1 ]]; then
-    echo 'running single file'
-else
-    echo 'running test suite'
-    all_tests='true'
-fi
-
-# alternative lint implementation
-# case "$file" in
-#     *.go)    goimports -w "$file" ;;
-#     *.templ) go tool templ fmt "$file" ;;
-#     *.js|*.jsx|*.ts|*.tsx)
-#         if find-up deno.json deno.jsonc >/dev/null 2>&1; then
-#             deno fmt "$file"
-#         else
-#             npx prettier --write "$file"
-#         fi
-#         ;;
-#     *.sh)
-#         shellcheck "$file"
-#         ;;
-#     *)
-#         if head -1 "$file" | grep bash -q; then
-#             shellcheck "$file"
-#         else
-#             echo "No formatter configured for: $file" >&2
-#             exit 1
-#         fi
-#         ;;
-# esac
-
+file=${1:-}
+filetype=
+tool=
 lint_status=0
-if [[ -n $1 ]]; then
-    if [[ ! -f $1 ]]; then
-        printf 'File not found: %s\n' "$1" >&2
+test_status=0
+lint_ran=0
+test_ran=0
+
+report_result() {
+    local label=$1 ran=$2 status=$3
+
+    if (( ! ran )); then
+        printf '⏭️  %s skipped\n' "$label"
+    elif (( status == 0 )); then
+        printf '✅ %s passed\n' "$label"
+    else
+        printf '❌ %s failed (exit %d)\n' "$label" "$status"
+    fi
+}
+
+run_lint() {
+    local linter=$1 status=0
+    shift
+
+    if ! command -v "$linter" >/dev/null 2>&1; then
+        printf '⏭️  %s skipped (not installed)\n' "$linter"
+        return 0
+    fi
+
+    lint_ran=1
+    "$linter" "$@" || status=$?
+    report_result "$linter" 1 "$status"
+
+    if (( lint_status == 0 )); then
+        lint_status=$status
+    fi
+}
+
+run_test() {
+    test_ran=1
+    "$@" || test_status=$?
+}
+
+has_make_target() {
+    local status=0
+
+    [[ -f Makefile ]] || return 1
+    make -q "$1" >/dev/null 2>&1 || status=$?
+    (( status == 0 || status == 1 ))
+}
+
+if [[ -n $file ]]; then
+    if [[ ! -f $file ]]; then
+        printf 'File not found: %s\n' "$file" >&2
         exit 1
     fi
 
-    case $1 in
+    case $file in
         *.sh|*.bash) filetype=shell ;;
         *.py) filetype=python ;;
-        *.zig) filetype=zig ;;
         *.js|*.jsx|*.ts|*.tsx) filetype=javascript ;;
         *.go) filetype=go ;;
+        *.zig) filetype=zig ;;
         *)
-            IFS= read -r shebang < "$1" || :
+            IFS= read -r shebang < "$file" || :
             case $shebang in
                 '#!'*bash*|'#!'*/sh*|'#!'*' sh'*) filetype=shell ;;
                 '#!'*python*) filetype=python ;;
@@ -60,46 +76,67 @@ if [[ -n $1 ]]; then
     esac
 
     case $filetype in
-        shell) tool=shellcheck; args=(-- "$1") ;;
-        python) tool=ruff; args=(check -- "$1") ;;
-        zig) tool=zig; args=(test "$1") ;;
-        javascript) tool=eslint; args=(-- "$1") ;;
-        go) tool=golangci-lint; args=(run "$(dirname "$1")/...") ;;
+        shell) tool=shellcheck; args=(-- "$file") ;;
+        python) tool=ruff; args=(check -- "$file") ;;
+        javascript) tool=eslint; args=(-- "$file") ;;
+        go) tool=golangci-lint; args=(run "$(dirname "$file")/...") ;;
     esac
+
     if [[ -n $tool ]]; then
-        if command -v "$tool" >/dev/null 2>&1; then
-            "$tool" "${args[@]}" || lint_status=$?
-        else
-            printf '%s not installed; skipping lint for %s\n' "$tool" "$1" >&2
-        fi
+        run_lint "$tool" "${args[@]}"
     fi
-fi
-
-if [[ -f "mvnw" ]]; then
-    if [[ -n "$all_tests" ]]; then
-        ./mvnw test
-    else
-        echo 'I would run a single mvn test if I knew how'
-    fi
-elif [[ -f "gradlew" ]]; then
-    if [[ -n "$all_tests" ]]; then
-        ./gradlew test --info # --stacktrace
-    else
-        ./gradlew test --tests="$1" --info # --stacktrace
-    fi
-elif [[ -f "go.mod" ]]; then
-    if [[ -n "$all_tests" ]]; then
-        go test ./...
-    else
-        go test "$(dirname "$1")/..."
-    fi
-elif [[ -f "Makefile" ]]; then
-    make test
+elif has_make_target lint; then
+    run_lint make lint
 else
-    echo 'could not detect any tests to run'
+    if [[ -f pyproject.toml || -f ruff.toml || -f .ruff.toml ]]; then
+        run_lint ruff check .
+    fi
+
+    if (
+        shopt -s nullglob
+        configs=(eslint.config.* .eslintrc .eslintrc.*)
+        (( ${#configs[@]} > 0 ))
+    ); then
+        run_lint eslint .
+    fi
+
+    if [[ -f go.mod ]]; then
+        run_lint golangci-lint run ./...
+    fi
 fi
 
-test_status=$?
+if [[ -f mvnw ]]; then
+    if [[ -z $file ]]; then
+        run_test ./mvnw test
+    else
+        printf 'Single-file Maven tests are not configured\n'
+    fi
+elif [[ -f build.zig ]]; then
+    if [[ -z $file ]]; then
+        run_test zig build test
+    else
+        run_test zig test "$file"
+    fi
+elif [[ -f gradlew ]]; then
+    if [[ -z $file ]]; then
+        run_test ./gradlew test --info
+    else
+        run_test ./gradlew test --tests="$file" --info
+    fi
+elif [[ -f go.mod ]]; then
+    if [[ -z $file ]]; then
+        run_test go test ./...
+    else
+        run_test go test "$(dirname "$file")/..."
+    fi
+elif has_make_target test; then
+    run_test make test
+fi
+
+printf '\n'
+report_result Lint "$lint_ran" "$lint_status"
+report_result Tests "$test_ran" "$test_status"
+
 if (( lint_status != 0 )); then
     exit "$lint_status"
 fi

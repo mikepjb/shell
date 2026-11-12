@@ -37,10 +37,10 @@ endif
 
 colorscheme flow
 
-command! -nargs=+ -complete=file Grep silent grep! <args> | redraw!
+" Use all input as the search term, assume grep for the whole codebase.
+command! -nargs=+ Grep execute 'silent grep! -- ' . shellescape(<q-args>, 1) | redraw!
 
 nnoremap Y y$
-nnoremap g<space> :Lexplore<CR>
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-h> <C-w>h
@@ -53,7 +53,7 @@ nnoremap <C-g> :noh<CR>:redraw!<CR><C-g>
 nnoremap gd <C-]>
 nnoremap gy :let @+ = expand('%:p') . ':' . line('.') . ':' . col('.')<CR>
 nnoremap gi :e ~/.vimrc<CR>
-nnoremap gn :call Selecta("fd -t f . ~/.notes/")<CR>
+nnoremap gn :call Spear("fd -t f . ~/.notes/")<CR>
 nnoremap ge :e <C-R>=fnamemodify(resolve(expand('%:p')), ':h') . '/'<CR>
 nnoremap gr :Grep<space>
 nnoremap gt /\CTODO\\|NEXT\\|CURRENT\\|DONE<CR>
@@ -77,9 +77,11 @@ nnoremap <CR> :update<CR>:!run-this %<CR>
 
 let g:netrw_liststyle = 3       " tree view
 let g:netrw_banner = 0          " leave more room for files
-let g:netrw_winsize = -30       " 30-column sidebar
-let g:netrw_usetab = 1
-nmap <C-;> <Plug>NetrwShrink
+let g:netrw_winsize = -45       " 35-column sidebar
+let g:netrw_browsesplit = 4
+let g:netrw_keepdir = 1
+nmap <C-y> :Lexplore<CR>
+nmap g<C-y> :Lexplore %:p:h<CR>
 
 augroup base
     autocmd!
@@ -87,11 +89,14 @@ augroup base
     autocmd FileType markdown setlocal formatoptions+=t " wrap lines in .md
     autocmd FileType clojure setl ts=2 sw=2 sts=4
     autocmd FileType qf setlocal statusline=Quickfix\ [%{len(getqflist())}]
+    autocmd FileType qf nnoremap <buffer> <CR> <CR>
+    autocmd FileType netrw silent! nunmap <buffer> <C-l>
+    autocmd FileType netrw nmap <buffer> <Tab> <CR>
     " TS syntax has a perf bug in 9.1.x and lower versions, this fixes that
     autocmd Syntax typescript,typescriptreact syntax clear typescriptArrowFuncDef
 augroup END
 
-function! Selecta(cmd)
+function! Spear(cmd)
     try
         let file = trim(system(a:cmd . ' | spear'))
         redraw!
@@ -99,7 +104,7 @@ function! Selecta(cmd)
     catch /Vim:Interrupt/ | redraw! | endtry
 endfunction
 
-nnoremap <space> :call Selecta("fd -E '*_templ.go' -t f . .")<CR>
+nnoremap <space> :call Spear("fd -E '*_templ.go' -t f . .")<CR>
 
 function! TreeView() abort
   topleft 35vnew

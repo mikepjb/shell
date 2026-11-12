@@ -156,3 +156,8 @@ autocmd BufEnter * :syntax sync fromstart " syntax highlights from the beginning
 of the file, sometimes syntax would be broken without it.
 set re=2 " forces newer NFA syntax engine
 ```
+
+## Also Consider
+
+- neomutt
+- tmux

@@ -38,8 +38,6 @@ export PATH="$(join_array "${path_collection[@]}")"
 
 eval "$(fnm env --use-on-cd --shell bash)"
 
-# WIP binding
-# bind -x '"\C-g": "cd ~/src/$(ls ~/src | spear)"'
 bind '"\C-g": "\C-a\C-kcd ~/src/\"$(ls ~/src | spear)\"\C-m"'
 
 # Pi: no automatic catalog/version/telemetry requests; model requests still work.
@@ -56,10 +54,10 @@ alias te='task export | jq '\''sort_by(.uuid) | map(del(.id, .urgency))'\'' > ~/
 alias ti='task import ~/.notes/tasks.json'
 alias tc='task +next mod -next' # clears next in line tasks queued for the day
 alias c='consult'
-alias x='tmux attach -t x || tmux new -s x'
+alias x='tmux new-session -A -s x'
 alias k='kubectl'
 alias kc='kubectl config current-context'
-alias ks='kubectl config use-context $(k config get-contexts -o "name" | selecta)'
+alias ks='kubectl config use-context $(k config get-contexts -o "name" | spear)'
 alias reload='~/.local/bin/reload && source ~/.bashrc'
 alias gc='ctags -R .' # generate ctags
 alias gr='cd $(git rev-parse --show-toplevel || echo \".\")'
@@ -68,11 +66,10 @@ alias dl='cd ~/Downloads'
 alias dc='cd ~/Documents'
 alias nr='npm run'
 alias pr='pnpm run'
-alias tv='tree -C | less -R'
 alias td='tree -Cd | less -R'
+alias tv='tree -C | less -R'
 alias cljx='clj -M:repl:dev'
 alias tree='tree -I node_modules -I ./target -I ./dist'
-# alias ks='kill -9 $(lsof -ti:8080)'
 alias ks="lsof -nP -iTCP -sTCP:LISTEN | tail -n +2 | spear | awk '{print $2}' | xargs -r kill -TERM"
 alias gp='gh pr create --fill'
 alias gd='gh pr create --draft --fill'
@@ -80,12 +77,7 @@ alias gw='gh pr view --web'
 alias gpm='cd "${GOPATH:-$HOME/go}/pkg/mod"'
 [[ $(command -v xdg-open) ]] && alias open=xdg-open
 
-
 viw() { vim $(which "$1"); }
-
-encrypt() {
-  tar czf - "$1" | openssl enc -aes-256-cbc -salt -out "${1}.tar.gz.enc"
-}
 
 [[ -f $HOME/.bashrc.local ]] && . $HOME/.bashrc.local
 
