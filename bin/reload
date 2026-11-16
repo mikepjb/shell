@@ -131,6 +131,27 @@ for tool in "${required_tools[@]}"; do
 done
 
 # ------------------------------------------------------------------------------
+section 'checking blocked websites'
+
+# Keep this manual: reload should not request sudo or edit system files.
+blocked_hosts=(news.ycombinator.com bbc.com www.bbc.com bbc.co.uk www.bbc.co.uk news.bbc.co.uk)
+
+for address in 0.0.0.0 ::; do
+    missing=()
+    for host in "${blocked_hosts[@]}"; do
+        if ! awk -v address="$address" -v host="$host" '
+            $1 == address { for (i = 2; i <= NF; i++) if ($i == host) found = 1 }
+            END { exit !found }
+        ' /etc/hosts; then
+            missing+=("$host")
+        fi
+    done
+    if ((${#missing[@]})); then
+        printf 'Missing /etc/hosts entries. To add them, run:\n  printf "%%s\\n" %q | sudo tee -a /etc/hosts\n' "$address ${missing[*]}"
+    fi
+done
+
+# ------------------------------------------------------------------------------
 section 'ensuring vim plugins are available'
 
 pkg_base="$HOME/.vim/pack/base"
