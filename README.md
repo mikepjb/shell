@@ -117,10 +117,12 @@ leave behind a reusable record of what worked.
 ### Keep tmux focused
 
 Bash starts in tmux so agents and other long-running work can keep running. The
-working view is one window with at most two visible panes: `M-o` splits it or
-switches between panes, and `M-i` toggles a persistent session in a popup for
-background work. Avoid accumulating windows and panes just because tmux makes
-it easy; keep the work you're doing in view.
+working view is one window with at most two panes: `M-o` splits it or switches
+between panes. `M-i` toggles zoom on the current pane: the other pane stays in
+the window and keeps running, but is out of view while zoomed. With only one
+pane, `M-i` does nothing.
+Avoid accumulating windows and panes just because tmux makes it easy; keep the
+work you're doing in view.
 
 ### Editors
 
