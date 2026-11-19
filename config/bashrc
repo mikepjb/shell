@@ -17,6 +17,7 @@ export EDITOR='vim'
 shopt -s histappend
 
 path_collection=(
+    "./zig" # prefer local project zig binary if available
     "$HOME/src/llama.cpp/build/bin" # llama.cpp built from source
     "$HOME/.local/bin" # User bin dir
     "/opt/homebrew/bin" # Mac OS Homebrew package manager
@@ -80,6 +81,7 @@ alias gp='gh pr create --fill'
 alias gd='gh pr create --draft --fill'
 alias gw='gh pr view --web'
 alias gpm='cd "${GOPATH:-$HOME/go}/pkg/mod"'
+alias zim='zig init --minimal'
 [[ $(command -v xdg-open) ]] && alias open=xdg-open
 
 viw() { vim $(which "$1"); }
