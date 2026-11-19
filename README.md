@@ -66,7 +66,12 @@ running `vendor` again to replace it. Requires `curl`.
 3. Python
 4. Bash (yes bash is considered a first-class language)
 5. Java
-6. Zig
+6. Zig (learning, hoping to be the default)
+
+### Retired Languages
+
+- Clojure (7 years)
+- Ruby (5 years)
 
 ## Offline Documentation
 
