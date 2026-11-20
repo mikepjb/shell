@@ -60,6 +60,7 @@ nnoremap gt /\CTODO\\|NEXT\\|CURRENT\\|DONE<CR>
 nnoremap gc :!ctags -R .<CR>
 nnoremap gs :read !snip<space>
 nnoremap gR :Eval (user/restart)<CR>
+nnoremap gb :!build<CR>
 " nnoremap g<space> :cd %:h \| pwd<CR>
 nnoremap gp :call Format()<CR>
 nnoremap <expr> gl empty(filter(getwininfo(), 'v:val.quickfix')) ? ':copen<CR>' : ':cclose<CR>'
