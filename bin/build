@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+if [[ -f build.zig ]]; then
+    zig build
+fi

@@ -37,7 +37,7 @@ path_collection=(
 join_array() { local IFS=':'; printf '%s' "$*"; }
 export PATH="$(join_array "${path_collection[@]}")"
 
-if [[ $- == *i* && -z ${TMUX:-} ]] && command -v tmux >/dev/null 2>&1; then
+if [[ $- == *i* && -z ${TMUX:-} && -z ${INSIDE_EMACS:-} ]] && command -v tmux >/dev/null 2>&1; then
     exec tmux new-session -A -s x
 fi
 
@@ -59,7 +59,7 @@ alias ta='task add'
 alias te='task export | jq '\''sort_by(.uuid) | map(del(.id, .urgency))'\'' > ~/.notes/tasks.json'
 alias ti='task import ~/.notes/tasks.json'
 alias tc='task +next mod -next' # clears next in line tasks queued for the day
-alias c='consult'
+alias q='consult'
 alias x='tmux new-session -A -s x'
 alias k='kubectl'
 alias kc='kubectl config current-context'
@@ -82,6 +82,10 @@ alias gd='gh pr create --draft --fill'
 alias gw='gh pr view --web'
 alias gpm='cd "${GOPATH:-$HOME/go}/pkg/mod"'
 alias zim='zig init --minimal'
+alias b='build'
+alias c='check'
+alias r='repl'
+alias f='format'
 [[ $(command -v xdg-open) ]] && alias open=xdg-open
 
 viw() { vim $(which "$1"); }

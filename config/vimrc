@@ -71,9 +71,9 @@ cnoremap        <C-B> <Left>
 cnoremap <expr> <C-D> getcmdpos()>strlen(getcmdline())?"\<Lt>C-D>":"\<Lt>Del>"
 cnoremap <expr> <C-F> getcmdpos()>strlen(getcmdline())?&cedit:"\<Lt>Right>"
 nnoremap Z :echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')<CR>
-nnoremap <C-t> :!test-this %<cr>
-nnoremap g<C-t> :!test-this<cr>
-nnoremap <CR> :update<CR>:!run-this %<CR>
+nnoremap <C-t> :!check %<cr>
+nnoremap g<C-t> :!check<cr>
+nnoremap <CR> :update<CR>:!repl %<CR>
 
 let g:netrw_liststyle = 3       " tree view
 let g:netrw_banner = 0          " leave more room for files
@@ -106,28 +106,13 @@ endfunction
 
 nnoremap <space> :call Spear("fd -E '*_templ.go' -t f . .")<CR>
 
-function! TreeView() abort
-  topleft 35vnew
-  setlocal winfixwidth
-  call term_start('tree -Cd .', {
-        \ 'curwin': 1,
-        \ 'term_name': 'Tree',
-        \ 'cwd': getcwd()
-        \ })
-endfunction
-
-nnoremap <silent> <C-s> :call TreeView()<CR>
-
-nnoremap <C-s> :call TreeView()<CR>
-
 function! Format()
     update
-    let out = system('format-this ' . shellescape(expand('%')))
+    let out = system('format ' . shellescape(expand('%')))
     if v:shell_error | echoerr out | else | checktime | redraw! | endif
 endfunction
 
 nnoremap gp :call Format()<CR>
-nnoremap gP :cexpr system('lint-this "' . expand('%') . '"')<CR>
 
 function! s:MarkdownFold() abort
     let line = getline(v:lnum)

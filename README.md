@@ -19,6 +19,9 @@ which would collect the test script output and populate a quickfix window.
 Rather than maintain the quickfix format, it is simpler to just read and
 remember the important part of the output and fuzzy find/navigate myself.
 
+Another key principle is _focus_ brought by having workflows with a singular
+purpose.
+
 Emacs still draws me in, but even a vanilla, low-maintenance setup gives up
 Vim's editing speed and leaves plenty of integration work. I suspect VS Code
 and IntelliJ involve a similar tradeoff: deeper language support that can
@@ -65,13 +68,14 @@ running `vendor` again to replace it. Requires `curl`.
 2. Javascript/Typescript
 3. Python
 4. Bash (yes bash is considered a first-class language)
-5. Java
-6. Zig (learning, hoping to be the default)
+5. Zig (learning, hoping to be the default)
+6. Java (there is always a Java service somewhere)
 
 ### Retired Languages
 
-- Clojure (7 years)
-- Ruby (5 years)
+- Clojure (7 years) - lisps in general have very sharp trade offs, they tend to
+  be extremely good for some things and extremely poor for others.
+- Ruby (5 years) - python is a more useful scripting language.
 
 ## Offline Documentation
 

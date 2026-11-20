@@ -71,6 +71,16 @@ for bin_file in "$shell_repo_root/bin/"*; do
   ln -sfv "$bin_file" "$local_bin_dir/$(basename "$bin_file")"
 done
 
+section 'Removing broken symlinks from ~/.local/bin'
+(
+    shopt -s nullglob dotglob
+    for link in "$local_bin_dir"/*; do
+        if [[ -L "$link" && ! -e "$link" ]]; then
+            rm -v -- "$link"
+        fi
+    done
+)
+
 section 'Reloading all configurations'
 
 if [[ -n "${TMUX:-}" ]]; then
